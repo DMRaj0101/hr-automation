@@ -1,0 +1,16 @@
+{
+  "_comment": "PDD Section 4.4 -- which generic team a ticket routes to, keyed by provisioning item name. Falls back to 'IT' if an item isn't listed here (see agents/ticket_agent.py). Facilities and Payroll have no items yet, per the PDD -- reserved for future use.",
+
+  "Access Recommendation": "Admin",
+  "Tax Preparation": "IT",
+  "Client Document Repository": "IT",
+  "Audit Software": "IT",
+  "Client Engagement Repository": "IT",
+  "Document Management": "IT",
+  "Legal Research": "IT",
+  "Productivity Suite": "IT",
+  "Network Access": "Security",
+  "Ticketing/ITSM": "IT",
+  "Ticketing (Fulfiller role)": "IT",
+  "Remote Support Tool": "IT"
+}

@@ -1,0 +1,291 @@
+{
+  "_comment": "Transcribed from PDD Section 3 (3.1 Tax, 3.2 Audit, 3.3 Law, 3.4 IT Support). status: 'functional' items get a real API call from the matching downstream agent; 'mock' items get a ticket opened instead (no real API call exists/feasible for this POC). agent_key tells the Decision Agent which downstream agent module owns this item -- see agents/decision_agent.py and the integrations/*_connector.py files. NOTE: three items were upgraded from Mock to Functional beyond the original PDD Section 3 tables -- Tax's 'Client Document Repository', Audit's 'Client Engagement Repository', and Law's 'Document Management' -- now provisioned for real via OpenKM (open-source) instead of the originally-specified commercial NetDocuments/iManage Work. See MIGRATION_NOTES.md.",
+  "Tax": [
+    {
+      "item": "Identity Account Creation",
+      "software": "Keycloak",
+      "status": "functional",
+      "agent_key": "identity",
+      "remarks": "Create user account, assign default role."
+    },
+    {
+      "item": "Email Account Creation",
+      "software": "MailU",
+      "status": "functional",
+      "agent_key": "email",
+      "remarks": "Create mailbox, generate email address."
+    },
+    {
+      "item": "Access Recommendation",
+      "software": "Microsoft 365, CCH Axcess Tax, NetDocuments, Kimai",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "License bundle recommendation -- Mock for the POC, no real provisioning call."
+    },
+    {
+      "item": "Asset Allocation",
+      "software": "Snipe-IT",
+      "status": "functional",
+      "agent_key": "asset",
+      "remarks": "Standard professional hardware kit: laptop, dual monitor, docking station, headset, mobile device."
+    },
+    {
+      "item": "Tax Preparation",
+      "software": "CCH Axcess Tax",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "Commercial cloud tax prep platform -- not feasible free, Mock only."
+    },
+    {
+      "item": "Client Document Repository",
+      "software": "OpenKM",
+      "status": "functional",
+      "agent_key": "document_management",
+      "remarks": "Real document workspace created via OpenKM (open-source) -- upgraded from Mock; originally spec'd as NetDocuments (commercial, would have stayed Mock)."
+    },
+    {
+      "item": "Time & Billing",
+      "software": "Kimai",
+      "status": "functional",
+      "agent_key": "time_billing",
+      "remarks": "Create user account, configure timesheet profile."
+    },
+    {
+      "item": "Productivity Suite",
+      "software": "Microsoft 365",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "M365 + Teams -- not feasible free, Mock only."
+    },
+    {
+      "item": "Network Access",
+      "software": "Cisco AnyConnect VPN",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "Requires commercial licensing -- Mock only."
+    },
+    {
+      "item": "Ticketing/ITSM",
+      "software": "ServiceNow (label only)",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "Register requester access for IT support tickets -- Mock only."
+    }
+  ],
+  "Audit": [
+    {
+      "item": "Identity Account Creation",
+      "software": "Keycloak",
+      "status": "functional",
+      "agent_key": "identity",
+      "remarks": "Create user account, assign default role."
+    },
+    {
+      "item": "Email Account Creation",
+      "software": "MailU",
+      "status": "functional",
+      "agent_key": "email",
+      "remarks": "Create mailbox, generate email address."
+    },
+    {
+      "item": "Access Recommendation",
+      "software": "Microsoft 365, CaseWare IDEA, NetDocuments, Kimai",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "License bundle recommendation -- Mock only."
+    },
+    {
+      "item": "Asset Allocation",
+      "software": "Snipe-IT",
+      "status": "functional",
+      "agent_key": "asset",
+      "remarks": "Standard professional hardware kit."
+    },
+    {
+      "item": "Audit Software",
+      "software": "CaseWare IDEA",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "Commercial audit/data-analysis software -- Mock only."
+    },
+    {
+      "item": "Client Engagement Repository",
+      "software": "OpenKM",
+      "status": "functional",
+      "agent_key": "document_management",
+      "remarks": "Real document workspace created via OpenKM (open-source) -- upgraded from Mock; originally spec'd as NetDocuments (commercial, would have stayed Mock)."
+    },
+    {
+      "item": "Time & Billing",
+      "software": "Kimai",
+      "status": "functional",
+      "agent_key": "time_billing",
+      "remarks": "Create user account, configure timesheet profile."
+    },
+    {
+      "item": "Productivity Suite",
+      "software": "Microsoft 365",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "M365 + Teams -- Mock only."
+    },
+    {
+      "item": "Network Access",
+      "software": "Cisco AnyConnect VPN",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "Requires commercial licensing -- Mock only."
+    },
+    {
+      "item": "Ticketing/ITSM",
+      "software": "ServiceNow (label only)",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "Register requester access -- Mock only."
+    }
+  ],
+  "Law": [
+    {
+      "item": "Identity Account Creation",
+      "software": "Keycloak",
+      "status": "functional",
+      "agent_key": "identity",
+      "remarks": "Create user account, assign default role."
+    },
+    {
+      "item": "Email Account Creation",
+      "software": "MailU",
+      "status": "functional",
+      "agent_key": "email",
+      "remarks": "Create mailbox, generate email address."
+    },
+    {
+      "item": "Access Recommendation",
+      "software": "Microsoft 365, iManage Work, NetDocuments, Kimai",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "License bundle recommendation -- Mock only."
+    },
+    {
+      "item": "Asset Allocation",
+      "software": "Snipe-IT",
+      "status": "functional",
+      "agent_key": "asset",
+      "remarks": "Standard professional hardware kit."
+    },
+    {
+      "item": "Document Management",
+      "software": "OpenKM",
+      "status": "functional",
+      "agent_key": "document_management",
+      "remarks": "Real document workspace created via OpenKM (open-source) -- upgraded from Mock; originally spec'd as iManage Work (commercial, would have stayed Mock)."
+    },
+    {
+      "item": "Legal Research",
+      "software": "Westlaw",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "Commercial legal research platform -- Mock only."
+    },
+    {
+      "item": "Time & Billing",
+      "software": "Kimai",
+      "status": "functional",
+      "agent_key": "time_billing",
+      "remarks": "Create user account, configure timesheet profile."
+    },
+    {
+      "item": "Productivity Suite",
+      "software": "Microsoft 365 + Teams",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "M365 E3 license, Teams access -- Mock only."
+    },
+    {
+      "item": "Network Access",
+      "software": "Cisco AnyConnect VPN",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "Requires commercial licensing -- Mock only."
+    },
+    {
+      "item": "Ticketing/ITSM",
+      "software": "ServiceNow (label only)",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "Register requester access -- Mock only."
+    }
+  ],
+  "IT Support": [
+    {
+      "item": "Identity Account Creation",
+      "software": "Keycloak",
+      "status": "functional",
+      "agent_key": "identity",
+      "remarks": "Standard (non-admin) role -- full admin access deliberately out of scope for this role."
+    },
+    {
+      "item": "Email Account Creation",
+      "software": "MailU",
+      "status": "functional",
+      "agent_key": "email",
+      "remarks": "Create mailbox, generate email address."
+    },
+    {
+      "item": "Access Recommendation",
+      "software": "Microsoft 365, ServiceNow Fulfiller/Agent license",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "Paid seat tier -- Mock only."
+    },
+    {
+      "item": "Asset Allocation",
+      "software": "Snipe-IT",
+      "status": "functional",
+      "agent_key": "asset",
+      "remarks": "Standard hardware kit via Snipe-IT's real asset-tracking API."
+    },
+    {
+      "item": "Ticketing (Fulfiller role)",
+      "software": "ServiceNow (label only)",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "Resolves tickets submitted by end users -- Mock only, requires commercial licensing."
+    },
+    {
+      "item": "Asset Management (operational access)",
+      "software": "Snipe-IT",
+      "status": "functional",
+      "agent_key": "asset",
+      "remarks": "Open source, no license cost -- real operational console access."
+    },
+    {
+      "item": "Helpdesk Admin Role (scoped)",
+      "software": "Keycloak (scoped role)",
+      "status": "functional",
+      "agent_key": "identity",
+      "remarks": "Scoped-down role within the same real Keycloak instance -- not full admin access."
+    },
+    {
+      "item": "Productivity Suite",
+      "software": "Microsoft 365",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "Mock only."
+    },
+    {
+      "item": "Network Access",
+      "software": "Cisco AnyConnect VPN",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "Requires commercial licensing -- Mock only."
+    },
+    {
+      "item": "Remote Support Tool",
+      "software": "Mock tool (no OSS pick yet)",
+      "status": "mock",
+      "agent_key": null,
+      "remarks": "TODO -- no open-source remote support tool evaluated/selected yet (PDD Open Item #7)."
+    }
+  ]
+}

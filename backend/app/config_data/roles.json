@@ -1,0 +1,6 @@
+{
+  "Tax": {"department_hints": ["Tax"], "title_hints": ["Tax Associate", "Tax Manager", "Tax Preparer"]},
+  "Audit": {"department_hints": ["Audit"], "title_hints": ["Auditor", "Audit Associate", "Audit Manager"]},
+  "Law": {"department_hints": ["Legal", "Law"], "title_hints": ["Attorney", "Associate", "Paralegal", "Partner"]},
+  "IT Support": {"department_hints": ["IT"], "title_hints": ["IT Support", "Help Desk", "IT Technician"]}
+}
