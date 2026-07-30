@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --vantara-navy: #14213d;
+  --vantara-navy-deep: #0a1226;
+  --vantara-gold: #d9a653;
+  --vantara-bg: #fafaf9;
+  --vantara-border: #e5e7eb;
+  --vantara-muted-bg: #f9fafb;
+  --vantara-text-muted: #6b7280;
+  --vantara-text-faint: #9ca3af;
+}
+
+body {
+  background: var(--vantara-bg);
+  color: var(--vantara-navy);
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--vantara-border);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  padding: 24px;
+}
+
+.card-sm {
+  background: #fff;
+  border: 1px solid var(--vantara-border);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+}
+
+.page-content {
+  padding: 40px 48px 56px;
+}
+
+.page-content-chat {
+  padding: 40px 48px 32px;
+}
+
+.page-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--vantara-navy);
+  margin-bottom: 6px;
+}
+
+.page-subtitle {
+  font-size: 15px;
+  color: var(--vantara-text-muted);
+  margin-bottom: 28px;
+}
+
+.card-sm {
+  padding: 20px;
+}
+
+@keyframes pulse-dot {
+  0% {
+    box-shadow: 0 0 0 0 rgba(22, 101, 52, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(22, 101, 52, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(22, 101, 52, 0);
+  }
+}
+
+.pulse-dot {
+  animation: pulse-dot 1.6s infinite;
+}
