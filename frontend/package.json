@@ -1,0 +1,47 @@
+{
+  "name": "vantara-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0 <21.0.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "mock-server": "json-server --watch mock-server/db.json --routes mock-server/routes.json --port 4000"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.1",
+    "@radix-ui/react-checkbox": "^1.1.2",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-select": "^2.1.2",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@tanstack/react-query": "^5.59.16",
+    "@tanstack/react-table": "^8.20.5",
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "axios": "^1.7.7",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.454.0",
+    "next": "16.2.12",
+    "postcss": "^8.4.47",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.53.2",
+    "tailwind-merge": "^2.5.4",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3",
+    "zod": "^3.23.8",
+    "zustand": "^5.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.0",
+    "eslint-config-next": "16.2.12",
+    "json-server": "^0.17.4"
+  }
+}

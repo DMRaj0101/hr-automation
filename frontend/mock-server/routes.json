@@ -1,0 +1,17 @@
+{
+  "/api/dashboard": "/dashboard",
+  "/api/employees": "/employees",
+  "/api/employees/:id": "/employees/:id",
+  "/api/checklists/:id": "/checklists/:id",
+  "/api/tickets": "/tickets",
+  "/api/tickets/:id": "/tickets/:id",
+  "/api/ticketDetails/:id": "/ticketDetails/:id",
+  "/api/systemHealthDetail": "/systemHealthDetail",
+  "/api/onboardingDetails/:id": "/onboardingDetails/:id",
+  "/api/monitoring": "/monitoring",
+  "/api/chatMessages": "/chatMessages",
+  "/api/suggestionChips": "/suggestionChips",
+  "/api/chipReplies": "/chipReplies",
+  "/api/meta": "/meta",
+  "/api/users": "/users"
+}

@@ -7,6 +7,7 @@ role -> provisioning-item mapping too.
 """
 import json
 import os
+from dotenv import load_dotenv
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "config_data")
 

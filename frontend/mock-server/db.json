@@ -1,0 +1,226 @@
+{
+  "employees": [
+    { "id": "EMP-2001", "name": "Priya Sharma", "dept": "Tax", "type": "experienced",
+      "manager": "David Klein", "status": "Onboarding", "progress": 55, "blockers": 1,
+      "start": "7/28", "est": "8/15", "remaining": 16,
+      "email": "priya.sharma@example.com", "phone": "+1 (415) 555-0142", "office": "New York",
+      "empManager": "Rajesh Kumar", "hireDate": "2026-07-28", "yearsOfService": "0.1",
+      "jobLevel": "Associate", "title": "Tax Associate" },
+    { "id": "EMP-1002", "name": "Rohan Mehta", "dept": "Audit", "type": "fresher",
+      "manager": "Priya Nair", "status": "Documents Pending", "progress": 17, "blockers": 2,
+      "start": "7/27", "est": "8/20", "remaining": 21,
+      "email": "rohan.mehta@example.com", "phone": "+1 (415) 555-0199", "office": "New York",
+      "empManager": "Priya Nair", "hireDate": "2026-07-27", "yearsOfService": "0.1",
+      "jobLevel": "Associate", "title": "Audit Associate" },
+    { "id": "EMP-1001", "name": "Ananya Sharma", "dept": "Law", "type": "experienced",
+      "manager": "David Klein", "status": "Onboarding", "progress": 91, "blockers": 0,
+      "start": "7/20", "est": "8/5", "remaining": 6,
+      "email": "ananya.sharma@example.com", "phone": "+1 (415) 555-0121", "office": "New York",
+      "empManager": "David Klein", "hireDate": "2026-07-20", "yearsOfService": "0.1",
+      "jobLevel": "Associate", "title": "Law Associate" },
+    { "id": "EMP-1003", "name": "Karthik Subramaniam", "dept": "Tax", "type": "experienced",
+      "manager": "Divya Rao", "status": "Onboarding", "progress": 40, "blockers": 0,
+      "start": null, "est": null, "remaining": null,
+      "email": "karthik.subramaniam@example.com", "phone": "+1 (415) 555-0177", "office": "New York",
+      "empManager": "Divya Rao", "hireDate": "2026-07-15", "yearsOfService": "0.2",
+      "jobLevel": "Associate", "title": "Tax Associate" }
+  ],
+
+  "tickets": [
+    { "id": "TKT-1001", "employee": "Priya Sharma", "dept": "Tax", "issue": "Tax Preparation",
+      "system": "CCH Axcess Tax", "team": "IT", "priority": "High", "status": "Closed", "time": "10:45 AM" },
+    { "id": "TKT-1002", "employee": "Rohan Mehta", "dept": "Audit", "issue": "Client Engagement Repository",
+      "system": "NetDocuments", "team": "IT", "priority": "High", "status": "Pending", "time": "11:22 AM" },
+    { "id": "TKT-1003", "employee": "Priya Sharma", "dept": "Tax", "issue": "Access Recommendation",
+      "system": "M365 / CCH Axcess Tax / OpenKM", "team": "Admin", "priority": "Medium", "status": "Open", "time": "10:02 AM" },
+    { "id": "TKT-1004", "employee": "Ananya Sharma", "dept": "Law", "issue": "Network Access",
+      "system": "Cisco AnyConnect VPN", "team": "Security", "priority": "Medium", "status": "In Progress", "time": "10:30 AM" },
+    { "id": "TKT-2004", "employee": "Priya Sharma", "dept": "Tax", "issue": "Client Document Repository",
+      "system": "OpenKM", "team": "IT", "priority": "Critical", "status": "Failed", "time": "10:11 AM" }
+  ],
+
+  "ticketDetails": {
+    "TKT-2004": {
+      "slaTotalHours": 8, "slaRemainingHours": 2.5, "slaPercentElapsed": 31,
+      "errorType": "API Timeout", "errorCode": "ETIMEDOUT",
+      "errorMessage": "Connection to OpenKM API timed out after 30s",
+      "retryCount": 1, "nextRetry": "8/1 10:00 AM",
+      "statusHistory": [
+        { "status": "Open", "time": "10:11 AM", "color": "#1D4ED8" },
+        { "status": "In Progress", "time": "10:15 AM", "color": "#92400E" },
+        { "status": "Failed", "time": "10:16 AM", "color": "#991B1B" }
+      ],
+      "notes": [ { "author": "IT", "time": "10:20 AM",
+        "text": "Escalated to OpenKM admin, investigating connectivity." } ]
+    }
+  },
+
+  "checklists": {
+    "EMP-2001": [
+      { "system": "Identity Account Creation", "platform": "Keycloak", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/28", "outcome": "Real Keycloak Admin REST API response — user id: a3f9e21c-88b4-4a2d-9c17-5e6d8b41f0a2" },
+      { "system": "Email Account Creation", "platform": "MailU", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/28", "outcome": "Real MailU API response — mailbox created: priya.sharma@vantara.com" },
+      { "system": "Time & Billing", "platform": "Kimai", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/28", "outcome": "Real Kimai API response — {\"id\":2001,\"username\":\"priya.sharma\",\"timesheet\":\"active\"}" },
+      { "system": "Asset Allocation", "platform": "Snipe-IT", "status": "inProgress", "kind": "Functional",
+        "detail": "Delivery expected 8/1", "outcome": "Real Snipe-IT API response — {\"asset_tag\":\"SNP-4471\",\"checkout\":\"pending\"}" },
+      { "system": "Access Recommendation", "platform": "M365 / CCH Axcess Tax / NetDocuments / Kimai", "status": "inProgress", "kind": "Mock",
+        "detail": "75% complete — ticket TKT-2003", "outcome": "M365 real: {\"skuId\":\"3b555118-da6a-4418-894f-7df1e2096870\"} — CCH Axcess Tax & NetDocuments illustrative only" },
+      { "system": "Client Document Repository", "platform": "OpenKM", "status": "failed", "kind": "Mock",
+        "detail": "API timeout — retry 8/1 10:00 AM — ticket TKT-2004", "outcome": "Illustrative workspace_id: OKM-ILLUS-4F7A2B — request timed out before response" },
+      { "system": "Tax Preparation", "platform": "CCH Axcess Tax", "status": "blocked", "kind": "Mock",
+        "detail": "Awaiting Finance approval — ticket TKT-2005", "outcome": "Illustrative client_id: CAT-ILLUS-004471 — Wolters Kluwer publishes no public API" },
+      { "system": "Productivity Suite", "platform": "Microsoft 365", "status": "done", "kind": "Mock",
+        "detail": "Completed — ticket TKT-2006", "outcome": "Real Graph API shape — {\"skuId\":\"3b555118-da6a-4418-894f-7df1e2096870\",\"skuPartNumber\":\"O365_BUSINESS_PREMIUM\"}" },
+      { "system": "Network Access", "platform": "Cisco AnyConnect VPN", "status": "pending", "kind": "Mock",
+        "detail": "Pending — ticket TKT-2007", "outcome": "" },
+      { "system": "Ticketing / ITSM", "platform": "GLPI", "status": "pending", "kind": "Mock",
+        "detail": "Pending — ticket TKT-2008", "outcome": "" }
+    ],
+    "EMP-1002": [
+      { "system": "Identity Account Creation", "platform": "Keycloak", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/27", "outcome": "Real Keycloak Admin REST API response — user id: 6d1c4a72-9e3b-4f18-8a02-7c5f9e1b2d64" },
+      { "system": "Email Account Creation", "platform": "MailU", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/27", "outcome": "Real MailU API response — mailbox created: rohan.mehta@vantara.com" },
+      { "system": "Time & Billing", "platform": "Kimai", "status": "inProgress", "kind": "Functional",
+        "detail": "Setup in progress", "outcome": "Real Kimai API response — {\"id\":1002,\"username\":\"rohan.mehta\",\"timesheet\":\"pending\"}" },
+      { "system": "Asset Allocation", "platform": "Snipe-IT", "status": "pending", "kind": "Functional",
+        "detail": "Awaiting assignment", "outcome": "" },
+      { "system": "Access Recommendation", "platform": "M365 / CaseWare IDEA / NetDocuments / Kimai", "status": "blocked", "kind": "Mock",
+        "detail": "Blocked on documents — ticket TKT-1003", "outcome": "M365 real: {\"skuId\":\"3b555118-da6a-4418-894f-7df1e2096870\"} — CaseWare IDEA & NetDocuments illustrative only" },
+      { "system": "Client Engagement Repository", "platform": "NetDocuments", "status": "failed", "kind": "Mock",
+        "detail": "Escalated to admin — ticket TKT-1002", "outcome": "Illustrative workspace_id: ND-ILLUS-9C2E17 — no public API docs to verify" },
+      { "system": "Audit Software", "platform": "CaseWare IDEA", "status": "pending", "kind": "Mock",
+        "detail": "Pending", "outcome": "" },
+      { "system": "Productivity Suite", "platform": "Microsoft 365", "status": "pending", "kind": "Mock",
+        "detail": "License not yet assigned", "outcome": "" },
+      { "system": "Network Access", "platform": "Cisco AnyConnect VPN", "status": "pending", "kind": "Mock",
+        "detail": "Pending", "outcome": "" },
+      { "system": "Ticketing / ITSM", "platform": "GLPI", "status": "pending", "kind": "Mock",
+        "detail": "Pending", "outcome": "" }
+    ],
+    "EMP-1001": [
+      { "system": "Identity Account Creation", "platform": "Keycloak", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/20", "outcome": "Real Keycloak Admin REST API response — user id: f28a6c15-3d9e-4b71-a5c8-1e0d7f4b9a33" },
+      { "system": "Email Account Creation", "platform": "MailU", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/20", "outcome": "Real MailU API response — mailbox created: ananya.sharma@vantara.com" },
+      { "system": "Time & Billing", "platform": "Kimai", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/21", "outcome": "Real Kimai API response — {\"id\":1001,\"username\":\"ananya.sharma\",\"timesheet\":\"active\"}" },
+      { "system": "Asset Allocation", "platform": "Snipe-IT", "status": "done", "kind": "Functional",
+        "detail": "Delivered 7/22", "outcome": "Real Snipe-IT API response — {\"asset_tag\":\"SNP-4318\",\"checkout\":\"complete\"}" },
+      { "system": "Access Recommendation", "platform": "M365 E3 / iManage Work / Westlaw / Aderant / Kimai", "status": "done", "kind": "Mock",
+        "detail": "Completed 7/23", "outcome": "M365 real: {\"skuId\":\"6fd2c87f-b296-42f0-b197-1e91e994b900\"} (E3, incl. Teams) — iManage/Westlaw/Aderant illustrative" },
+      { "system": "Document Management", "platform": "iManage Work", "status": "done", "kind": "Mock",
+        "detail": "Completed 7/24", "outcome": "folder_id: 217 — shape grounded in public iManage SDK docs, value illustrative" },
+      { "system": "Legal Research", "platform": "Westlaw", "status": "inProgress", "kind": "Mock",
+        "detail": "Final review — ticket TKT-1004", "outcome": "Illustrative session_id: WL-ILLUS-88231 — Thomson Reuters API is partner-gated" },
+      { "system": "Productivity Suite", "platform": "Microsoft 365 + Teams", "status": "done", "kind": "Mock",
+        "detail": "Completed 7/24", "outcome": "Real Office 365 E3 SKU — {\"skuId\":\"6fd2c87f-b296-42f0-b197-1e91e994b900\",\"skuPartNumber\":\"ENTERPRISEPACK\"}" },
+      { "system": "Network Access", "platform": "Cisco AnyConnect VPN", "status": "inProgress", "kind": "Mock",
+        "detail": "Final review", "outcome": "No reference ID in reality — \"VPN profile assigned via existing AD group membership\"" },
+      { "system": "Ticketing / ITSM", "platform": "GLPI", "status": "inProgress", "kind": "Mock",
+        "detail": "Account activation pending", "outcome": "" }
+    ],
+    "EMP-1003": [
+      { "system": "Identity Account Creation", "platform": "Keycloak", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/15", "outcome": "Real Keycloak Admin REST API response — user id: 9b47e0a2-5c8d-4e91-b3f6-2a1d8c0e7f45" },
+      { "system": "Email Account Creation", "platform": "MailU", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/15", "outcome": "Real MailU API response — mailbox created: karthik.subramaniam@vantara.com" },
+      { "system": "Time & Billing", "platform": "Kimai", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/16", "outcome": "Real Kimai API response — {\"id\":1003,\"username\":\"karthik.subramaniam\",\"timesheet\":\"active\"}" },
+      { "system": "Asset Allocation", "platform": "Snipe-IT", "status": "inProgress", "kind": "Functional",
+        "detail": "Delivery expected 8/2", "outcome": "Real Snipe-IT API response — {\"asset_tag\":\"SNP-4402\",\"checkout\":\"pending\"}" },
+      { "system": "Access Recommendation", "platform": "M365 / CCH Axcess Tax / NetDocuments / Kimai", "status": "pending", "kind": "Mock",
+        "detail": "Pending", "outcome": "" },
+      { "system": "Tax Preparation", "platform": "CCH Axcess Tax", "status": "pending", "kind": "Mock",
+        "detail": "Pending", "outcome": "" },
+      { "system": "Client Document Repository", "platform": "OpenKM", "status": "pending", "kind": "Mock",
+        "detail": "Pending", "outcome": "" },
+      { "system": "Productivity Suite", "platform": "Microsoft 365", "status": "pending", "kind": "Mock",
+        "detail": "License not yet assigned", "outcome": "" },
+      { "system": "Network Access", "platform": "Cisco AnyConnect VPN", "status": "pending", "kind": "Mock",
+        "detail": "Pending", "outcome": "" },
+      { "system": "Ticketing / ITSM", "platform": "GLPI", "status": "pending", "kind": "Mock",
+        "detail": "Pending", "outcome": "" }
+    ]
+  },
+
+  "dashboard": {
+    "stats": { "total": 24, "completed": 19, "inProgress": 3, "failed": 2 },
+    "integrationCoverage": { "realCount": 5, "mockCount": 7, "realPct": 44, "mockPct": 56,
+      "realSystems": ["Keycloak", "MailU", "Kimai", "Snipe-IT", "OpenKM", "GLPI"],
+      "mockSystems": ["Tax Prep", "Access Recommendation", "Productivity Suite", "Network Access"] },
+    "slaWarning": { "ticketId": "TKT-1002", "employee": "Rohan Mehta", "department": "Audit",
+      "item": "Client Engagement Repository", "duration": "4h 24m" },
+    "departments": [
+      { "name": "Tax", "employees": 7, "openTickets": 3, "avgCompletion": 82 },
+      { "name": "Audit", "employees": 5, "openTickets": 2, "avgCompletion": 65 },
+      { "name": "Law", "employees": 8, "openTickets": 1, "avgCompletion": 91 }
+    ],
+    "systemHealth": [
+      { "name": "Keycloak", "status": "Operational" }, { "name": "MailU", "status": "Operational" },
+      { "name": "Kimai", "status": "Operational" }, { "name": "Snipe-IT", "status": "Operational" },
+      { "name": "OpenKM", "status": "Operational" }, { "name": "GLPI", "status": "Operational" }
+    ],
+    "ticketStatus": { "open": 6, "inProgress": 3, "pending": 1, "closed": 14 }
+  },
+
+  "systemHealthDetail": [
+    { "name": "Keycloak", "status": "Operational", "latency": "145ms" },
+    { "name": "MailU", "status": "Operational", "latency": "203ms" },
+    { "name": "Snipe-IT", "status": "Operational", "latency": "175ms" },
+    { "name": "Kimai", "status": "Operational", "latency": "250ms" },
+    { "name": "OpenKM", "status": "Down", "latency": "Timeout" },
+    { "name": "Microsoft 365", "status": "Degraded", "latency": "1500ms" },
+    { "name": "GLPI", "status": "Operational", "latency": "—" }
+  ],
+
+  "onboardingDetails": {
+    "EMP-2001": {
+      "status": "In Progress", "type": "Onboarding",
+      "startDate": "Jul 28, 2026", "plannedCompletion": "Aug 15, 2026", "daysRemaining": 16,
+      "alerts": [
+        { "id": "a1", "severity": "critical", "title": "OpenKM API Timeout",
+          "body": "Blocking Client Document Repository (TKT-2004). Auto-retry scheduled 8/1 10:00 AM.",
+          "kind": "dismiss" },
+        { "id": "a2", "severity": "high", "title": "Finance Approval Pending",
+          "body": "CCH Axcess Tax license ($15,000/yr) awaiting Finance sign-off.", "kind": "view" },
+        { "id": "a3", "severity": "medium", "title": "Microsoft 365 Slow Response",
+          "body": "Response time 1.5s, above 500ms baseline.", "kind": "ack" }
+      ]
+    }
+  },
+
+  "monitoring": {
+    "lastEvent": "Identity Agent completed for EMP-2001, 2s ago",
+    "activeRequests": [
+      { "name": "Priya Sharma", "dept": "Tax", "status": "In Progress", "retries": "0/3", "tickets": 3 },
+      { "name": "Rohan Mehta", "dept": "Audit", "status": "Failed", "retries": "3/3", "tickets": 1 },
+      { "name": "Ananya Sharma", "dept": "Law", "status": "Completed", "retries": "0/3", "tickets": 0 }
+    ],
+    "slaWarning": { "ticketId": "TKT-1002", "employee": "Rohan Mehta",
+      "item": "Client Engagement Repository", "team": "IT", "since": "05:40 AM", "duration": "4h 24m" }
+  },
+
+  "chatMessages": [
+    { "role": "user", "text": "What's Priya's onboarding status?" },
+    { "role": "agent", "text": "Priya Sharma (EMP-2001, Tax) is 55% complete. 3 items done, 2 in progress, 1 failed (Client Document Repository — OpenKM timeout), 1 blocked (Tax Prep — Finance approval), 2 pending.",
+      "source": "Monitoring Agent" },
+    { "role": "user", "text": "Show me failed tickets" },
+    { "role": "agent", "text": "1 failed ticket: TKT-2004, Client Document Repository (OpenKM), Priya Sharma — retry scheduled 8/1 10:00 AM.",
+      "source": "Ticket Queue" }
+  ],
+
+  "suggestionChips": ["What's pending right now?", "Show failed tickets", "Is OpenKM working?"],
+
+  "chipReplies": {
+    "What's pending right now?": { "text": "2 items are pending for Priya Sharma: Network Access (Cisco AnyConnect VPN) and Ticketing/ITSM (GLPI).", "source": "Provisioning Agent" },
+    "Show failed tickets": { "text": "1 failed ticket: TKT-2004, Client Document Repository (OpenKM), Priya Sharma — retry scheduled 8/1 10:00 AM.", "source": "Ticket Queue" },
+    "Is OpenKM working?": { "text": "No — OpenKM is currently down (API timeout). It's blocking the Client Document Repository step for Priya Sharma. Auto-retry scheduled for 8/1 10:00 AM.", "source": "Monitoring Agent" }
+  },
+
+  "meta": { "depts": ["All", "Tax", "Audit", "Law"], "teams": ["All", "IT", "Admin", "Security"], "roles": ["All", "Tax", "Audit", "Law"] },
+
+  "users": [ { "id": 1, "email": "admin@gmail.com", "password": "admin@123", "name": "HR Admin", "role": "hr" } ]
+}
