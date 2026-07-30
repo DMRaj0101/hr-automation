@@ -300,3 +300,4 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
         "functional_items": len(plan["functional_items"]),
         "mock_items": len(plan["mock_items"]),
     }
+
