@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useOnboardingDetail } from "@/hooks/useOnboardingDetail";
@@ -24,14 +24,13 @@ export default function OnboardingDetailPage() {
   const { data: checklist } = useChecklist(id);
   const { systemHealth } = useMonitoring();
 
-  const [alerts, setAlerts] = useState<OnboardingAlert[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (detail.data) setAlerts(detail.data.alerts);
-  }, [detail.data]);
+  const alerts: OnboardingAlert[] =
+    detail.data?.alerts.filter((a) => !dismissedIds.has(a.id)) ?? [];
 
   const dismissAlert = (alertId: string) => {
-    setAlerts((prev) => prev.filter((a) => a.id !== alertId));
+    setDismissedIds((prev) => new Set(prev).add(alertId));
   };
 
   if (employee.isLoading || !employee.data) {

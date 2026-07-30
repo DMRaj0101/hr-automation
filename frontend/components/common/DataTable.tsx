@@ -12,7 +12,7 @@ export function DataTable<T>({
   data,
   gridTemplateColumns,
 }: {
-  columns: ColumnDef<T, any>[];
+  columns: ColumnDef<T, unknown>[];
   data: T[];
   gridTemplateColumns: string;
 }) {
