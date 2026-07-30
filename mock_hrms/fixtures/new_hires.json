@@ -2,19 +2,28 @@
   {
     "hrms_employee_id": "EMP-1001",
     "full_name": "Michael Turner",
-    "work_email": "havikeerthu@gmail.com",
+    "work_email": "michael.turner@vantara.com",
     "department": "Legal",
     "job_title": "Senior Attorney",
     "role": "Law",
     "location": "New York",
     "manager_name": "David Klein",
     "start_date": "2026-07-10",
-    "synced": true
+    "synced": true,
+    "documents_files": [
+      "../mock_employee_docs/EMP-1001/Michael_Turner_OfferLetter.pdf",
+      "../mock_employee_docs/EMP-1001/Michael_Turner_Resume.pdf",
+      "../mock_employee_docs/EMP-1001/Michael_Turner_BankDetails.pdf",
+      "../mock_employee_docs/EMP-1001/Michael_Turner_SSN_Scanned.pdf",
+      "../mock_employee_docs/EMP-1001/Michael_Turner_RelievingLetter.pdf",
+      "../mock_employee_docs/EMP-1001/Michael_Turner_AddressProof.pdf",
+      "../mock_employee_docs/EMP-1001/Michael_Turner_EducationalCertificate.pdf"
+    ]
   },
   {
     "hrms_employee_id": "EMP-1002",
     "full_name": "Rachel Bennett",
-    "work_email": "rachel.bennett@example.com",
+    "work_email": "rachel.bennett@vantara.com",
     "department": "Finance",
     "job_title": "Financial Analyst",
     "role": "Tax",
@@ -22,12 +31,21 @@
     "location": "Chennai",
     "manager_name": "Priya Nair",
     "start_date": "2026-07-08",
-    "synced": true
+    "synced": true,
+    "documents_files": [
+      "../mock_employee_docs/EMP-1002/Rachel_Bennett_OfferLetter.pdf",
+      "../mock_employee_docs/EMP-1002/Rachel_Bennett_Resume.pdf",
+      "../mock_employee_docs/EMP-1002/Rachel_Bennett_BankDetails.pdf",
+      "../mock_employee_docs/EMP-1002/Rachel_Bennett_AddressProof.pdf",
+      "../mock_employee_docs/EMP-1002/Rachel_Bennett_EducationalCertificate.pdf",
+      "../mock_employee_docs/EMP-1002/Rachel_Bennett_RelievingLetter.pdf",
+      "../mock_employee_docs/EMP-1002/Rachel_Bennett_SSN_Scanned.pdf"
+    ]
   },
   {
     "hrms_employee_id": "EMP-1003",
     "full_name": "David Coleman",
-    "work_email": "david.coleman@example.com",
+    "work_email": "david.coleman@vantara.com",
     "department": "IT",
     "job_title": "IT Administrator",
     "role": "IT Support",
@@ -35,24 +53,42 @@
     "location": "Bengaluru",
     "manager_name": "Divya Rao",
     "start_date": "2026-07-09",
-    "synced": true
+    "synced": true,
+    "documents_files": [
+      "../mock_employee_docs/EMP-1003/David_Coleman_OfferLetter.pdf",
+      "../mock_employee_docs/EMP-1003/David_Coleman_Resume.pdf",
+      "../mock_employee_docs/EMP-1003/David_Coleman_BankDetails.pdf",
+      "../mock_employee_docs/EMP-1003/David_Coleman_SSN_Scanned.pdf",
+      "../mock_employee_docs/EMP-1003/David_Coleman_RelievingLetter.pdf",
+      "../mock_employee_docs/EMP-1003/David_Coleman_AddressProof.pdf",
+      "../mock_employee_docs/EMP-1003/David_Coleman_EducationalCertificate.pdf"
+    ]
   },
   {
     "hrms_employee_id": "EMP-1004",
     "full_name": "Jessica Palmer",
-    "work_email": "jessica.palmer@example.com",
+    "work_email": "jessica.palmer@vantara.com",
     "department": "Marketing",
     "job_title": "Marketing Coordinator",
     "location": "Mumbai",
     "manager_name": "Arjun Kapoor",
     "start_date": "2026-07-11",
     "synced": true,
-    "role": null
+    "role": null,
+    "documents_files": [
+      "../mock_employee_docs/EMP-1004/Jessica_Palmer_OfferLetter.pdf",
+      "../mock_employee_docs/EMP-1004/Jessica_Palmer_Resume.pdf",
+      "../mock_employee_docs/EMP-1004/Jessica_Palmer_BankDetails.pdf",
+      "../mock_employee_docs/EMP-1004/Jessica_Palmer_SSN_Scanned.pdf",
+      "../mock_employee_docs/EMP-1004/Jessica_Palmer_RelievingLetter.pdf",
+      "../mock_employee_docs/EMP-1004/Jessica_Palmer_AddressProof.pdf",
+      "../mock_employee_docs/EMP-1004/Jessica_Palmer_EducationalCertificate.pdf"
+    ]
   },
   {
     "hrms_employee_id": "EMP-1005",
     "full_name": "Andrew Mitchell",
-    "work_email": "andrew.mitchell@example.com",
+    "work_email": "andrew.mitchell@vantara.com",
     "department": "Legal",
     "job_title": "Legal Intern",
     "role": "InvalidRoleXYZ",
@@ -60,12 +96,21 @@
     "location": "Chennai",
     "manager_name": "David Klein",
     "start_date": "2026-07-12",
-    "synced": true
+    "synced": true,
+    "documents_files": [
+      "../mock_employee_docs/EMP-1005/Andrew_Mitchell_OfferLetter.pdf",
+      "../mock_employee_docs/EMP-1005/Andrew_Mitchell_Resume.pdf",
+      "../mock_employee_docs/EMP-1005/Andrew_Mitchell_BankDetails.pdf",
+      "../mock_employee_docs/EMP-1005/Andrew_Mitchell_SSN_Scanned.pdf",
+      "../mock_employee_docs/EMP-1005/Andrew_Mitchell_RelievingLetter.pdf",
+      "../mock_employee_docs/EMP-1005/Andrew_Mitchell_AddressProof.pdf",
+      "../mock_employee_docs/EMP-1005/Andrew_Mitchell_EducationalCertificate.pdf"
+    ]
   },
   {
     "hrms_employee_id": "EMP-1006",
     "full_name": "Emily Sanders",
-    "work_email": "emily.sanders@example.com",
+    "work_email": "emily.sanders@vantara.com",
     "department": "Compliance",
     "job_title": "Compliance Officer",
     "role": "Audit",
@@ -73,12 +118,21 @@
     "location": "New York",
     "manager_name": "Priya Nair",
     "start_date": "2026-07-13",
-    "synced": true
+    "synced": true,
+    "documents_files": [
+      "../mock_employee_docs/EMP-1006/Emily_Sanders_OfferLetter.pdf",
+      "../mock_employee_docs/EMP-1006/Emily_Sanders_Resume.pdf",
+      "../mock_employee_docs/EMP-1006/Emily_Sanders_BankDetails.pdf",
+      "../mock_employee_docs/EMP-1006/Emily_Sanders_SSN_Scanned.pdf",
+      "../mock_employee_docs/EMP-1006/Emily_Sanders_RelievingLetter.pdf",
+      "../mock_employee_docs/EMP-1006/Emily_Sanders_AddressProof.pdf",
+      "../mock_employee_docs/EMP-1006/Emily_Sanders_EducationalCertificate.pdf"
+    ]
   },
   {
     "hrms_employee_id": "EMP-1007",
     "full_name": "Christopher Hayes",
-    "work_email": "christopher.hayes@example.com",
+    "work_email": "christopher.hayes@vantara.com",
     "department": "Compliance",
     "job_title": "Compliance Officer",
     "role": "Audit",
@@ -86,12 +140,21 @@
     "location": "New York",
     "manager_name": "Priya Nair",
     "start_date": "2026-07-14",
-    "synced": true
+    "synced": true,
+    "documents_files": [
+      "../mock_employee_docs/EMP-1007/Christopher_Hayes_OfferLetter.pdf",
+      "../mock_employee_docs/EMP-1007/Christopher_Hayes_Resume.pdf",
+      "../mock_employee_docs/EMP-1007/Christopher_Hayes_BankDetails.pdf",
+      "../mock_employee_docs/EMP-1007/Christopher_Hayes_SSN_Scanned.pdf",
+      "../mock_employee_docs/EMP-1007/Christopher_Hayes_RelievingLetter.pdf",
+      "../mock_employee_docs/EMP-1007/Christopher_Hayes_AddressProof.pdf",
+      "../mock_employee_docs/EMP-1007/Christopher_Hayes_EducationalCertificate.pdf"
+    ]
   },
   {
     "hrms_employee_id": "EMP-1008",
     "full_name": "Olivia Foster",
-    "work_email": "olivia.foster@example.com",
+    "work_email": "olivia.foster@vantara.com",
     "department": "Compliance",
     "job_title": "Compliance Officer",
     "role": "Audit",
@@ -99,12 +162,20 @@
     "location": "New York",
     "manager_name": "Priya Nair",
     "start_date": "2026-07-15",
-    "synced": true
+    "synced": true,
+    "documents_files": [
+      "../mock_employee_docs/EMP-1008/Olivia_Foster_OfferLetter.pdf",
+      "../mock_employee_docs/EMP-1008/Olivia_Foster_Resume.pdf",
+      "../mock_employee_docs/EMP-1008/Olivia_Foster_BankDetails.pdf",
+      "../mock_employee_docs/EMP-1008/Olivia_Foster_SSN_Scanned.pdf",
+      "../mock_employee_docs/EMP-1008/Olivia_Foster_AddressProof.pdf",
+      "../mock_employee_docs/EMP-1008/Olivia_Foster_EducationalCertificate.pdf"
+    ]
   },
   {
     "hrms_employee_id": "EMP-1009",
     "full_name": "Brandon Walsh",
-    "work_email": "brandon.walsh@example.com",
+    "work_email": "brandon.walsh@vantara.com",
     "department": "Compliance",
     "job_title": "Compliance Officer",
     "role": "Audit",
@@ -112,12 +183,20 @@
     "location": "New York",
     "manager_name": "Priya Nair",
     "start_date": "2026-07-16",
-    "synced": true
+    "synced": true,
+    "documents_files": [
+      "../mock_employee_docs/EMP-1009/Brandon_Walsh_OfferLetter.pdf",
+      "../mock_employee_docs/EMP-1009/Brandon_Walsh_Resume.pdf",
+      "../mock_employee_docs/EMP-1009/Brandon_Walsh_BankDetails.pdf",
+      "../mock_employee_docs/EMP-1009/Brandon_Walsh_SSN_Scanned.pdf",
+      "../mock_employee_docs/EMP-1009/Brandon_Walsh_AddressProof.pdf",
+      "../mock_employee_docs/EMP-1009/Brandon_Walsh_EducationalCertificate.pdf"
+    ]
   },
   {
     "hrms_employee_id": "EMP-1010",
     "full_name": "Natalie Reyes",
-    "work_email": "natalie.reyes@example.com",
+    "work_email": "natalie.reyes@vantara.com",
     "department": "Compliance",
     "job_title": "Compliance Officer",
     "role": "Audit",
@@ -125,6 +204,14 @@
     "location": "New York",
     "manager_name": "Priya Nair",
     "start_date": "2026-07-17",
-    "synced": true
+    "synced": true,
+    "documents_files": [
+      "../mock_employee_docs/EMP-1010/Natalie_Reyes_OfferLetter.pdf",
+      "../mock_employee_docs/EMP-1010/Natalie_Reyes_Resume.pdf",
+      "../mock_employee_docs/EMP-1010/Natalie_Reyes_BankDetails.pdf",
+      "../mock_employee_docs/EMP-1010/Natalie_Reyes_SSN_Scanned.pdf",
+      "../mock_employee_docs/EMP-1010/Natalie_Reyes_AddressProof.pdf",
+      "../mock_employee_docs/EMP-1010/Natalie_Reyes_EducationalCertificate.pdf"
+    ]
   }
 ]

@@ -28,7 +28,7 @@ from app.models import Employee, OnboardingTracker, AuditLog, ProvisioningRecord
 from app.agents.role_classifier import classify_role
 from app.agents.decision_agent import decide
 from app.agents import ticket_agent
-from app.integrations import keycloak_connector, mailu_connector, kimai_connector, snipeit_connector, openkm_connector
+from app.integrations import keycloak_connector, mailu_connector, kimai_connector, snipeit_connector, openkm_connector, hrms_connector
 from app import email_client
 from app.models import WelcomeEmail
 
@@ -84,26 +84,92 @@ def _resolve_role(db: Session, employee: Employee) -> str:
     return employee.role
 
 
-def _draft_and_queue_welcome_email(db: Session, employee: Employee):
-    """Kept from the previous version, unchanged -- PDD Section 6.2's I1
-    ("Onboarding request received" -> HR/Manager) and I2 ("Mailbox
-    created" -> new employee welcome email) both live here conceptually;
-    this drafts the I2-style welcome email. TODO: once
-    mailu_connector.create_mailbox() is implemented and returns a temp
-    password, thread it into this draft (see mailu_connector.py's
-    module docstring point 5)."""
+def _draft_and_queue_welcome_email(db: Session, employee: Employee, credentials: list[dict]):
+    """PDD Section 6.2's I1 ("Onboarding request received" -> HR/Manager)
+    and I2 ("Mailbox created" -> new employee welcome email) both live
+    here conceptually; this drafts the I2-style welcome email.
+
+    `credentials` is a list of {"system", "username", "password"} dicts
+    collected during provisioning (see the functional-items loop below)
+    -- currently populated by openkm_connector.create_workspace()'s
+    `openkm_username`/`temp_password` fields when a new OpenKM account
+    was created, and will be populated by mailu_connector.create_mailbox()
+    the same way once that connector is implemented.
+
+    SECURITY NOTE (flagging, not fixing here -- a product decision):
+    this writes temp passwords in plaintext into WelcomeEmail.body,
+    which then sits in the database and gets sent over
+    email_client.py's SMTP connection. That's a common-enough pattern
+    for temp/first-login passwords but not a best-practice one -- a
+    reset-link flow (employee sets their own password on first login)
+    would avoid ever having a real password at rest or in an email body
+    at all. Worth a real decision before this goes past POC/demo use,
+    not something this function should quietly decide on its own.
+    """
     existing = db.query(WelcomeEmail).filter(WelcomeEmail.employee_id == employee.id).first()
     if existing:
         return
     # TODO: this previously called an AI agent (welcome_email_agent.py,
     # removed) to draft subject/body. Either restore a similar draft
     # agent, or -- simpler, given this is a fixed-shape notification --
-    # just template it directly. Left as a plain placeholder for now:
+    # just template it directly. Left as a plain placeholder for now.
     subject = f"Welcome to the team, {employee.name}!"
-    body = f"Hi {employee.name},\n\nWelcome aboard! Your onboarding is underway.\n\nTODO: fill in login instructions once mailu_connector.create_mailbox() is implemented."
+    body = f"Hi {employee.name},\n\nWelcome aboard! Your onboarding is underway.\n"
+    if credentials:
+        body += "\nYour initial login credentials:\n"
+        for cred in credentials:
+            body += f"  - {cred['system']}: username '{cred['username']}', temporary password '{cred['password']}'\n"
+        body += "\nPlease log in and change these passwords as soon as possible.\n"
+    else:
+        body += "\nTODO: no login credentials were available yet when this was drafted -- either no Functional items generated one, or this ran before provisioning finished."
     db.add(WelcomeEmail(employee_id=employee.id, subject=subject, body=body, status="drafted"))
     db.commit()
+    _audit(db, employee.id, "Email Agent", "Welcome email drafted", f"{len(credentials)} credential(s) included")
     _audit(db, employee.id, "Email Agent", "Welcome email drafted", "")
+
+
+def _seed_openkm_documents(employee: Employee, folder_path: str) -> str:
+    """Fetches the employee's onboarding documents from the mock HRMS
+    and uploads them into their newly-created OpenKM folder. Best-effort
+    and non-fatal by design -- see openkm_connector.upload_employee_documents()'s
+    docstring: one bad file shouldn't undo an otherwise-successful
+    workspace creation. Returns a short summary string for the audit log.
+
+    Sensitive documents (SSN scans, bank details) are excluded by
+    default -- see integrations/hrms_connector.py's
+    SENSITIVE_DOCUMENT_MARKERS and its TODO; this is a judgment call
+    flagged for whoever owns document-retention policy, not something
+    decided quietly here.
+    """
+    try:
+        filenames = hrms_connector.list_employee_documents(employee.employee_id)
+    except Exception as e:
+        return f"Could not list documents from mock HRMS: {e}"
+
+    if not filenames:
+        return "No documents available to seed."
+
+    documents = []
+    for filename in filenames:
+        try:
+            content = hrms_connector.get_employee_document(employee.employee_id, filename)
+            documents.append((filename, content))
+        except Exception as e:
+            documents.append((filename, None))  # will show up as a fetch failure below, not silently dropped
+
+    to_upload = [(f, c) for f, c in documents if c is not None]
+    fetch_failures = [f for f, c in documents if c is None]
+
+    results = openkm_connector.upload_employee_documents(folder_path, to_upload)
+    ok = [r for r in results if r["error"] is None]
+    failed = [r for r in results if r["error"] is not None]
+
+    summary = f"Uploaded {len(ok)}/{len(filenames)} document(s)."
+    if fetch_failures:
+        summary += f" Failed to fetch from mock HRMS: {fetch_failures}."
+    if failed:
+        summary += f" Failed to upload: {[(r['filename'], r['error']) for r in failed]}."
+    return summary
 
 
 def run_onboarding(db: Session, employee_id: str) -> dict:
@@ -145,10 +211,14 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
     # record for the plan, and have a separate endpoint resume the rest
     # of this function. See MIGRATION_NOTES.md.
 
-    _draft_and_queue_welcome_email(db, employee)
+    # NOTE: welcome email is drafted AFTER provisioning below, not here --
+    # it needs to include any real login credentials (e.g. OpenKM's
+    # temp password) that provisioning generates. See the functional-items
+    # loop and _draft_and_queue_welcome_email()'s docstring.
 
     # --- Step 4: Downstream agents perform real provisioning ---
     _mark(db, employee_id, STEP_PROVISIONING, "running")
+    credentials = []  # collected from connector results below, threaded into the welcome email after this loop
     for item in plan["functional_items"]:
         record = ProvisioningRecord(
             employee_id=employee_id, provisioning_item=item["item"],
@@ -168,6 +238,26 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
             db.commit()
             _audit(db, employee_id, f"{item['agent_key'].title()} Agent",
                    f"Provisioned {item['item']}", result.get("detail", ""))
+            # Capture any freshly-issued login credentials for the welcome
+            # email -- currently only openkm_connector.create_workspace()
+            # returns these (temp_password is None on a reused/existing
+            # account, so skip in that case). TODO: mailu_connector once
+            # implemented should populate the same "username"/"password"
+            # keys under its own result dict for this to pick up.
+            if result.get("temp_password"):
+                credentials.append({
+                    "system": item["software_name"] or item["agent_key"],
+                    "username": result.get("openkm_username") or result.get("username") or employee.email,
+                    "password": result["temp_password"],
+                })
+            # Seed the new OpenKM workspace with the employee's onboarding
+            # documents (offer letter, resume, etc.) -- see
+            # _seed_openkm_documents()'s docstring. Only applies to the
+            # document_management item; other functional items have no
+            # equivalent step.
+            if item["agent_key"] == "document_management" and result.get("folder_path"):
+                seed_summary = _seed_openkm_documents(employee, result["folder_path"])
+                _audit(db, employee_id, "Document Management Agent", "Seeded documents", seed_summary)
         except NotImplementedError as e:
             # Expected until the connector is built -- log clearly rather
             # than silently failing, so it's obvious in the audit trail
@@ -189,6 +279,8 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
             # continues retrying per PDD Section 5 -- no further action
             # needed here.
     _mark(db, employee_id, STEP_PROVISIONING, "completed")
+
+    _draft_and_queue_welcome_email(db, employee, credentials)
 
     # --- Ticket Generation Agent for Mock items ---
     _mark(db, employee_id, STEP_TICKETING, "running")

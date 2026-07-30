@@ -37,6 +37,7 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import ProvisioningRecord, Ticket, AuditLog
 from app.agents import ticket_agent
+from app.integrations import openkm_connector
 
 POLL_INTERVAL_SECONDS = int(os.getenv("MONITORING_POLL_INTERVAL_SECONDS", "30"))
 MAX_RETRIES = 3
@@ -52,7 +53,7 @@ STATUS_CHECKERS = {
     "email": None,         # TODO: app.integrations.mailu_connector.get_mailbox_status
     "time_billing": None,  # TODO: app.integrations.kimai_connector.get_user_status
     "asset": None,         # TODO: app.integrations.snipeit_connector.get_asset_status
-    "document_management": None,  # TODO: app.integrations.openkm_connector.get_workspace_status
+    "document_management": openkm_connector.get_workspace_status,  # implemented
 }
 
 
@@ -84,14 +85,28 @@ def poll_once(db: Session):
         checker = STATUS_CHECKERS.get(record.agent_key)
         if checker is None:
             continue  # TODO: remove this skip once the matching connector is implemented
+        if not record.external_ref:
+            continue  # nothing to check yet -- e.g. orchestrator's NotImplementedError path left this unset
 
         try:
             result = checker(record.external_ref)
-            # TODO: interpret `result` per-system (shape varies by connector,
-            # see each connector's get_*_status docstring) and update
-            # record.status accordingly -- "completed" if confirmed done,
-            # leave as "in_progress" if still pending, "failed" if the
-            # system reports an error.
+            # All get_*_status functions are documented to return a dict
+            # with at least an "exists" key (see each connector's
+            # docstring) -- interpreted generically here so this works
+            # for every connector without a per-system branch. If a
+            # future connector's status shape needs richer handling
+            # (e.g. "enabled": False for a disabled-but-existing user),
+            # add that check here rather than a new special case.
+            if result.get("exists"):
+                if record.status != "completed":
+                    record.status = "completed"
+                    record.completed_at = datetime.datetime.utcnow()
+                    db.commit()
+            else:
+                # System reports the record no longer exists (e.g. folder
+                # was deleted out-of-band) -- treat like a failure so it
+                # goes through the same retry/ticket path below.
+                raise RuntimeError(f"{record.provisioning_item} no longer exists in the target system")
         except Exception as e:
             record.retry_count += 1
             record.last_attempted_at = datetime.datetime.utcnow()
