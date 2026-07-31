@@ -320,7 +320,7 @@ def _create_keycloak_user(username: str, employee_name: str, employee_email: str
         "firstName": first_name,
         "lastName": last_name,
         "enabled": True,
-        "credentials": [{"type": "password", "value": username, "temporary": False}],
+        "credentials": [{"type": "password", "value": username, "temporary": True}],
     }
 
     response = _request("POST", "/users", json=payload)
@@ -347,7 +347,12 @@ def create_user(employee_name: str, employee_email: str, role: str, scoped_role:
     - scoped_role=True: assigns the scoped Helpdesk Admin role instead
       (IT Support's "Helpdesk Admin Role (scoped)" provisioning item).
 
-    Returns {"external_ref": "<keycloak-user-uuid>", "detail": "..."}.
+    Returns {"external_ref": "<keycloak-user-uuid>", "username": "...",
+    "password": "...", "detail": "..."}. `password` is the same value set
+    as the initial credential in `_create_keycloak_user()` (username==
+    password per PDD) so the orchestrator can plumb it into the welcome
+    email -- see mailu_connector.create_mailbox()'s return shape for the
+    equivalent on the email side.
     Raises KeycloakConnectorError on any failure.
     """
     try:
@@ -359,6 +364,8 @@ def create_user(employee_name: str, employee_email: str, role: str, scoped_role:
 
         return {
             "external_ref": user_id,
+            "username": username,
+            "password": username,
             "detail": "Identity account created.",
         }
     except KeycloakConnectorError:

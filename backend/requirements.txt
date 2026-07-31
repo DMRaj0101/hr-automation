@@ -11,6 +11,7 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.12
 python-dotenv==1.0.1
+httpx==0.27.2
 
 # ==========================
 # TODO -- new integration dependencies, add as each connector is
@@ -19,4 +20,4 @@ python-dotenv==1.0.1
 # ==========================
 # python-keycloak            # Identity Agent -> Keycloak Admin REST API
 # requests (already above)   # Kimai + Snipe-IT both have plain REST/token APIs, no special client needed
-# TODO: confirm MailU integration approach (admin API vs mail/ CLI vs direct DB) -- see integrations/mailu_connector.py
+# httpx (already above)      # Identity Agent (Keycloak) + Email Agent (MailU) both use httpx directly
