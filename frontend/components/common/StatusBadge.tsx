@@ -1,11 +1,18 @@
-import { statusStyle } from "@/lib/utils";
+import { statusStyle, cn } from "@/lib/utils";
 
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status, className }: { status: string; className?: string }) {
   const { bg, text } = statusStyle(status);
   return (
     <span
-      className="inline-flex items-center whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold"
-      style={{ backgroundColor: bg, color: text }}
+      className={cn(
+        "inline-flex items-center rounded-full px-3 py-1 text-[13px] font-semibold",
+        className
+      )}
+      style={{
+        backgroundColor: bg,
+        color: text,
+        whiteSpace: "nowrap",
+      }}
     >
       {status}
     </span>
