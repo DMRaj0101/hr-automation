@@ -73,7 +73,7 @@ export default function LeftPanel() {
       color: "rgba(255,255,255,.95)",
     }}
   >
-    One system for every stage of the employee lifecycle.
+    One system. Every stage of the employee lifecycle.
   </h1>
 
   <div className="mt-12">

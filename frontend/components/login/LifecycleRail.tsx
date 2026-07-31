@@ -5,14 +5,14 @@ const STAGES = [
     id: "01",
     title: "Onboarding",
     description:
-      "Every new hire moves from signed offer to a confident first day, automatically.",
+      "Bringing new employee fully online.",
     active: true,
   },
   {
     id: "02",
     title: "Offboarding",
     description:
-      "When someone leaves, access, assets, and paperwork are wrapped up cleanly.",
+      "Coming Soon.",
     active: false,
   },
 ];

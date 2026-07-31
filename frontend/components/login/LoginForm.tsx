@@ -32,7 +32,7 @@ export default function LoginForm({
       </h2>
 
       <p className="mt-3 text-[17px] leading-7 text-[#D9A653]">
-        Sign in to access the Vantara AI orchestration dashboard.
+        Sign in to your Vantara AI orchestration dashboard.
       </p>
 
       {/* Form */}
