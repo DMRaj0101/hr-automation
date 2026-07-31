@@ -10,7 +10,6 @@ NOT included below -- see its module docstring (pending PDD Suggestion #1).
 """
 from dotenv import load_dotenv
 
-from backend.app.routers import agent_ticketing
 load_dotenv()
 
 import asyncio
@@ -23,7 +22,7 @@ from app import models  # noqa: F401 -- ensures models are registered before cre
 from app.ai_client import prewarm
 from app.routers import (
     auth, employees, hrms_sync, onboarding, dashboard, profile,
-    hr_assistant, tickets, monitoring
+    hr_assistant, tickets, monitoring,agent_ticketing
 )
 # TODO: from app.agents.monitoring_agent import monitoring_loop  -- uncomment
 # once at least one integrations/*_connector.py is implemented, see below.
