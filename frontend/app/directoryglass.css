@@ -1,190 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 :root {
-  --vantara-navy: #14213d;
-  --vantara-navy-deep: #0a1226;
-  --vantara-gold: #d9a653;
-  --vantara-bg: #fafaf9;
-  --vantara-border: #e5e7eb;
-  --vantara-muted-bg: #f9fafb;
-  --vantara-text-muted: #6b7280;
-  --vantara-text-faint: #9ca3af;
   --glass-bg: rgba(255, 255, 255, 0.88);
   --glass-bg-strong: rgba(255, 255, 255, 0.95);
   --glass-border: rgba(255, 255, 255, 0.72);
 }
 
-body {
-  background: var(--vantara-bg);
-  color: var(--vantara-navy);
-  font-family: "Inter", system-ui, sans-serif;
-}
-
-.card {
-  background: #fff;
-  border: 1px solid var(--vantara-border);
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  padding: 24px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-.card-sm {
-  background: #fff;
-  border: 1px solid var(--vantara-border);
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  padding: 20px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.card-sm:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-}
-
-.page-content {
-  padding: 40px 48px 56px;
-}
-
-.page-content-chat {
-  padding: 40px 48px 32px;
-}
-
-.page-title {
-  font-size: 36px;
-  font-weight: 700;
-  color: var(--vantara-navy);
-  margin-bottom: 6px;
-}
-
-.page-subtitle {
-  font-size: 15px;
-  color: var(--vantara-text-muted);
-  margin-bottom: 28px;
-}
-
-@keyframes pulse-dot {
-  0% {
-    box-shadow: 0 0 0 0 rgba(22, 101, 52, 0.45);
-  }
-  70% {
-    box-shadow: 0 0 0 8px rgba(22, 101, 52, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(22, 101, 52, 0);
-  }
-}
-
-.pulse-dot {
-  animation: pulse-dot 1.6s infinite;
-}
-
-/* ==========================================================================
-   Provisioning Checklist (card-grid + inline expand, no modal)
-   ========================================================================== */
-
-.checklist-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-@media (max-width: 640px) {
-  .checklist-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.checklist-card {
-  cursor: pointer;
-  border: 1px solid var(--vantara-border);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-}
-
-.checklist-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 26px rgba(20, 33, 61, 0.14);
-  border-color: var(--vantara-gold);
-}
-
-.checklist-hint {
-  font-size: 11px;
-  color: var(--vantara-text-faint);
-  opacity: 0.8;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.checklist-card:hover .checklist-hint {
-  opacity: 1;
-}
-
-.checklist-hint-chevron {
-  transition: transform 0.25s ease;
-}
-
-.checklist-hint-chevron.open {
-  transform: rotate(180deg);
-}
-
-@keyframes icon-tick {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-14deg); }
-  75% { transform: rotate(14deg); }
-}
-
-.icon-ticking {
-  animation: icon-tick 1.4s ease-in-out infinite;
-}
-
-.checklist-detail-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--vantara-border);
-  font-size: 13px;
-}
-
-.checklist-detail-row:last-of-type {
-  border-bottom: none;
-}
-
-.checklist-detail-row span:first-child {
-  color: var(--vantara-text-muted);
-}
-
-.checklist-detail-row span:last-child {
-  font-weight: 600;
-  text-align: right;
-  color: var(--vantara-navy);
-}
-
-.checklist-detail-mono {
-  margin-top: 10px;
-  padding: 10px 12px;
-  background: var(--vantara-muted-bg);
-  border: 1px solid var(--vantara-border);
-  border-radius: 8px;
-  font-family: Consolas, monospace;
-  font-size: 11px;
-  color: var(--vantara-text-muted);
-  word-break: break-all;
-}
-
-/* ==========================================================================
-   Employee Directory (scoped under .directory-*, formerly directoryglass.css)
-   ========================================================================== */
-
+/* PAGE BACKGROUND */
 .directory-bg {
   position: relative;
   height: 100%;
@@ -197,36 +17,43 @@ body {
   width: 100%;
   max-width: none !important;
   height: 100%;
-  padding: 12px !important;
+  padding: 24px !important;   /* 👈 global padding override */
 }
 
+/* MAIN PANEL */
 .directory-panel {
   position: relative;
   overflow: hidden;
   height: 100%;
   width: 100%;
   box-sizing: border-box;
-  border-radius: 20px;
+  border-radius: 24px;
   background: #fbfaf7;
-  padding: 0 !important;
-  border: 1px solid var(--vantara-border);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  padding: 16px !important;
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(#fbfaf7, #fbfaf7),
+    linear-gradient(135deg, #E5E0F0 0%, #D9D4E8 50%, #E0DCF0 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 4px 24px rgba(20, 33, 61, 0.06);
 }
 
 .directory-orb {
   display: none;
 }
 
+/* TOOLBAR */
 .directory-toolbar {
   position: relative;
   z-index: 5;
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   flex-wrap: wrap;
   width: 100%;
-  padding: 10px 14px;
+  padding: 12px 16px;   /* 18px 24px → 12px 16px */
   border-radius: 16px;
   background: #ffffff;
   border: 1px solid #E5E7EB;
@@ -237,7 +64,7 @@ body {
   flex: 1;
   min-width: 220px;
   max-width: 430px;
-  height: 44px;
+  height: 44px;   /* 50px → 44px */
   border-radius: 12px;
   background: #FAFAF9 !important;
   border: 1px solid #E5E7EB !important;
@@ -246,7 +73,7 @@ body {
 
 .directory-toolbar .directory-select {
   min-width: 160px;
-  height: 44px;
+  height: 44px;   /* 50px → 44px */
   border-radius: 12px;
   background: #ffffff !important;
   border: 1px solid #C8933F !important;
@@ -255,7 +82,7 @@ body {
 
 .directory-count-pill {
   margin-left: auto;
-  padding: 10px 20px;
+  padding: 10px 20px;   /* 12px 24px → 10px 20px */
   border-radius: 999px;
   background: #14213D;
   color: white;
@@ -266,6 +93,7 @@ body {
   box-shadow: 0 8px 18px rgba(20,33,61,.15);
 }
 
+/* TABLE CARD */
 .directory-card {
   position: relative;
   z-index: 2;
@@ -273,9 +101,9 @@ body {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  overflow-x: hidden;
-  scrollbar-gutter: stable;
-  margin-top: 8px;
+  overflow-x: hidden;         /* horizontal scroll venaam na */
+  scrollbar-gutter: stable;   /* 👈 scrollbar ku dedicated space create pannum */
+  margin-top: 14px;
   width: 100%;
   background: #ffffff !important;
   border: 1px solid #E5E7EB !important;
@@ -307,14 +135,13 @@ body {
 }
 
 .directory-th {
-  padding: 0;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: #8A8F9C;
   white-space: nowrap;
-  text-align: left;
+  text-align: left;      /* 👈 explicit left align */
 }
 
 .directory-table-row {
@@ -322,7 +149,7 @@ body {
   box-sizing: border-box;
   display: grid;
   align-items: center;
-  padding: 20px 24px;
+  padding: 20px 24px;    /* 18px → 20px, konjam extra breathing room */
   gap: 14px;
   cursor: pointer;
   border-bottom: 1px solid rgba(20,33,61,.06);
@@ -347,31 +174,12 @@ body {
 
 .directory-td {
   min-width: 0;
-  padding: 0;
   font-size: 14px;
   color: #1F2937;
   overflow: hidden;
-  text-align: left;
+  text-align: left;      /* 👈 explicit left align */
   display: flex;
-  align-items: center;
-}
-
-/* Excel-style column grid: vertical dividers + consistent baseline alignment */
-.directory-th,
-.directory-td {
-  display: flex;
-  align-items: center;
-}
-
-.directory-table-header > div,
-.directory-table-row > div {
-  border-right: 1px solid rgba(20, 33, 61, 0.06);
-  padding-right: 12px !important;
-}
-
-.directory-table-header > div:last-child,
-.directory-table-row > div:last-child {
-  border-right: none;
+  align-items: center;   /* vertical center, so badges/text row nடுவே varum */
 }
 
 .directory-col-name .font-medium {
@@ -402,11 +210,11 @@ body {
   font-size: 12px;
   font-weight: 700;
   white-space: normal;
-  text-align: center;
+  text-align: center;    /* badge kulla text mattum center */
   line-height: 1.3;
   word-break: break-word;
   display: inline-flex;
-  align-self: flex-start;
+  align-self: flex-start; /* badge itself left ah anchor aagum */
 }
 
 .directory-status-onboarding {
@@ -424,6 +232,14 @@ body {
   color: #2563EB;
 }
 
+.directory-td.directory-col-blockers {
+  text-align: center;
+  font-weight: 500;
+}
+
+.directory-th.directory-col-blockers {
+  text-align: center;
+}
 .directory-col-actions {
   display: flex;
   justify-content: flex-end;
@@ -447,7 +263,7 @@ body {
 .directory-progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: #D9A653;
+  background: #D9A653;   /* gradient illama, solid gold */
   transition: width .35s ease;
 }
 
@@ -468,6 +284,14 @@ body {
   color: #100236;
 }
 
+.directory-view-link svg {
+  transition: transform .25s ease;
+}
+
+.directory-view-link:hover svg {
+  transform: translateX(4px);
+}
+
 .directory-card::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -475,13 +299,14 @@ body {
 
 .directory-card::-webkit-scrollbar-track {
   background: transparent;
-  margin: 20px 0;
+  margin: 20px 0;   /* top/bottom scrollbar track ku margin */
 }
+
 
 .directory-card::-webkit-scrollbar-thumb {
   background: rgba(169, 118, 42, .30);
   border-radius: 999px;
-  border: 2px solid #ffffff;
+  border: 2px solid #ffffff;   /* white border — scrollbar konjam thinner ah, floating ah kaanum */
   background-clip: padding-box;
 }
 
@@ -495,6 +320,7 @@ body {
   scrollbar-color: rgba(169,118,42,.45) transparent;
 }
 
+/* MOBILE */
 @media (max-width: 860px) {
   .directory-card {
     background: transparent !important;
@@ -520,10 +346,6 @@ body {
     background: #ffffff;
     border: 1px solid #E5E7EB;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  }
-
-  .directory-table-row > div {
-    border-right: none;
   }
 
   .directory-col-actions {
@@ -574,7 +396,6 @@ body {
     text-align: center;
   }
 }
-
 .directory-pagination {
   display: flex;
   align-items: center;
@@ -663,45 +484,5 @@ body {
   .directory-pagination-summary {
     width: 100%;
     text-align: center;
-  }
-}
-
-/* ==========================================================================
-   View Transitions — page navigation slide-from-right effect
-   (used by EmployeeTable's goToProfile via document.startViewTransition)
-   ========================================================================== */
-
-::view-transition-group(root) {
-  animation-duration: 0.7s;
-  animation-timing-function: cubic-bezier(.16, 1, .3, 1);
-}
-
-::view-transition-old(root) {
-  animation: slide-out-left 0.7s cubic-bezier(.16, 1, .3, 1) both;
-}
-
-::view-transition-new(root) {
-  animation: slide-in-right 0.7s cubic-bezier(.16, 1, .3, 1) both;
-}
-
-@keyframes slide-out-left {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(-40px);
-    opacity: 0;
-  }
-}
-
-@keyframes slide-in-right {
-  from {
-    transform: translateX(100%);
-    opacity: 0.6;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
   }
 }
