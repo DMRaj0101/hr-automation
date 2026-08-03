@@ -1,6 +1,7 @@
 "use client";
 
 import { Logo } from "@/components/common/Logo";
+import { VantaraMark } from "@/components/common/VantaraMark";
 import AnimatedBackground from "./AnimatedBackground";
 import LifecycleRail from "./LifecycleRail";
 
@@ -28,59 +29,59 @@ export default function LeftPanel() {
       {/* Content */}
       <div className="relative z-10 flex h-full flex-col justify-between px-20 py-14">
 
-       {/* ================= Header ================= */}
+        {/* ================= Header ================= */}
 
-<div className="pt-2">
+        <div className="pt-2">
 
-  <div className="flex items-center gap-5">
+          <div className="flex items-center gap-5">
 
-    <div className="relative">
+            <div className="relative">
 
-      {/* Glow */}
-      <div className="absolute inset-0 rounded-lg bg-[#D9A653] blur-xl opacity-40 animate-pulse" />
+              {/* Logo */}
+              <div className="relative animate-float">
+                <VantaraMark className="h-12 w-12 drop-shadow-lg" />
+              </div>
 
-      {/* Logo Box */}
-      <div className="relative h-12 w-12 rounded-md bg-[#D9A653] shadow-xl shadow-[#D9A653]/40 animate-float" />
+            </div>
 
-    </div>
+            <div>
 
-    <div>
+              <h2 className="text-[30px] font-extrabold tracking-[0.22em] text-white">
+                VANTARA
+              </h2>
 
-      <h2 className="text-[30px] font-extrabold tracking-[0.22em] text-white">
-        VANTARA
-      </h2>
+              <p
+                className="mt-1 uppercase text-[13px] font-semibold tracking-[0.45em]"
+                style={{ color: "#D9A653" }}
+              >
+                PEOPLE OPERATIONS PLATFORM
+              </p>
 
-      <p
-        className="mt-1 uppercase text-[13px] font-semibold tracking-[0.45em]"
-        style={{ color: "#D9A653" }}
-      >
-        PEOPLE OPERATIONS PLATFORM
-      </p>
+            </div>
 
-    </div>
+          </div>
 
-  </div>
+        </div>
 
-</div>
+        {/* ================= Hero ================= */}
 
-       {/* ================= Hero ================= */}
+        <div className="-mt-2">
 
-<div className="-mt-2">
+          <h1
+            className="text-[18px] font-normal leading-[40px] text-white whitespace-nowrap"
+            style={{
+              color: "rgba(255,255,255,.95)",
+            }}
+          >
 
-  <h1
-    className="text-[18px] font-normal leading-[40px] text-white whitespace-nowrap"
-    style={{
-      color: "rgba(255,255,255,.95)",
-    }}
-  >
-    One system. Every stage of the employee lifecycle.
-  </h1>
+            One system. Every stage of the employee lifecycle.
+          </h1>
 
-  <div className="mt-12">
-    <LifecycleRail />
-  </div>
+          <div className="mt-12">
+            <LifecycleRail />
+          </div>
 
-</div>
+        </div>
 
         {/* ================= Footer ================= */}
 

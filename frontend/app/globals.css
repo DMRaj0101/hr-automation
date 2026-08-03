@@ -665,3 +665,43 @@ body {
     text-align: center;
   }
 }
+
+/* ==========================================================================
+   View Transitions — page navigation slide-from-right effect
+   (used by EmployeeTable's goToProfile via document.startViewTransition)
+   ========================================================================== */
+
+::view-transition-group(root) {
+  animation-duration: 0.7s;
+  animation-timing-function: cubic-bezier(.16, 1, .3, 1);
+}
+
+::view-transition-old(root) {
+  animation: slide-out-left 0.7s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+::view-transition-new(root) {
+  animation: slide-in-right 0.7s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@keyframes slide-out-left {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-40px);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

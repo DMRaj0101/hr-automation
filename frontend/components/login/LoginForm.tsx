@@ -31,12 +31,16 @@ export default function LoginForm({
         Welcome
       </h2>
 
-      <p className="mt-3 text-[17px] leading-7 text-[#D9A653]">
-        Sign in to your Vantara AI orchestration dashboard.
+      <p className="mt-3 text-[13px] font-semibold uppercase leading-6 tracking-[0.15em] text-[#D9A653]">
+        Sign in to your
+        Vantara Dashboard
+        
       </p>
 
+      <div className="mt-4 h-px w-16 bg-[#D9A653]/40" />
+
       {/* Form */}
-      <form onSubmit={onSubmit} className="mt-4 space-y-4">
+      <form onSubmit={onSubmit} className="mt-6 space-y-4">
         {/* Email */}
         <div>
           <label className="mb-3 block text-sm font-semibold text-[#14213D]">

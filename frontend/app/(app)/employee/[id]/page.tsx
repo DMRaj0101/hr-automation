@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ServerCog } from "lucide-react";
 import { useEmployee, useChecklist } from "@/hooks/useEmployee";
 import { ProfileHeader } from "@/components/employee/ProfileHeader";
 import { InfoCard } from "@/components/employee/InfoCard";
@@ -83,16 +84,21 @@ export default function EmployeeProfilePage() {
           />
         </div>
 
-        <div className="ep-section-title">
-          <h2>
-            <span className="ep-title-icon">⚡</span> Provisioning Checklist
-          </h2>
-          <span className="ep-counter">
-            {doneCount} / {totalCount} complete
-          </span>
-        </div>
+        <div className="ep-glass ep-checklist-card">
+          <div className="ep-section-title">
+            <h2>
+              <span className="ep-title-icon">
+                <ServerCog size={16} strokeWidth={2.4} />
+              </span>
+              Provisioning Checklist
+            </h2>
+            <span className="ep-counter">
+              {doneCount} / {totalCount} complete
+            </span>
+          </div>
 
-        <ProvisioningChecklist items={checklist ?? []} />
+          <ProvisioningChecklist items={checklist ?? []} />
+        </div>
       </div>
     </div>
   );
@@ -209,6 +215,45 @@ const epStyles = `
   font-size:13px;-webkit-text-fill-color:initial;
 }
 .ep-counter{color:var(--ep-txt-dim);font-size:13px}
+
+/* ================= Provisioning Checklist wrapper card ================= */
+.ep-checklist-card{
+  padding:24px 26px 26px;
+  margin-bottom:24px;
+  transition:transform .3s ease;
+}
+
+.ep-checklist-card .ep-section-title{
+  margin:0 0 18px;
+  padding-bottom:16px;
+  border-bottom:1px solid var(--ep-card-brd);
+}
+
+.ep-checklist-card .ep-section-title h2{
+  background:none;
+  -webkit-background-clip:unset;
+  background-clip:unset;
+  color:var(--ep-card-txt);
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:-0.01em;
+}
+
+.ep-checklist-card .ep-title-icon{
+  width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(135deg,var(--ep-copper),var(--ep-coral));
+  color:#fff;
+  box-shadow:0 3px 10px rgba(232,163,61,.35);
+}
+
+.ep-checklist-card .ep-counter{
+  font-weight:700;
+  font-size:12.5px;
+  color:var(--ep-copper-soft);
+  background:rgba(232,163,61,.1);
+  padding:4px 10px;
+  border-radius:999px;
+}
 
 @media(max-width:640px){.ep-grid2{grid-template-columns:1fr}}
 `;

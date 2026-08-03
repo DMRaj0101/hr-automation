@@ -1,6 +1,7 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { LogOut, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { Avatar } from "@/components/common/Avatar";
@@ -17,11 +18,24 @@ export function Header({
 }) {
   const { user, logout } = useAuthStore();
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     logout();
     router.push("/login");
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-vantara-border bg-white px-6">
@@ -51,29 +65,33 @@ export function Header({
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-3 shrink-0">
-        <Avatar
-          name={user?.name ?? "HR Admin"}
-          size={34}
-        />
-
-        <div className="leading-tight">
-          <div className="text-sm font-semibold text-vantara-navy">
-            {user?.name ?? "HR Admin"}
-          </div>
-
-          <div className="text-xs text-vantara-text-muted">
-            {user?.email}
-          </div>
-        </div>
-
+      <div className="relative flex items-center gap-3 shrink-0" ref={menuRef}>
         <button
-          onClick={handleLogout}
-          aria-label="Log out"
-          className="rounded-xl p-2 text-vantara-text-muted transition-all duration-200 hover:bg-[#F5F7FA] hover:text-vantara-navy"
+          onClick={() => setMenuOpen((prev) => !prev)}
+          className="flex items-center gap-2 rounded-xl p-1 transition-all duration-200 hover:bg-[#F5F7FA]"
         >
-          <LogOut size={18} />
+          <Avatar name={user?.name ?? "HR Admin"} size={34} />
         </button>
+
+        {menuOpen && (
+          <div className="absolute right-0 top-12 z-50 w-48 rounded-xl border border-vantara-border bg-white py-2 shadow-lg">
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-vantara-navy hover:bg-[#F5F7FA]"
+            >
+              <User size={16} />
+              HR Admin
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-vantara-navy hover:bg-[#F5F7FA]"
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

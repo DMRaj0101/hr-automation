@@ -22,7 +22,17 @@ export function EmployeeTable({
   const isMobile = useMediaQuery("(max-width: 640px)");
   const isTablet = useMediaQuery("(max-width: 1024px)");
 
-  const goToProfile = (id: string) => router.push(`/employee/${id}`);
+  const goToProfile = (id: string) => {
+    const navigate = () => router.push(`/employee/${id}`);
+
+    // @ts-ignore - startViewTransition isn't in all TS lib targets yet
+    if (typeof document !== "undefined" && document.startViewTransition) {
+      // @ts-ignore
+      document.startViewTransition(navigate);
+    } else {
+      navigate();
+    }
+  };
 
   // ---------- MOBILE: card list ----------
   if (isMobile) {
@@ -81,7 +91,9 @@ export function EmployeeTable({
   const columns: ColumnDef<Employee>[] = [
     {
       id: "name",
-      header: "Employee",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Employee</div>
+      ),
       accessorKey: "name",
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
@@ -100,26 +112,34 @@ export function EmployeeTable({
 
     {
       id: "dept",
-      header: "Department",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Department</div>
+      ),
       accessorKey: "dept",
       cell: ({ row }) => (
-        <span className="text-[13px] text-vantara-navy">{row.original.dept}</span>
+        <div className="flex w-full items-center justify-center">
+          <span className="text-[13px] text-vantara-navy">{row.original.dept}</span>
+        </div>
       ),
     },
 
     {
       id: "type",
-      header: "Type",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Employee Category</div>
+      ),
       accessorKey: "type",
       cell: ({ row }) => {
         const { bg, text } = employeeTypeStyle(row.original.type);
         return (
-          <span
-            className="inline-flex items-center rounded-full px-3 py-1 text-[13px] font-semibold whitespace-nowrap"
-            style={{ backgroundColor: bg, color: text }}
-          >
-            {employeeTypeLabel(row.original.type)}
-          </span>
+          <div className="flex w-full items-center justify-center">
+            <span
+              className="inline-flex items-center rounded-full px-3 py-1 text-[13px] font-semibold whitespace-nowrap"
+              style={{ backgroundColor: bg, color: text }}
+            >
+              {employeeTypeLabel(row.original.type)}
+            </span>
+          </div>
         );
       },
     },
@@ -129,12 +149,16 @@ export function EmployeeTable({
       ? [
           {
             id: "manager",
-            header: "Manager",
+            header: () => (
+              <div className="flex w-full items-center justify-center text-gray-700">Manager</div>
+            ),
             accessorKey: "manager",
             cell: ({ row }: { row: { original: Employee } }) => (
-              <span className="block truncate text-[13px] font-medium">
-                {row.original.manager}
-              </span>
+              <div className="flex w-full items-center justify-center">
+                <span className="truncate text-[13px] font-medium">
+                  {row.original.manager}
+                </span>
+              </div>
             ),
           } as ColumnDef<Employee>,
         ]
@@ -142,36 +166,50 @@ export function EmployeeTable({
 
     {
       id: "status",
-      header: "Status",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Employment Lifecycle</div>
+      ),
       accessorKey: "status",
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      cell: ({ row }) => (
+        <div className="flex w-full items-center justify-center">
+          <StatusBadge status={row.original.status} />
+        </div>
+      ),
     },
 
     {
       id: "progress",
-      header: "Progress",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Progress</div>
+      ),
       accessorKey: "progress",
       cell: ({ row }) => (
-        <span className="text-[13px] font-medium text-vantara-navy">
-          {row.original.progress}%
-        </span>
+        <div className="flex w-full items-center justify-center">
+          <span className="text-[13px] font-medium text-vantara-navy">
+            {row.original.progress}%
+          </span>
+        </div>
       ),
     },
 
     {
       id: "actions",
-      header: "",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Action</div>
+      ),
       cell: ({ row }) => (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            goToProfile(row.original.id);
-          }}
-          className="rounded-lg bg-vantara-navy px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-vantara-navy/90"
-        >
-          View
-        </button>
+        <div className="flex w-full items-center justify-center">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              goToProfile(row.original.id);
+            }}
+            className="rounded-lg bg-vantara-navy px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-vantara-navy/90"
+          >
+            View
+          </button>
+        </div>
       ),
     },
   ];

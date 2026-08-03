@@ -1,422 +1,407 @@
 "use client";
 
 export default function AnimatedBackground() {
+  const strands = Array.from({ length: 34 }).map((_, i) => {
+    const offset = i * 6;
+
+    return (
+      <path
+        key={i}
+        d={`
+          M -80 ${350 + offset}
+          C 80 ${330 + offset},
+            240 ${430 + offset},
+            430 ${260 + offset}
+          S 640 20,
+            760 -40
+        `}
+        stroke="url(#goldWave)"
+        strokeWidth={1.6 - i * 0.035}
+        opacity={1 - i * 0.028}
+        fill="none"
+      />
+    );
+  });
+
   return (
     <>
       {/* Top Left Golden Glow */}
       <div
-        className="pointer-events-none absolute -top-40 -left-40 h-[420px] w-[420px] rounded-full blur-[120px] glow-gold"
+        className="pointer-events-none absolute -top-40 -left-40 h-[420px] w-[420px] rounded-full glow-gold"
         style={{
           background: "rgba(217,166,83,.18)",
+          filter: "blur(120px)",
         }}
       />
 
       {/* Bottom Right Blue Glow */}
       <div
-        className="pointer-events-none absolute -bottom-44 -right-44 h-[420px] w-[420px] rounded-full blur-[120px] glow-blue"
+        className="pointer-events-none absolute -bottom-44 -right-44 h-[420px] w-[420px] rounded-full glow-blue"
         style={{
           background: "rgba(59,130,246,.18)",
+          filter: "blur(120px)",
         }}
       />
 
-
-      {/* Floating Gold V Logo */}
+      {/* Logo */}
       <div className="floating-square">
         <div className="floating-square-inner">
-          <div className="logo-v">
-            V
-          </div>
+          <div className="shine"></div>
+          <div className="logo-v">V</div>
         </div>
       </div>
 
-
-      {/* Gold Particle */}
+      {/* Particles */}
       <div className="particle particle-gold"></div>
-
-      {/* Cyan Particle */}
       <div className="particle particle-cyan"></div>
-
-      {/* White Particle */}
       <div className="particle particle-white"></div>
 
-      {/* Diagonal Accent Line */}
-      <div className="accent-line"></div>
+      {/* Sparkles */}
+      <span className="spark s1"></span>
+      <span className="spark s2"></span>
+      <span className="spark s3"></span>
+      <span className="spark s4"></span>
+
+     
+
+      {/* Bottom Right Mesh Wave */}
+      <div className="wave-wrap pointer-events-none">
+        <svg
+          viewBox="0 0 760 520"
+          className="wave-svg"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient
+              id="goldWave"
+              x1="0%"
+              y1="100%"
+              x2="100%"
+              y2="0%"
+            >
+              <stop offset="0%" stopColor="transparent" />
+              <stop offset="50%" stopColor="#D9A653" />
+              <stop offset="100%" stopColor="transparent" />
+            </linearGradient>
+          </defs>
+
+          {strands}
+
+          <circle cx="620" cy="20" r="2.6" fill="#D9A653">
+            <animate
+              attributeName="opacity"
+              values=".3;1;.3"
+              dur="2.5s"
+              repeatCount="indefinite"
+            />
+          </circle>
+        </svg>
+      </div>
+
+      <style jsx>{`.glow-gold {
+  animation: glowGold 8s ease-in-out infinite;
+}
+
+.glow-blue {
+  animation: glowBlue 10s ease-in-out infinite;
+}
+
+@keyframes glowGold {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.45;
+  }
+}
+
+@keyframes glowBlue {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.18;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.35;
+  }
+}
+
+/* ---------------- Logo ---------------- */
+
+.floating-square {
+  position: absolute;
+  top: 70px;
+  left: 70px;
+  z-index: 20;
+  animation: floatSquare 6s ease-in-out infinite;
+}
+
+.floating-square-inner {
+  position: relative;
+
+  width: 72px;
+  height: 72px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 18px;
+
+  background: #d9a653;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 0 25px rgba(217,166,83,.45),
+    0 0 70px rgba(217,166,83,.18);
 
+  animation: logoGlow 5s ease-in-out infinite;
+}
 
+.logo-v {
+  position: relative;
+  z-index: 2;
 
-      <style jsx>{`
+  color: #14213d;
 
-        .glow-gold {
-          animation: glowGold 8s ease-in-out infinite;
-        }
+  font-size: 46px;
+  font-weight: 900;
 
+  font-family: Arial, Helvetica, sans-serif;
 
-        .glow-blue {
-          animation: glowBlue 10s ease-in-out infinite;
-        }
+  animation: logoPulse 5s ease-in-out infinite;
+}
 
+.shine{
+  position:absolute;
 
+  top:-30%;
+  left:-160%;
 
-        @keyframes glowGold {
-          0%,
-          100% {
-            transform: scale(1);
-            opacity: .25;
-          }
+  width:55%;
+  height:180%;
 
-          50% {
-            transform: scale(1.15);
-            opacity: .45;
-          }
-        }
+  background:linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.65),
+    transparent
+  );
 
+  transform:rotate(25deg);
 
+  animation:shine 5s linear infinite;
+}
 
-        @keyframes glowBlue {
-          0%,
-          100% {
-            transform: scale(1);
-            opacity: .18;
-          }
+@keyframes shine{
+  from{
+    left:-160%;
+  }
+  to{
+    left:180%;
+  }
+}
 
-          50% {
-            transform: scale(1.12);
-            opacity: .35;
-          }
-        }
+@keyframes logoGlow{
+  0%,100%{
+    box-shadow:
+      0 0 25px rgba(217,166,83,.45),
+      0 0 60px rgba(217,166,83,.15);
+  }
 
+  50%{
+    box-shadow:
+      0 0 45px rgba(217,166,83,.8),
+      0 0 90px rgba(217,166,83,.25);
+  }
+}
 
+@keyframes logoPulse{
+  0%,100%{
+    transform:scale(1);
+  }
 
+  50%{
+    transform:scale(1.06);
+  }
+}
 
-        /* V Logo Position */
-        .floating-square {
-          position: absolute;
+@keyframes floatSquare{
+  0%,100%{
+    transform:translateY(0px);
+  }
 
-          top: 70px;
-          left: 70px;
+  50%{
+    transform:translateY(-10px);
+  }
+}
 
-          animation: floatSquare 5s ease-in-out infinite;
+/* ---------------- Particles ---------------- */
 
-          z-index: 20;
-        }
+.particle{
+  position:absolute;
+  border-radius:999px;
 
+  animation:floatParticle 8s ease-in-out infinite;
+}
 
+.particle-gold{
+  top:120px;
+  right:120px;
 
+  width:8px;
+  height:8px;
 
-        /* Gold Square */
-        .floating-square-inner {
+  background:#D9A653;
 
-          width: 70px;
-          height: 70px;
+  box-shadow:0 0 14px #D9A653;
+}
 
-          border-radius: 16px;
+.particle-cyan{
+  bottom:140px;
+  left:80px;
 
-          background: #d9a653;
+  width:6px;
+  height:6px;
 
+  background:#42C6D8;
 
-          display: flex;
-          align-items: center;
-          justify-content: center;
+  box-shadow:0 0 12px #42C6D8;
 
+  animation-delay:2s;
+}
 
-          position: relative;
+.particle-white{
+  bottom:70px;
+  right:190px;
 
+  width:5px;
+  height:5px;
 
-          box-shadow:
-            0 0 25px rgba(217,166,83,.55),
-            0 0 60px rgba(217,166,83,.25);
+  background:white;
 
-        }
+  opacity:.7;
 
+  animation-delay:4s;
+}
 
+@keyframes floatParticle{
 
+  0%,100%{
+    transform:translateY(0);
+    opacity:.45;
+  }
 
+  50%{
+    transform:translateY(-20px);
+    opacity:1;
+  }
 
-        /* Capital V */
-        .logo-v {
+}
 
-          width: 100%;
-          height: 100%;
+/* ---------------- Sparkles ---------------- */
 
+.spark{
 
-          display: flex;
-          align-items: center;
-          justify-content: center;
+  position:absolute;
 
+  width:4px;
+  height:4px;
 
-          font-size: 44px;
+  border-radius:999px;
 
-          font-weight: 900;
+  background:#D9A653;
 
-          line-height: 1;
+  box-shadow:0 0 12px #D9A653;
 
+  animation:twinkle 3s infinite;
+}
 
-          color: #14213d;
+.s1{
+  top:110px;
+  left:240px;
+}
 
+.s2{
+  top:190px;
+  left:330px;
+  animation-delay:1s;
+}
 
-          font-family: Arial, Helvetica, sans-serif;
+.s3{
+  bottom:170px;
+  right:220px;
+  animation-delay:2s;
+}
 
+.s4{
+  bottom:80px;
+  right:110px;
+  animation-delay:1.5s;
+}
 
-          position: relative;
+@keyframes twinkle{
 
-          z-index: 50;
+  0%,100%{
+    opacity:.2;
+    transform:scale(.6);
+  }
 
+  50%{
+    opacity:1;
+    transform:scale(1.8);
+  }
 
-          text-shadow:
-            0 2px 8px rgba(0,0,0,.35);
+}
 
 
-          animation: logoPulse 5s ease-in-out infinite;
 
-        }
+/* ---------------- Mesh Wave ---------------- */
 
+.wave-wrap{
 
+  position:absolute;
 
+  right:-140px;
+  bottom:-120px;
 
+  width:760px;
+  height:540px;
 
-        @keyframes logoPulse {
+  pointer-events:none;
+}
 
-          0%,
-          100% {
+.wave-svg{
 
-            transform: scale(1);
+  width:100%;
+  height:100%;
 
-            opacity: .95;
+  opacity:.95;
 
-          }
+  animation:waveFloat 9s ease-in-out infinite;
+}
 
+@keyframes waveFloat{
 
-          50% {
+  0%,100%{
+    transform:
+      translate(0,0)
+      scale(1);
+  }
 
-            transform: scale(1.08);
+  50%{
+    transform:
+      translate(-8px,-6px)
+      scale(1.02);
+  }
 
-            opacity: 1;
-
-          }
-
-        }
-
-
-
-
-
-
-        @keyframes floatSquare {
-
-          0%,
-          100% {
-
-            transform: translateY(0px);
-
-          }
-
-
-          50% {
-
-            transform: translateY(-8px);
-
-          }
-
-        }
-
-
-
-
-
-
-
-        /* Particles */
-
-        .particle {
-
-          position: absolute;
-
-          border-radius: 9999px;
-
-          animation: floatParticle 8s ease-in-out infinite;
-
-        }
-
-
-
-
-
-        .particle-gold {
-
-          top: 120px;
-
-          right: 120px;
-
-
-          width: 8px;
-
-          height: 8px;
-
-
-          background: #d9a653;
-
-
-          box-shadow: 0 0 12px #d9a653;
-
-        }
-
-
-
-
-
-        .particle-cyan {
-
-          bottom: 140px;
-
-          left: 80px;
-
-
-          width: 6px;
-
-          height: 6px;
-
-
-          background: #42c6d8;
-
-
-          box-shadow: 0 0 10px #42c6d8;
-
-
-          animation-delay: 2s;
-
-        }
-
-
-
-
-
-
-        .particle-white {
-
-          bottom: 60px;
-
-          right: 180px;
-
-
-          width: 5px;
-
-          height: 5px;
-
-
-          background: rgba(255,255,255,.7);
-
-
-          animation-delay: 4s;
-
-        }
-
-
-
-
-
-
-        @keyframes floatParticle {
-
-          0%,
-          100% {
-
-            transform: translateY(0);
-
-            opacity: .5;
-
-          }
-
-
-          50% {
-
-            transform: translateY(-20px);
-
-            opacity: 1;
-
-          }
-
-        }
-
-
-
-
-
-
-
-
-        /* Accent Line */
-
-        .accent-line {
-
-          position: absolute;
-
-
-          top: 120px;
-
-          left: -100px;
-
-
-          width: 420px;
-
-          height: 1px;
-
-
-          background: linear-gradient(
-
-            90deg,
-
-            transparent,
-
-            rgba(217,166,83,.45),
-
-            transparent
-
-          );
-
-
-          transform: rotate(-18deg);
-
-
-          animation: moveLine 6s linear infinite;
-
-        }
-
-
-
-
-
-
-
-        @keyframes moveLine {
-
-
-          0% {
-
-            transform: translateX(-40px) rotate(-18deg);
-
-          }
-
-
-          50% {
-
-            transform: translateX(40px) rotate(-18deg);
-
-          }
-
-
-          100% {
-
-            transform: translateX(-40px) rotate(-18deg);
-
-          }
-
-
-        }
-
-
-
-      `}</style>
-
+}`}</style>
     </>
   );
 }

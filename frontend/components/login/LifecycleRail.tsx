@@ -4,15 +4,13 @@ const STAGES = [
   {
     id: "01",
     title: "Onboarding",
-    description:
-      "Bringing new employee fully online.",
+    description: "Bringing new employee fully online.",
     active: true,
   },
   {
     id: "02",
     title: "Offboarding",
-    description:
-      "Coming Soon.",
+    description: "Coming Soon.",
     active: false,
   },
 ];
@@ -50,7 +48,12 @@ export default function LifecycleRail() {
 
             {/* Content */}
             <div className="pt-[2px]">
-              <h3 className="text-[18px] font-semibold text-white">
+              <h3
+                className="text-[18px] font-semibold"
+                style={{
+                  color: stage.active ? "#D9A653" : "#42C6D8",
+                }}
+              >
                 {stage.title}
               </h3>
 
@@ -91,16 +94,13 @@ export default function LifecycleRail() {
             opacity: 0;
             transform: scale(0.5);
           }
-
           10% {
             opacity: 1;
             transform: scale(1);
           }
-
           90% {
             opacity: 1;
           }
-
           100% {
             top: calc(100% - 6px);
             opacity: 0;
