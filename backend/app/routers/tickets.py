@@ -33,6 +33,7 @@ def list_tickets(team: str = None, status: str = None, db: Session = Depends(get
             "software_name": t.software_name, "assigned_team": t.assigned_team,
             "status": t.status, "notes": t.notes, "created_at": t.created_at,
             "status_changed_at": t.status_changed_at, "closed_at": t.closed_at,
+            "sla_flagged_at": t.sla_flagged_at,
         }
         for t in tickets
     ]

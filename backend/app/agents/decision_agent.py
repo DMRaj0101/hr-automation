@@ -21,9 +21,17 @@ def decide(role: str) -> dict:
     """Returns the full provisioning plan for a role:
     {
       "role": "Tax",
-      "functional_items": [ {item, software_name, agent_key}, ... ],
+      "functional_items": [ {item, software_name, agent_key, scoped_role}, ... ],
       "mock_items": [ {item, software_name, assigned_team, remarks}, ... ],
     }
+
+    scoped_role: passed through as-is from provisioning_matrix.json
+    (defaults to False if absent). Currently only meaningful for
+    Keycloak's "identity" agent_key, which uses it to distinguish IT
+    Support's "Helpdesk Admin Role (scoped)" item from the regular
+    "Identity Account Creation" item -- see
+    orchestrators/onboarding_orchestrator.py's _PROVISIONING_CALLS for
+    where it's consumed. Every other agent_key just ignores it.
 
     Raises KeyError if the role isn't in provisioning_matrix.json --
     callers (the orchestrator) should treat that as a hard stop and
@@ -44,6 +52,7 @@ def decide(role: str) -> dict:
                 "item": entry["item"],
                 "software_name": entry["software"],
                 "agent_key": entry["agent_key"],
+                "scoped_role": entry.get("scoped_role", False),
             })
         else:
             mock_items.append({

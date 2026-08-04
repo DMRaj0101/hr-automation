@@ -23,7 +23,10 @@ frontend/*.tsbuildinfo
 
 # Env files -- never commit real secrets
 .env
+mailu.env
 backend/.env
+backend/mailu.env
+
 frontend/.env.local
 
 # OS / editor junk
@@ -45,4 +48,5 @@ backend/storage/faiss/
 backend/storage/*.index
 backend/storage/*.pkl
 
+mailu/
 project.zip

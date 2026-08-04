@@ -24,8 +24,7 @@ from app.routers import (
     auth, employees, hrms_sync, onboarding, dashboard, profile,
     hr_assistant, tickets, monitoring,agent_ticketing
 )
-# TODO: from app.agents.monitoring_agent import monitoring_loop  -- uncomment
-# once at least one integrations/*_connector.py is implemented, see below.
+from app.agents.monitoring_agent import monitoring_loop
 
 app = FastAPI(title="AI Orchestration POC API -- Employee Onboarding (v3)")
 
@@ -55,13 +54,11 @@ app.include_router(agent_ticketing.router)
 def on_startup():
     Base.metadata.create_all(bind=engine)
     prewarm()
-    # TODO: asyncio.create_task(monitoring_loop())  -- the Monitoring Agent's
-    # background poll loop (agents/monitoring_agent.py). Commented out
-    # rather than started, since right now every STATUS_CHECKERS entry
-    # there is None -- it would just spin doing nothing. Uncomment the
-    # import above and this line together, once at least one connector
-    # (integrations/*_connector.py) is implemented and wired into
-    # STATUS_CHECKERS.
+    # Monitoring Agent background poll loop (agents/monitoring_agent.py).
+    # identity/email/document_management have real status checks wired;
+    # time_billing/asset (Kimai/Snipe-IT) will just be skipped per-record
+    # by poll_once() until those connectors exist -- safe to run now.
+    asyncio.create_task(monitoring_loop())
 
 
 @app.get("/")

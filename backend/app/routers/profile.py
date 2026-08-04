@@ -8,7 +8,7 @@ task-track/compliance/access-recommendation view.
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Employee, OnboardingTracker, ProvisioningRecord, Ticket, AuditLog
+from app.models import Employee, OnboardingTracker, ProvisioningRecord, Ticket, AuditLog, WelcomeEmail
 
 router = APIRouter(prefix="/employees", tags=["profile"])
 
@@ -31,6 +31,7 @@ def get_profile(employee_id: str, db: Session = Depends(get_db)):
         .all()
     )
     tickets = db.query(Ticket).filter(Ticket.employee_id == employee_id).all()
+    welcome_email = db.query(WelcomeEmail).filter(WelcomeEmail.employee_id == employee_id).first()
     recent_activity = (
         db.query(AuditLog)
         .filter(AuditLog.employee_id == employee_id)
@@ -63,6 +64,17 @@ def get_profile(employee_id: str, db: Session = Depends(get_db)):
              "assigned_team": t.assigned_team, "status": t.status}
             for t in tickets
         ],
+        # NOTE: welcome_email.body currently contains any real credentials
+        # (temp passwords) in plaintext -- see
+        # orchestrators/onboarding_orchestrator.py's
+        # _draft_and_queue_welcome_email() docstring for the security
+        # tradeoff note. Frontend should treat this as sensitive display
+        # data (e.g. don't log it, consider masking by default with a
+        # reveal action) until that's revisited.
+        "welcome_email": (
+            {"subject": welcome_email.subject, "body": welcome_email.body, "status": welcome_email.status}
+            if welcome_email else None
+        ),
         "recent_activity": [
             {"timestamp": a.timestamp, "agent": a.agent, "action": a.action, "detail": a.detail}
             for a in recent_activity

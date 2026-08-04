@@ -35,18 +35,18 @@ realm (e.g. "master"), point KEYCLOAK_REALM there or extend
 """
 
 from __future__ import annotations
-
+from dotenv import load_dotenv
 import os
 import threading
 import time
 from typing import Any
 
 import httpx
-
-KEYCLOAK_URL = os.getenv("KEYCLOAK_URL", "").rstrip("/")
-KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM", "")
-KEYCLOAK_ADMIN_CLIENT_ID = os.getenv("KEYCLOAK_ADMIN_CLIENT_ID", "")
-KEYCLOAK_ADMIN_CLIENT_SECRET = os.getenv("KEYCLOAK_ADMIN_CLIENT_SECRET", "")
+load_dotenv()
+KEYCLOAK_URL = os.getenv("KEYCLOAK_URL").rstrip("/")
+KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM")
+KEYCLOAK_ADMIN_CLIENT_ID = os.getenv("KEYCLOAK_ADMIN_CLIENT_ID")
+KEYCLOAK_ADMIN_CLIENT_SECRET = os.getenv("KEYCLOAK_ADMIN_CLIENT_SECRET")
 
 _TIMEOUT_SECONDS = 10.0
 _TOKEN_EXPIRY_SAFETY_MARGIN_SECONDS = 5

@@ -25,14 +25,53 @@ services:
       OLLAMA_URL: http://host.docker.internal:11434
       OLLAMA_MODEL: gpt-oss:120b-cloud
       JWT_SECRET: poc-dev-secret-change-me
-      # TODO: add KEYCLOAK_*, MAILU_*, KIMAI_*, SNIPEIT_* once each
-      # connector is implemented -- see backend/.env.example (repo root
-      # .env.example) for the full list of vars each owner needs to fill in.
+
+      # Identity Agent -- Keycloak. Realm/client/roles (Tax, Audit, Law,
+      # IT Support + the scoped helpdesk role) must exist in Keycloak
+      # before onboarding will succeed -- see keycloak service below.
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: master
+      KEYCLOAK_ADMIN_CLIENT_ID: identity_agent
+      KEYCLOAK_ADMIN_CLIENT_SECRET: DjkweDhG279JIKxuuXZTC8Mdu9QfhooU
+
+      # Email Agent -- MailU. MAILU_URL points at `front` (the nginx
+      # entry point) rather than `admin` directly -- MailU's Admin API
+      # is served at {front}/api/v1/... via the WEB_API=/api path
+      # prefix in mailu.env, reverse-proxied internally to the admin
+      # container. Pointing straight at `admin` would miss that prefix
+      # entirely and 404. MAILU_DOMAIN and MAILU_ADMIN_TOKEN below match
+      # the dev's actual mailu.env (DOMAIN=company.local, API_TOKEN=...)
+      # -- note this means employee mailboxes land on @company.local,
+      # NOT @vantara.com like their business email in the HRMS fixture
+      # data. Worth confirming whether that's intentional or whether
+      # mailu.env's DOMAIN should be changed to vantara.com to match.
+      MAILU_URL: http://front
+      MAILU_DOMAIN: vantara.com
+      MAILU_ADMIN_TOKEN: NDZGBWZKE82BF4DA8W0FB2594DGWAAQD
+
+      # Document Management Agent -- OpenKM. Defaults match the official
+      # openkm/openkm-ce image's out-of-the-box superuser account.
+      OPENKM_URL: http://openkm:8080/OpenKM/services/rest
+      OPENKM_USER: okmAdmin
+      OPENKM_PASSWORD: admin
+
+      MANAGER_TEAM_EMAIL: your-manager-team-inbox@example.com
+      IT_TEAM_EMAIL: your-it-team-inbox@example.com
+      HR_TEAM_EMAIL: your-hr-team-inbox@example.com
+      SECURITY_TEAM_EMAIL: your-security-team-inbox@example.com
+      # TODO: SMTP_*/IMAP_* (real notification email, e.g. Gmail app
+      # password) still need to be filled in here or via a local .env
+      # override -- not committed with real values for obvious reasons.
+
+      # TODO: KIMAI_*, SNIPEIT_* once those two connectors are implemented.
     ports:
       - "8000:8000"
     depends_on:
       - postgres
       - mock_hrms
+      - keycloak
+      - openkm
+      - front
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -76,6 +115,18 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: admin
     ports:
       - "8080:8080"
+
+################################################################################
+# OPENKM
+################################################################################
+
+  openkm:
+    image: openkm/openkm-ce
+    restart: always
+    ports:
+      - "8082:8080"
+    # Default superuser is okmAdmin/admin -- matches OPENKM_USER/PASSWORD
+    # in the backend service's environment above. Change before any real use.
 
 ################################################################################
 # MAILU

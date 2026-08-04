@@ -127,6 +127,7 @@ class Ticket(Base):
     closed_at = Column(DateTime, nullable=True)
     closed_by = Column(String, nullable=True)
     notes = Column(Text, nullable=True)
+    sla_flagged_at = Column(DateTime, nullable=True)  # set once when Monitoring Agent detects a Pending > 4h breach -- one-shot, so the same ticket doesn't re-alert every poll cycle
 
 
 class WelcomeEmail(Base):

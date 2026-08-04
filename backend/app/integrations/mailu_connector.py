@@ -26,7 +26,7 @@ so the orchestrator can plumb it into the welcome email draft.
 """
 
 from __future__ import annotations
-
+from dotenv import load_dotenv
 import logging
 import os
 import secrets
@@ -34,7 +34,7 @@ import string
 from typing import Any
 
 import httpx
-
+load_dotenv()
 logger = logging.getLogger(__name__)
 
 MAILU_URL = os.getenv("MAILU_URL", "").rstrip("/")

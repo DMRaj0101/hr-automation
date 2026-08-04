@@ -50,6 +50,8 @@ import re
 import secrets
 import string
 import requests
+from dotenv import load_dotenv
+load_dotenv()
 
 OPENKM_URL = os.getenv("OPENKM_URL", "http://localhost:8080/OpenKM/services/rest").rstrip("/")
 OPENKM_USER = os.getenv("OPENKM_USER", "")

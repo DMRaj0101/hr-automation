@@ -29,9 +29,12 @@ from app.agents.role_classifier import classify_role
 from app.agents.decision_agent import decide
 from app.agents import ticket_agent
 from app.integrations import keycloak_connector, mailu_connector, kimai_connector, snipeit_connector, openkm_connector, hrms_connector
+from app.services.agent_ticketing_service import AgentTicketClient
 from app import email_client
 from app.models import WelcomeEmail
+from dotenv import load_dotenv
 
+load_dotenv()
 STEP_REGISTERED = "Registered"
 STEP_ROLE_RESOLUTION = "Role Resolution"
 STEP_DECISION = "Decision Agent"
@@ -44,16 +47,42 @@ STEPS = [
     STEP_PROVISIONING, STEP_TICKETING, STEP_MONITORING,
 ]
 
-# agent_key -> connector function. TODO: each of these currently raises
+# agent_key -> connector function. TODO: Kimai/Snipe-IT still raise
 # NotImplementedError -- see the matching integrations/*_connector.py
 # file. Wired here (rather than inline below) so adding a connector is
 # a one-line change once it's implemented.
+#
+# Keycloak (identity) and MailU (email) are real implementations.
+# Lambdas take (emp, item) instead of just (emp) -- needed to fix a
+# real dispatch bug: IT Support has TWO separate "identity" provisioning
+# items (regular account + scoped Helpdesk Admin role), and the
+# dispatch table previously had no way to tell them apart by agent_key
+# alone -- both calls would have used scoped_role=False, so the second
+# call would fail (duplicate Keycloak user) and the scoped role would
+# never get assigned. Fixed by reading a `scoped_role` flag off the
+# item itself (see config_data/provisioning_matrix.json and
+# agents/decision_agent.py, both updated to carry it through).
 _PROVISIONING_CALLS = {
-    "identity": lambda emp: keycloak_connector.create_user(emp.name, emp.email, emp.role),
-    "email": lambda emp: mailu_connector.create_mailbox(emp.name, emp.email.split("@")[0]),
-    "time_billing": lambda emp: kimai_connector.create_user_and_timesheet(emp.name, emp.email, emp.role),
-    "asset": lambda emp: snipeit_connector.allocate_standard_kit(emp.name, emp.email),
-    "document_management": lambda emp: openkm_connector.create_workspace(emp.name, emp.email, emp.role),
+    "identity": lambda emp, item: keycloak_connector.create_user(
+        emp.name, emp.email, emp.role, scoped_role=item.get("scoped_role", False)
+    ),
+    "email": lambda emp, item: mailu_connector.create_mailbox(emp.name, emp.email.split("@")[0]),
+    "time_billing": lambda emp, item: kimai_connector.create_user_and_timesheet(emp.name, emp.email, emp.role),
+    "asset": lambda emp, item: snipeit_connector.allocate_standard_kit(emp.name, emp.email),
+    "document_management": lambda emp, item: openkm_connector.create_workspace(emp.name, emp.email, emp.role),
+}
+
+# Display names for audit-log entries -- matches the PDD's own naming
+# exactly. Previously generated with agent_key.title() + " Agent", which
+# silently produced wrong names for anything with an underscore (e.g.
+# "Time_Billing Agent" instead of "Time & Billing Agent",
+# "Document_Management Agent" instead of "Document Management Agent").
+AGENT_DISPLAY_NAMES = {
+    "identity": "Identity Agent",
+    "email": "Email Agent",
+    "time_billing": "Time & Billing Agent",
+    "asset": "Asset Allocation Agent",
+    "document_management": "Document Management Agent",
 }
 
 
@@ -125,7 +154,6 @@ def _draft_and_queue_welcome_email(db: Session, employee: Employee, credentials:
     db.add(WelcomeEmail(employee_id=employee.id, subject=subject, body=body, status="drafted"))
     db.commit()
     _audit(db, employee.id, "Email Agent", "Welcome email drafted", f"{len(credentials)} credential(s) included")
-    _audit(db, employee.id, "Email Agent", "Welcome email drafted", "")
 
 
 def _seed_openkm_documents(employee: Employee, folder_path: str) -> str:
@@ -230,25 +258,44 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
         db.refresh(record)
 
         call = _PROVISIONING_CALLS.get(item["agent_key"])
+        agent_display_name = AGENT_DISPLAY_NAMES.get(item["agent_key"], item["agent_key"])
+        # AgentTicketClient -- the AI-only execution-log ticket, distinct
+        # from the human-facing Ticket (Section 4). Fires the moment each
+        # agent starts, and resolves to either completed or problem below.
+        # This is what backs the "native ticket queue" showing live
+        # agent-run status in the frontend -- previously built but never
+        # actually called from inside an agent (see MIGRATION_NOTES.md).
+        agent_ticket = AgentTicketClient(agent_name=agent_display_name, employee_id=employee.employee_id)
+        agent_ticket.report_started()
         try:
-            result = call(employee)  # TODO: raises NotImplementedError until each connector is built
+            result = call(employee, item)  # TODO: raises NotImplementedError until Kimai/Snipe-IT are built
             record.status = "completed"
             record.external_ref = result.get("external_ref")
             record.completed_at = datetime.datetime.utcnow()
             db.commit()
-            _audit(db, employee_id, f"{item['agent_key'].title()} Agent",
+            agent_ticket.report_completed()
+            _audit(db, employee_id, agent_display_name,
                    f"Provisioned {item['item']}", result.get("detail", ""))
             # Capture any freshly-issued login credentials for the welcome
-            # email -- currently only openkm_connector.create_workspace()
-            # returns these (temp_password is None on a reused/existing
-            # account, so skip in that case). TODO: mailu_connector once
-            # implemented should populate the same "username"/"password"
-            # keys under its own result dict for this to pick up.
-            if result.get("temp_password"):
+            # email. Each connector uses a different key name for the
+            # password, confirmed by checking their actual return values
+            # (not assumed):
+            #   - openkm_connector.create_workspace()        -> "temp_password"
+            #   - mailu_connector.create_mailbox()            -> "temp_password"
+            #   - keycloak_connector.create_user()            -> "password" (NOT "temp_password")
+            # Missing/None whenever nothing new was issued (e.g. a reused
+            # OpenKM account), so those are correctly skipped.
+            password_value = result.get("temp_password") or result.get("password")
+            if password_value:
                 credentials.append({
                     "system": item["software_name"] or item["agent_key"],
-                    "username": result.get("openkm_username") or result.get("username") or employee.email,
-                    "password": result["temp_password"],
+                    "username": (
+                        result.get("openkm_username")
+                        or result.get("email_address")
+                        or result.get("username")
+                        or employee.email
+                    ),
+                    "password": password_value,
                 })
             # Seed the new OpenKM workspace with the employee's onboarding
             # documents (offer letter, resume, etc.) -- see
@@ -257,25 +304,46 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
             # equivalent step.
             if item["agent_key"] == "document_management" and result.get("folder_path"):
                 seed_summary = _seed_openkm_documents(employee, result["folder_path"])
-                _audit(db, employee_id, "Document Management Agent", "Seeded documents", seed_summary)
+                _audit(db, employee_id, AGENT_DISPLAY_NAMES["document_management"], "Seeded documents", seed_summary)
         except NotImplementedError as e:
             # Expected until the connector is built -- log clearly rather
             # than silently failing, so it's obvious in the audit trail
             # which items are still pending implementation vs. genuinely
-            # failed at runtime.
+            # failed at runtime. Still reported as a problem on the agent
+            # ticket -- from the AI-monitoring perspective this attempt
+            # didn't complete either way, regardless of cause.
             record.status = "not_started"
             record.error_detail = f"Connector not yet implemented: {e}"
             db.commit()
-            _audit(db, employee_id, f"{item['agent_key'].title()} Agent",
+            agent_ticket.report_problem(f"Connector not yet implemented: {e}")
+            _audit(db, employee_id, agent_display_name,
                    f"Skipped {item['item']} -- connector not implemented", str(e))
         except Exception as e:
-            record.status = "failed"
+            # NOTE: status is "in_progress", not "failed" -- "failed" is
+            # the TERMINAL state the Monitoring Agent sets once retries
+            # are exhausted (see agents/monitoring_agent.py's poll_once).
+            # Marking this "failed" immediately (the previous behavior)
+            # meant it could never be picked up by poll_once(), which
+            # only queries "not_started"/"in_progress" -- the entire
+            # retry/backoff mechanism was unreachable from a real first-
+            # attempt failure. Known remaining gap even after this fix:
+            # STATUS_CHECKERS only verify a resource that already has an
+            # external_ref -- a record that failed before ever getting
+            # one (this exact case) still won't be retried by
+            # poll_once() as currently written, since it requires
+            # external_ref to be set. Actually re-attempting creation
+            # (not just checking status) needs a second dispatch table
+            # in monitoring_agent.py mirroring _PROVISIONING_CALLS --
+            # not yet built, see the analysis doc for this as a
+            # tracked follow-up rather than something silently patched here.
+            record.status = "in_progress"
             record.retry_count += 1
             record.error_detail = str(e)
             db.commit()
-            _audit(db, employee_id, f"{item['agent_key'].title()} Agent",
+            agent_ticket.report_problem(str(e))
+            _audit(db, employee_id, agent_display_name,
                    f"Failed {item['item']}", str(e))
-            # TODO: Monitoring Agent picks this up on its next poll and
+            # Monitoring Agent picks this up on its next poll and
             # continues retrying per PDD Section 5 -- no further action
             # needed here.
     _mark(db, employee_id, STEP_PROVISIONING, "completed")

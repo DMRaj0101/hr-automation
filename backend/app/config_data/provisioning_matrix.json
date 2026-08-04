@@ -264,7 +264,8 @@
       "software": "Keycloak (scoped role)",
       "status": "functional",
       "agent_key": "identity",
-      "remarks": "Scoped-down role within the same real Keycloak instance -- not full admin access."
+      "remarks": "Scoped-down role within the same real Keycloak instance -- not full admin access.",
+      "scoped_role": true
     },
     {
       "item": "Productivity Suite",

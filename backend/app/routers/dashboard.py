@@ -39,6 +39,8 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         .all()
     )
 
+    tickets_over_sla = db.query(Ticket).filter(Ticket.sla_flagged_at.isnot(None)).count()
+
     recent_activity = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).limit(10).all()
 
     return {
@@ -49,12 +51,10 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         "tickets_by_team": tickets_by_team,
         "provisioning_by_status": provisioning_by_status,
         "role_distribution": [{"name": r, "count": c} for r, c in role_rows],
+        "tickets_over_sla": tickets_over_sla,
         "recent_activity": [
             {"timestamp": a.timestamp, "agent": a.agent, "action": a.action,
              "detail": a.detail, "employee_id": a.employee_id}
             for a in recent_activity
         ],
-        # TODO: SLA-breach count once agents/monitoring_agent.py's
-        # _check_sla_breaches() is implemented -- surface it here as
-        # e.g. "tickets_over_sla": <count> for a dashboard alert widget.
     }
