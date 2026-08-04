@@ -1,0 +1,521 @@
+================================================================================
+FRONTEND MOCK DATA -> BACKEND FIELD MAPPING (CONDENSED)
+Source: frontend/mock-server/db.json  |  Backend: backend/app/**, backend/main.py
+================================================================================
+
+Context: The backend implements a 6-step agentic onboarding pipeline (PDD v3:
+HRMS sync -> Decision Agent -> Keycloak/MailU/Kimai/Snipe-IT/OpenKM connectors
+for "Functional" items -> Ticket Generation Agent for "Mock" items ->
+Monitoring Agent). db.json instead backs a dashboard-style UI (progress %,
+blockers, SLA countdowns, alerts, scripted chatbot). Most direct field matches
+below are renames of existing columns; the rest are gaps.
+
+================================================================================
+ENDPOINT: employees[]
+================================================================================
+
+Field: id
+Backend File: backend/app/models/employee.py
+Function/Model: Employee.employee_id
+Database Source: employees.employee_id
+Status: ✅ Exists
+Notes: Backend also has a separate `id` (UUID) column -- mock's "EMP-2001" maps to employee_id, not id.
+
+Field: name
+Backend File: backend/app/models/employee.py
+Function/Model: Employee.name
+Database Source: employees.name
+Status: ✅ Exists
+Notes: Direct match.
+
+Field: dept
+Backend File: backend/app/models/employee.py
+Function/Model: Employee.department
+Database Source: employees.department
+Status: ✅ Exists
+Notes: Field rename only.
+
+Field: type (experienced/fresher)
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. No seniority/tenure-band column or HRMS field anywhere.
+
+Field: manager
+Backend File: backend/app/models/employee.py
+Function/Model: Employee.manager
+Database Source: employees.manager
+Status: ✅ Exists
+Notes: Only one manager column exists (see empManager below).
+
+Field: status
+Backend File: backend/app/models/employee.py, orchestrators/onboarding_orchestrator.py
+Function/Model: Employee.status
+Database Source: employees.status
+Status: 🟡 Derivable
+Notes: Backend vocabulary is registered/provisioning/active, not "Onboarding"/"Documents Pending" -- needs a mapping table.
+
+Field: progress
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: 🟡 Derivable
+Notes: (completed ProvisioningRecord + Closed Ticket) / (total of both) per employee -- both tables queryable, but no function computes this ratio today.
+
+Field: blockers
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: 🟡 Derivable
+Notes: Could be count of failed ProvisioningRecord + Pending Ticket rows per employee; no function does this yet.
+
+Field: start / hireDate
+Backend File: backend/app/models/employee.py
+Function/Model: Employee.joining_date
+Database Source: employees.joining_date
+Status: ✅ Exists
+Notes: Same column backs both mock fields (two different date formats); stored as raw string, unparsed.
+
+Field: est
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. No ETA/planned-completion concept anywhere.
+
+Field: remaining
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: 🟡 Derivable
+Notes: Would be (est - today); blocked on "est" not existing first.
+
+Field: email
+Backend File: backend/app/models/employee.py
+Function/Model: Employee.email
+Database Source: employees.email
+Status: ✅ Exists
+Notes: Direct match.
+
+Field: phone
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. No phone column on Employee; HRMS mock doesn't send one either.
+
+Field: office
+Backend File: backend/app/models/employee.py
+Function/Model: Employee.office
+Database Source: employees.office
+Status: ✅ Exists
+Notes: Also used as a role_classifier.py hint.
+
+Field: empManager
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. Employee model has only one manager field; can't represent two distinct managers.
+
+Field: yearsOfService
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: 🟡 Derivable
+Notes: (today - joining_date)/365.25 -- possible only once joining_date is parsed as a real date; no function does this.
+
+Field: jobLevel
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. No seniority/level column or parsing of `title`.
+
+Field: title
+Backend File: backend/app/models/employee.py
+Function/Model: Employee.title
+Database Source: employees.title
+Status: ✅ Exists
+Notes: Also a role_classifier.py fallback hint.
+
+================================================================================
+ENDPOINT: tickets[]
+================================================================================
+
+Field: id
+Backend File: backend/app/models/employee.py, agents/ticket_agent.py
+Function/Model: Ticket.ticket_id / _next_ticket_id()
+Database Source: tickets.ticket_id
+Status: ✅ Exists
+Notes: Auto-incrementing "TKT-####"; routers/tickets.py exposes it as `ticket_id`, not `id`.
+
+Field: employee (name)
+Backend File: backend/app/routers/tickets.py
+Function/Model: get_ticket() employee join
+Database Source: tickets.employee_id -> employees.name
+Status: 🟡 Derivable
+Notes: Join exists only in GET /tickets/{id} (as "employee_name"); list_tickets() doesn't do it yet.
+
+Field: dept
+Backend File: backend/app/models/employee.py
+Function/Model: N/A (no join written)
+Database Source: tickets.employee_id -> employees.department
+Status: 🟡 Derivable
+Notes: Ticket.role is an existing close proxy for this same value, no join needed.
+
+Field: issue
+Backend File: backend/app/models/employee.py, agents/ticket_agent.py
+Function/Model: Ticket.provisioning_item
+Database Source: tickets.provisioning_item
+Status: ✅ Exists
+Notes: Sourced from provisioning_matrix.json's "item" field via Decision Agent.
+
+Field: system
+Backend File: backend/app/models/employee.py, agents/ticket_agent.py
+Function/Model: Ticket.software_name
+Database Source: tickets.software_name
+Status: ✅ Exists
+Notes: Sourced from provisioning_matrix.json's "software" field.
+
+Field: team
+Backend File: backend/app/models/employee.py, agents/decision_agent.py
+Function/Model: Ticket.assigned_team
+Database Source: tickets.assigned_team
+Status: ✅ Exists
+Notes: Assigned via team_routing.json lookup, default "IT".
+
+Field: priority
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. Ticket model has no priority column; no config assigns severity.
+
+Field: status
+Backend File: backend/app/models/employee.py, agents/ticket_agent.py
+Function/Model: Ticket.status
+Database Source: tickets.status
+Status: 🟡 Derivable
+Notes: Real vocabulary is Open/In Progress/Pending/Closed only -- no "Failed" state on Ticket (that's a ProvisioningRecord concept).
+
+Field: time
+Backend File: backend/app/models/employee.py
+Function/Model: Ticket.created_at
+Database Source: tickets.created_at
+Status: 🟡 Derivable
+Notes: Full datetime stored; mock's 12-hour time-only string needs frontend formatting.
+
+================================================================================
+ENDPOINT: ticketDetails (per ticket id)
+================================================================================
+
+Field: slaTotalHours / slaRemainingHours / slaPercentElapsed
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. No SLA-hours policy exists anywhere (monitoring_agent.py's SLA check is an unimplemented stub).
+
+Field: errorType / errorCode / errorMessage
+Backend File: backend/app/models/employee.py
+Function/Model: ProvisioningRecord.error_detail
+Database Source: provisioning_records.error_detail
+Status: ❌ Missing
+Notes: Missing - only one unstructured error_detail string exists, and only on ProvisioningRecord, not Ticket.
+
+Field: retryCount
+Backend File: backend/app/models/employee.py, agents/monitoring_agent.py
+Function/Model: ProvisioningRecord.retry_count
+Database Source: provisioning_records.retry_count
+Status: ❌ Missing
+Notes: Exists only on ProvisioningRecord (Functional items); Ticket has no retry_count column.
+
+Field: nextRetry
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. Retry backoff timing is an explicit TODO in monitoring_agent.py, not implemented.
+
+Field: statusHistory[]
+Backend File: backend/app/models/employee.py, agents/ticket_agent.py
+Function/Model: Ticket.status_history
+Database Source: tickets.status_history (JSON text)
+Status: 🟡 Derivable
+Notes: Stores {status,changed_at,note} list -- no "color" key; returned as raw JSON string, not parsed.
+
+Field: notes[] (author/time/text)
+Backend File: backend/app/models/employee.py
+Function/Model: Ticket.notes
+Database Source: tickets.notes
+Status: ❌ Missing
+Notes: Ticket.notes is one plain string, set once at creation -- no author, no append-only list.
+
+================================================================================
+ENDPOINT: checklists (per employee id)
+================================================================================
+
+Field: system / platform
+Backend File: backend/app/models/employee.py
+Function/Model: ProvisioningRecord / Ticket .provisioning_item, .software_name
+Database Source: provisioning_records / tickets
+Status: ✅ Exists
+Notes: Split across two tables depending on Functional vs Mock; no single unified checklist endpoint merges them.
+
+Field: status
+Backend File: backend/app/models/employee.py
+Function/Model: ProvisioningRecord.status / Ticket.status
+Database Source: provisioning_records.status / tickets.status
+Status: 🟡 Derivable
+Notes: Two different vocabularies to translate; "blocked" has no equivalent in either.
+
+Field: kind (Functional/Mock)
+Backend File: agents/decision_agent.py, config_data/provisioning_matrix.json
+Function/Model: decide()
+Database Source: N/A (implicit via which table the row is in)
+Status: 🟡 Derivable
+Notes: Not a stored column -- inferred from whether row came from ProvisioningRecord or Ticket.
+
+Field: detail
+Backend File: backend/app/models/employee.py
+Function/Model: OnboardingTracker.detail
+Database Source: onboarding_tracker.detail
+Status: ❌ Missing
+Notes: Closest match is step-level (not per-item) free text; no per-checklist-item detail sentence exists.
+
+Field: outcome
+Backend File: backend/app/models/employee.py
+Function/Model: ProvisioningRecord.external_ref
+Database Source: provisioning_records.external_ref
+Status: ❌ Missing
+Notes: Missing - only a bare ID string exists (not exposed by any router today); mock's narrated "Real/Illustrative API response" prose is fabricated, no function generates it.
+
+================================================================================
+ENDPOINT: dashboard
+================================================================================
+
+Field: stats {total, completed, inProgress, failed}
+Backend File: backend/app/tests/test.py
+Function/Model: dashboard_preview()
+Database Source: employees, provisioning_records
+Status: ✅ Exists
+Notes: Scratch router (wired into main.py); "failed" definition flagged in its own docstring as an unconfirmed guess.
+
+Field: integrationCoverage
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. Docstring in tests/test.py confirms: needs a real-vs-mock systems registry that doesn't exist.
+
+Field: slaWarning
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. No SLA policy exists (confirmed by tests/test.py docstring).
+
+Field: departments[].name/employees/openTickets
+Backend File: backend/app/tests/test.py
+Function/Model: dashboard_preview()
+Database Source: employees.department, tickets joined to employees
+Status: ✅ Exists
+Notes: Grouped counts already implemented.
+
+Field: departments[].avgCompletion
+Backend File: backend/app/tests/test.py
+Function/Model: dashboard_preview()
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - endpoint hardcodes this to null; no completion-% formula exists (same gap as employees[].progress).
+
+Field: systemHealth[]
+Backend File: orchestrators/health_check_orchestrator.py
+Function/Model: get_cached_health()
+Database Source: N/A (in-memory cache)
+Status: ✅ Exists
+Notes: Cache is empty until background loop runs or /system-health/refresh is called manually.
+
+Field: ticketStatus {open,inProgress,pending,closed}
+Backend File: backend/app/tests/test.py
+Function/Model: dashboard_preview()
+Database Source: tickets.status (grouped)
+Status: ✅ Exists
+Notes: routers/dashboard.py also computes an equivalent (tickets_by_status) with different key casing.
+
+================================================================================
+ENDPOINT: systemHealthDetail[]
+================================================================================
+
+Field: name / status / latency
+Backend File: orchestrators/health_check_orchestrator.py, routers/healthcheck.py
+Function/Model: run_health_checks(), get_cached_health()
+Database Source: N/A (in-memory cache)
+Status: ✅ Exists
+Notes: Best/exact match in the whole report -- GET /system-health returns this exact shape under the same key name. Microsoft 365/GLPI have no real connector, only a generic ping.
+
+================================================================================
+ENDPOINT: onboardingDetails (per employee id)
+================================================================================
+
+Field: status / type
+Backend File: backend/app/models/employee.py
+Function/Model: Employee.status
+Database Source: employees.status
+Status: 🟡 Derivable
+Notes: Same vocabulary gap as employees[].status; "type" is trivially always "Onboarding" (no offboarding path exists).
+
+Field: startDate
+Backend File: backend/app/models/employee.py
+Function/Model: Employee.joining_date
+Database Source: employees.joining_date
+Status: ✅ Exists
+Notes: Needs reformatting to "Jul 28, 2026" style.
+
+Field: plannedCompletion / daysRemaining
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. Same gap as employees[].est/remaining.
+
+Field: alerts[]
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. No Alert/Notification model, no severity taxonomy, anywhere in the codebase.
+
+================================================================================
+ENDPOINT: monitoring
+================================================================================
+
+Field: lastEvent
+Backend File: backend/app/models/employee.py
+Function/Model: AuditLog (agent/action/timestamp)
+Database Source: audit_log
+Status: 🟡 Derivable
+Notes: Most recent AuditLog row exists (dashboard.py's recent_activity is the closest analog); no function formats it as one relative-time sentence.
+
+Field: activeRequests[] (name,dept,status,retries,tickets)
+Backend File: backend/app/routers/monitoring.py
+Function/Model: monitoring_console()
+Database Source: provisioning_records, tickets
+Status: 🟡 Derivable
+Notes: Endpoint returns flat failing/in-progress/pending lists, not a per-employee aggregated row -- needs a group-by-employee rewrite.
+
+Field: slaWarning
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. Same gap as dashboard.slaWarning.
+
+================================================================================
+ENDPOINT: chatMessages[] / suggestionChips[] / chipReplies{}
+================================================================================
+
+Field: chatMessages (role/text/source)
+Backend File: backend/app/routers/hr_assistant.py, services/chatbot/*
+Function/Model: ops_chat() -> answer_ops_question()
+Database Source: employees, tickets, provisioning_records (via get_ops_context())
+Status: 🟡 Derivable
+Notes: Live LLM Q&A exists, but is stateless (no stored transcript) and always returns source="Knowledge Agent", never the varying sources shown in the mock.
+
+Field: suggestionChips
+Backend File: N/A
+Function/Model: N/A
+Database Source: N/A
+Status: ❌ Missing
+Notes: Missing - No backend source. No endpoint returns canned/suggested questions.
+
+Field: chipReplies
+Backend File: backend/app/routers/hr_assistant.py
+Function/Model: ops_chat() (general mechanism only)
+Database Source: same as chatMessages
+Status: ❌ Missing
+Notes: No keyed/fixed-reply lookup exists; only a live, non-deterministic LLM answer per question.
+
+================================================================================
+ENDPOINT: meta {depts, teams, roles}
+================================================================================
+
+Field: depts / roles
+Backend File: config_data/provisioning_matrix.json
+Function/Model: app/config.py get_provisioning_matrix()
+Database Source: N/A (config file)
+Status: 🟡 Derivable
+Notes: Top-level JSON keys (Tax/Audit/Law/IT Support); mock omits "IT Support" with no stated reason.
+
+Field: teams
+Backend File: config_data/team_routing.json
+Function/Model: app/config.py get_team_routing()
+Database Source: N/A (config file)
+Status: 🟡 Derivable
+Notes: Distinct values (IT/Admin/Security); no endpoint currently exposes this list.
+
+================================================================================
+ENDPOINT: users[]
+================================================================================
+
+Field: id / email / password / name / role
+Backend File: backend/app/routers/auth.py
+Function/Model: DEMO_USERS dict, login()
+Database Source: N/A (hardcoded dict, not DB-backed)
+Status: ❌ Missing
+Notes: DEMO_USERS only has password+role per email (no id/name), only 4 fixed accounts, never exposed via any GET endpoint -- consumed only internally by login().
+
+================================================================================
+
+## Existing Backend Fields
+- employees: name, dept, manager, start/hireDate, email, office, title, id (as employee_id)
+- tickets: id, issue, system, team
+- checklists: system, platform
+- dashboard: stats, departments (name/employees/openTickets), systemHealth, ticketStatus
+- systemHealthDetail: name, status, latency
+- onboardingDetails: startDate
+
+## Derivable Fields
+- employees: status, progress, blockers, remaining, yearsOfService
+- tickets: employee (name via join), dept (via join or Ticket.role), status, time
+- ticketDetails: statusHistory
+- checklists: status, kind
+- onboardingDetails: status/type
+- monitoring: lastEvent, activeRequests
+- chatMessages: text/source (live LLM, not scripted)
+- meta: depts, roles, teams
+
+## Missing Fields
+- employees: type, est, phone, empManager, jobLevel
+- ticketDetails: slaTotalHours, slaRemainingHours, slaPercentElapsed, errorType, errorCode, errorMessage, retryCount, nextRetry, notes[].author
+- checklists: detail, outcome
+- dashboard: integrationCoverage, slaWarning, departments[].avgCompletion
+- onboardingDetails: plannedCompletion, daysRemaining, alerts[]
+- monitoring: slaWarning
+- suggestionChips, chipReplies
+- users: entire list shape (id/name fields, list exposure)
+
+## Missing APIs
+- No unified per-employee "checklist" endpoint (profile.py keeps provisioning/tickets as two separate lists)
+- No GET endpoint exposing users as a list
+- No GET endpoint exposing meta filter options (depts/teams/roles)
+- No single "ticket detail" endpoint with SLA/structured-error/history in one response
+- routers/approvals.py is a stub with zero endpoints (not wired into main.py)
+- health_check_orchestrator's and monitoring_agent's background loops are implemented but not started at app startup -- system-health/monitoring data can be stale or empty
+
+## Overall Backend Readiness
+Partially Ready. Core identity fields for employees and tickets, and the
+system-health panel, are already backed by real backend code with only
+minor renames needed. A second tier (progress ratios, per-employee ticket
+aggregation, chatbot Q&A, filter metadata) is reachable with new queries
+but no schema changes. The largest tier -- SLA tracking, structured error
+detail, alerts/notifications, completion percentages, and the scripted
+chatbot/user-list shapes -- has no backend concept today and needs new
+models and product decisions before the frontend can be fully powered by
+this backend.
+
+================================================================================
+END OF REPORT
+================================================================================
