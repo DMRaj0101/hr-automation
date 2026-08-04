@@ -43,14 +43,6 @@ export default function AnimatedBackground() {
         }}
       />
 
-      {/* Logo */}
-      <div className="floating-square">
-        <div className="floating-square-inner">
-          <div className="shine"></div>
-          <div className="logo-v">V</div>
-        </div>
-      </div>
-
       {/* Particles */}
       <div className="particle particle-gold"></div>
       <div className="particle particle-cyan"></div>
@@ -128,117 +120,6 @@ export default function AnimatedBackground() {
   50% {
     transform: scale(1.12);
     opacity: 0.35;
-  }
-}
-
-/* ---------------- Logo ---------------- */
-
-.floating-square {
-  position: absolute;
-  top: 70px;
-  left: 70px;
-  z-index: 20;
-  animation: floatSquare 6s ease-in-out infinite;
-}
-
-.floating-square-inner {
-  position: relative;
-
-  width: 72px;
-  height: 72px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 18px;
-
-  background: #d9a653;
-
-  overflow: hidden;
-
-  box-shadow:
-    0 0 25px rgba(217,166,83,.45),
-    0 0 70px rgba(217,166,83,.18);
-
-  animation: logoGlow 5s ease-in-out infinite;
-}
-
-.logo-v {
-  position: relative;
-  z-index: 2;
-
-  color: #14213d;
-
-  font-size: 46px;
-  font-weight: 900;
-
-  font-family: Arial, Helvetica, sans-serif;
-
-  animation: logoPulse 5s ease-in-out infinite;
-}
-
-.shine{
-  position:absolute;
-
-  top:-30%;
-  left:-160%;
-
-  width:55%;
-  height:180%;
-
-  background:linear-gradient(
-    90deg,
-    transparent,
-    rgba(255,255,255,.65),
-    transparent
-  );
-
-  transform:rotate(25deg);
-
-  animation:shine 5s linear infinite;
-}
-
-@keyframes shine{
-  from{
-    left:-160%;
-  }
-  to{
-    left:180%;
-  }
-}
-
-@keyframes logoGlow{
-  0%,100%{
-    box-shadow:
-      0 0 25px rgba(217,166,83,.45),
-      0 0 60px rgba(217,166,83,.15);
-  }
-
-  50%{
-    box-shadow:
-      0 0 45px rgba(217,166,83,.8),
-      0 0 90px rgba(217,166,83,.25);
-  }
-}
-
-@keyframes logoPulse{
-  0%,100%{
-    transform:scale(1);
-  }
-
-  50%{
-    transform:scale(1.06);
-  }
-}
-
-@keyframes floatSquare{
-  0%,100%{
-    transform:translateY(0px);
-  }
-
-  50%{
-    transform:translateY(-10px);
   }
 }
 

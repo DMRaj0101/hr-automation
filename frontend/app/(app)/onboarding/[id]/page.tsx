@@ -9,7 +9,7 @@ import { useMonitoring } from "@/hooks/useMonitoring";
 import { Avatar } from "@/components/common/Avatar";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { ProgressBar } from "@/components/common/ProgressBar";
-import { ProvisioningChecklist } from "@/components/employee/ProvisioningChecklist";
+import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
 import { OnboardingSummaryCards } from "@/components/onboarding/OnboardingSummaryCards";
 import { AlertCard } from "@/components/onboarding/AlertCard";
 import { SystemHealthGrid } from "@/components/onboarding/SystemHealthGrid";
@@ -90,7 +90,7 @@ export default function OnboardingDetailPage() {
         <div className="card">
           <h3 className="font-semibold text-vantara-navy">Provisioning Checklist</h3>
           <div className="mt-4">
-            <ProvisioningChecklist items={checklist ?? []} />
+            <OnboardingChecklist items={checklist ?? []} />
           </div>
         </div>
         <div className="card">

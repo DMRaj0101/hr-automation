@@ -38,12 +38,12 @@ export function Header({
   }, []);
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-vantara-border bg-white px-6">
+    <header className="header-glass relative flex h-20 shrink-0 items-center justify-between border-b border-vantara-border px-6">
       {/* Left */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="relative z-10 flex items-center gap-3 min-w-0">
         {icon && (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FBEFD9] text-[#B8862E]">
-            <div className="scale-90">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FBEFD9] text-[#B8862E]">
+            <div className="scale-95">
               {icon}
             </div>
           </div>
@@ -51,12 +51,12 @@ export function Header({
 
         {title && (
           <div className="min-w-0">
-            <h1 className="truncate text-base font-bold text-vantara-navy leading-tight">
+            <h1 className="header-title truncate leading-tight">
               {title}
             </h1>
 
             {subtitle && (
-              <p className="mt-0.5 truncate text-xs text-gray-500">
+              <p className="header-subtitle mt-1.5 truncate">
                 {subtitle}
               </p>
             )}
@@ -65,7 +65,7 @@ export function Header({
       </div>
 
       {/* Right */}
-      <div className="relative flex items-center gap-3 shrink-0" ref={menuRef}>
+      <div className="relative z-10 flex items-center gap-3 shrink-0" ref={menuRef}>
         <button
           onClick={() => setMenuOpen((prev) => !prev)}
           className="flex items-center gap-2 rounded-xl p-1 transition-all duration-200 hover:bg-[#F5F7FA]"
