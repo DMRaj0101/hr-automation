@@ -16,6 +16,7 @@ backend/app/reports/*.pdf
 backend/app/uploads/*
 
 # Node / Next.js
+node_modules/
 frontend/node_modules/
 frontend/.next/
 frontend/out/

@@ -56,6 +56,8 @@ export interface OnboardingAlert {
   title: string;
   body: string;
   kind: "dismiss" | "view" | "ack";
+  time?: string;
+  date?: string;
 }
 
 export interface OnboardingDetail {

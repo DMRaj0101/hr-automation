@@ -25,18 +25,20 @@ export function initials(name: string) {
     .join("");
 }
 
+// solid light badge colors matching the employee directory design
 export const statusColorMap: Record<string, { bg: string; text: string }> = {
-  Onboarding: { bg: "#FEF3C7", text: "#92400E" },
-  "In Progress": { bg: "#FEF3C7", text: "#92400E" },
-  Pending: { bg: "#FEF3C7", text: "#92400E" },
-  Degraded: { bg: "#FEF3C7", text: "#92400E" },
-  "Documents Pending": { bg: "#FEE2E2", text: "#991B1B" },
-  Failed: { bg: "#FEE2E2", text: "#991B1B" },
-  Down: { bg: "#FEE2E2", text: "#991B1B" },
-  Completed: { bg: "#DCFCE7", text: "#166534" },
-  Closed: { bg: "#DCFCE7", text: "#166534" },
-  Operational: { bg: "#DCFCE7", text: "#166534" },
-  Open: { bg: "#DBEAFE", text: "#1D4ED8" },
+  Onboarding: { bg: "#FEF3C7", text: "#B45309" },
+  "In Progress": { bg: "#FEF3C7", text: "#B45309" },
+  Degraded: { bg: "#FEF3C7", text: "#B45309" },
+  Pending: { bg: "#F3F4F6", text: "#6B7280" },
+  "Documents Pending": { bg: "#FEE2E2", text: "#DC2626" },
+  "IT Pending": { bg: "#DBEAFE", text: "#2563EB" },
+  Failed: { bg: "#FEE2E2", text: "#DC2626" },
+  Down: { bg: "#FEE2E2", text: "#DC2626" },
+  Completed: { bg: "#D1FAE5", text: "#059669" },
+  Closed: { bg: "#D1FAE5", text: "#059669" },
+  Operational: { bg: "#D1FAE5", text: "#059669" },
+  Open: { bg: "#FCE7F3", text: "#DB2777" },
 };
 
 export function statusStyle(status: string) {
@@ -44,20 +46,26 @@ export function statusStyle(status: string) {
 }
 
 export const priorityColorMap: Record<string, { bg: string; text: string }> = {
-  Critical: { bg: "#FEE2E2", text: "#991B1B" },
-  High: { bg: "#FEF3C7", text: "#92400E" },
-  Medium: { bg: "#DBEAFE", text: "#1D4ED8" },
+  Critical: { bg: "#FEE2E2", text: "#DC2626" },
+  High: { bg: "#FEF3C7", text: "#B45309" },
+  Medium: { bg: "#F3F4F6", text: "#6B7280" },
 };
 
 export function priorityStyle(priority: string) {
   return priorityColorMap[priority] ?? { bg: "#F3F4F6", text: "#6B7280" };
 }
 
+// solid light badge colors for the employee directory table (matches white card design)
 export const employeeTypeColorMap: Record<string, { bg: string; text: string }> = {
-  experienced: { bg: "#EDE9FE", text: "#6D28D9" },
+  experienced: { bg: "#EDE9FE", text: "#7C3AED" },
   fresher: { bg: "#F3F4F6", text: "#6B7280" },
 };
 
 export function employeeTypeStyle(type: string) {
-  return employeeTypeColorMap[type] ?? { bg: "#F3F4F6", text: "#6B7280" };
+  const key = type.toLowerCase();
+  return employeeTypeColorMap[key] ?? { bg: "#F3F4F6", text: "#6B7280" };
+}
+
+export function employeeTypeLabel(type: string) {
+  return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
 }
