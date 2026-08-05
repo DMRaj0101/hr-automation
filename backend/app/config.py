@@ -43,7 +43,7 @@ def get_team_routing() -> dict:
 class Config:
     """Loads and exposes all environment-based configuration."""
 
-    def __init__(self, env_path: str = r"C:\Users\devanathan.k\APA\hr-automation\backend\app\.env"):
+    def __init__(self, env_path: str = r".env"):
         load_dotenv(dotenv_path=env_path)
 
         # self.glpi_api_url = self._require("GLPI_API_URL")
@@ -65,3 +65,7 @@ class Config:
         if not value:
             raise ValueError(f"Missing required environment variable: {key}")
         return value
+
+if __name__=="__main__":
+    config=Config()
+    print(config.kimai_admin_token)
