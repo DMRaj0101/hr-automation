@@ -1,19 +1,22 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { User, RefreshCcw, Rocket, IdCard, Briefcase, Sparkles } from "lucide-react";
+import {
+  User,
+  RefreshCcw,
+  Rocket,
+  IdCard,
+  Briefcase,
+  Sparkles,
+} from "lucide-react";
 
 import { useOnboardingDetail } from "@/hooks/useOnboardingDetail";
 import { useChecklist } from "@/hooks/useEmployee";
 
-import { StatusBadge } from "@/components/common/StatusBadge";
 import { ProgressBar } from "@/components/common/ProgressBar";
 
 import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
 import { OnboardingSummaryCards } from "@/components/onboarding/OnboardingSummaryCards";
-import ActiveAlerts from "@/components/onboarding/ActiveAlerts";
-
-import { OnboardingAlert } from "@/types/onboarding";
 
 export default function OnboardingDetailPage() {
   const params = useParams<{ id: string }>();
@@ -21,16 +24,6 @@ export default function OnboardingDetailPage() {
 
   const { employee, detail } = useOnboardingDetail(id);
   const { data: checklist } = useChecklist(id);
-
-  const alerts: OnboardingAlert[] = detail.data?.alerts ?? [];
-
-  const handleAlertClick = (alert: OnboardingAlert) => {
-    console.log("Alert Clicked:", alert);
-
-    // Later you can
-    // router.push(...)
-    // or open a modal
-  };
 
   if (employee.isLoading || !employee.data) {
     return (
@@ -52,7 +45,7 @@ export default function OnboardingDetailPage() {
 
   return (
     <div className="page-content space-y-5">
-      {/* Employee hero */}
+      {/* Employee Hero */}
 
       <div className="ob-hero-card">
         <div className="ob-hero-left">
@@ -86,6 +79,7 @@ export default function OnboardingDetailPage() {
                 <IdCard size={14} strokeWidth={2} />
                 {emp.id}
               </span>
+
               <span className="ob-hero-pill">
                 <Briefcase size={14} strokeWidth={2} />
                 {emp.title}
@@ -96,15 +90,30 @@ export default function OnboardingDetailPage() {
 
         <div className="ob-hero-art">
           <div className="ob-hero-art-disc" />
+
           <div className="ob-hero-art-card">
             <div className="ob-hero-art-card-icon">
               <User size={16} strokeWidth={2} />
             </div>
+
             <div className="ob-hero-art-card-line" />
-            <div className="ob-hero-art-card-line" style={{ width: 30 }} />
+            <div
+              className="ob-hero-art-card-line"
+              style={{ width: 30 }}
+            />
           </div>
-          <Sparkles size={16} className="ob-hero-art-sparkle" style={{ top: 10, right: 20 }} />
-          <Sparkles size={12} className="ob-hero-art-sparkle" style={{ bottom: 40, left: 4 }} />
+
+          <Sparkles
+            size={16}
+            className="ob-hero-art-sparkle"
+            style={{ top: 10, right: 20 }}
+          />
+
+          <Sparkles
+            size={12}
+            className="ob-hero-art-sparkle"
+            style={{ bottom: 40, left: 4 }}
+          />
         </div>
       </div>
 
@@ -122,18 +131,11 @@ export default function OnboardingDetailPage() {
           },
           {
             label: "Planned Completion",
-            value:
-              od?.plannedCompletion ??
-              emp.est ??
-              "—",
+            value: od?.plannedCompletion ?? emp.est ?? "—",
           },
           {
             label: "Days Remaining",
-            value: `${
-              od?.daysRemaining ??
-              emp.remaining ??
-              "—"
-            }`,
+            value: `${od?.daysRemaining ?? emp.remaining ?? "—"}`,
           },
         ]}
       />
@@ -157,49 +159,18 @@ export default function OnboardingDetailPage() {
         />
       </div>
 
-      {/* Main Grid */}
+      {/* Provisioning Checklist */}
 
-      <div
-        className="grid gap-5"
-        style={{
-         gridTemplateColumns: "1.7fr 1fr",
-        }}
-      >
-        {/* Provisioning */}
+      <div className="card">
+        <h3 className="font-semibold text-vantara-navy">
+          Provisioning Checklist
+        </h3>
 
-        <div className="card">
-          <h3 className="font-semibold text-vantara-navy">
-            Provisioning Checklist
-          </h3>
-
-          <div className="mt-4">
-            <OnboardingChecklist
-              items={checklist ?? []}
-            />
-          </div>
+        <div className="mt-4">
+          <OnboardingChecklist
+            items={checklist ?? []}
+          />
         </div>
-
-        {/* Active Alerts */}
-
-        <div className="card p-0 overflow-hidden">
-
-          {alerts.length === 0 ? (
-
-            <div className="p-6 text-sm text-vantara-text-muted">
-              No active alerts.
-            </div>
-
-          ) : (
-
-            <ActiveAlerts
-              alerts={alerts}
-              onAlertClick={handleAlertClick}
-            />
-
-          )}
-
-        </div>
-
       </div>
     </div>
   );
