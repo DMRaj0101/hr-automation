@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -37,16 +37,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           icon={icon ?? fallback.icon}
         />
 
-        <main className="relative flex-1 overflow-y-auto">
+        <main className="relative flex-1 overflow-x-hidden overflow-y-auto">
           <ProgressBar />
-          <motion.div
-            key={pathname}
-            initial={{ opacity: 0, scale: 0.97, filter: "blur(6px)" }}
-            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            transition={{ duration: 0.35, ease: [0.65, 0, 0.35, 1] }}
-          >
-            {children}
-          </motion.div>
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, x: 120 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -80 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              style={{ width: "100%", height: "100%" }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>

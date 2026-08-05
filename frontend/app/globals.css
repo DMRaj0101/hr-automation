@@ -51,9 +51,8 @@ body {
 }
 
 .page-content {
-  padding: 40px 48px 56px;
+  padding: 20px 48px 56px;   /* was 40px 48px 56px — top 40 → 20 */
 }
-
 .page-content-chat {
   padding: 40px 48px 32px;
 }
@@ -824,20 +823,24 @@ body {
 
 /* ==========================================================================
    View Transitions — page navigation slide-from-right effect
-   (used by EmployeeTable's goToProfile via document.startViewTransition)
+   Sidebar/Header should stay static — only the page content area animates.
    ========================================================================== */
 
-::view-transition-group(root) {
-  animation-duration: 0.7s;
+/* Kill the default root-level transition — this is what was moving the Sidebar */
+
+
+/* Only this named group animates — see view-transition-name on the content wrapper in AppShell */
+::view-transition-group(page-content) {
+  animation-duration: 0.5s;
   animation-timing-function: cubic-bezier(.16, 1, .3, 1);
 }
 
-::view-transition-old(root) {
-  animation: slide-out-left 0.7s cubic-bezier(.16, 1, .3, 1) both;
+::view-transition-old(page-content) {
+  animation: slide-out-left 0.5s cubic-bezier(.16, 1, .3, 1) both;
 }
 
-::view-transition-new(root) {
-  animation: slide-in-right 0.7s cubic-bezier(.16, 1, .3, 1) both;
+::view-transition-new(page-content) {
+  animation: slide-in-right 0.5s cubic-bezier(.16, 1, .3, 1) both;
 }
 
 @keyframes slide-out-left {
@@ -853,15 +856,14 @@ body {
 
 @keyframes slide-in-right {
   from {
-    transform: translateX(100%);
-    opacity: 0.6;
+    transform: translateX(60px);
+    opacity: 0;
   }
   to {
     transform: translateX(0);
     opacity: 1;
   }
 }
-
 /* ==========================================================================
    Employee Profile Page (moved from inline epStyles in page.tsx)
    ========================================================================== */
@@ -1108,5 +1110,172 @@ body {
   font-weight: 400;
   font-size: 12.5px;
   letter-spacing: 0.01em;
-  color: #8a8f9c;
+  color: #5b6472;
+}
+/* ==========================================================================
+   Onboarding Detail — Profile hero card
+   ========================================================================== */
+
+.ob-hero-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid var(--vantara-border);
+  border-radius: 20px;
+  padding: 16px 32px;   /* was 24px 32px — reduced top/bottom */
+  gap: 24px;
+}
+
+.ob-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
+}
+
+.ob-hero-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ob-hero-avatar-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid #ffffff;
+}
+
+.ob-hero-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ob-hero-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--vantara-navy);
+}
+
+.ob-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.ob-hero-pills {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.ob-hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--vantara-border);
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vantara-navy);
+}
+
+.ob-hero-pill i,
+.ob-hero-pill svg {
+  color: #7c5cfc;
+}
+
+.ob-hero-art {
+  position: relative;
+  width: 220px;
+  height: 140px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.ob-hero-art::before {
+  content: "";
+  position: absolute;
+  inset: -30px;
+  background: radial-gradient(circle at 60% 40%, rgba(124,92,252,.16), transparent 65%);
+  border-radius: 50%;
+}
+
+.ob-hero-art-disc {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffffff, #ece9ff);
+  border: 1px solid #e4defe;
+}
+
+.ob-hero-art-card {
+  position: absolute;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-6deg);
+  width: 92px;
+  height: 108px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #ffffff, #f3f0ff);
+  border: 1px solid #e4defe;
+  box-shadow: 0 12px 24px rgba(124,92,252,.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ob-hero-art-card-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #ede9fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7c5cfc;
+}
+
+.ob-hero-art-card-line {
+  width: 46px;
+  height: 5px;
+  border-radius: 999px;
+  background: #e4defe;
+}
+
+.ob-hero-art-sparkle {
+  position: absolute;
+  color: #a78bfa;
+}
+
+@media (max-width: 768px) {
+  .ob-hero-art {
+    display: none;
+  }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type ElementType, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   CheckCircle2,
@@ -10,13 +10,10 @@ import {
   Hourglass,
   X as CloseIcon,
 } from "lucide-react";
-import { ChecklistItem, ChecklistStatus } from "@/types/employee";
+import type { ChecklistItem, ChecklistStatus } from "@/types/employee";
 import { StatusBadge } from "@/components/common/StatusBadge";
 
-const iconMap: Record<
-  ChecklistStatus,
-  { icon: React.ElementType; bg: string; color: string }
-> = {
+const iconMap: Record<ChecklistStatus, { icon: ElementType; bg: string; color: string }> = {
   done: { icon: CheckCircle2, bg: "#DCFCE7", color: "#16A34A" },
   inProgress: { icon: Clock, bg: "#FEF3C7", color: "#D97706" },
   failed: { icon: XOctagon, bg: "#FEE2E2", color: "#DC2626" },
@@ -128,11 +125,8 @@ export function OnboardingChecklist({ items }: { items: ChecklistItem[] }) {
 const pcModalStyles = `
 .checklist-grid{
   display:grid;
-  grid-template-columns:repeat(2, 1fr);
+  grid-template-columns:1fr;
   gap:14px;
-}
-@media (max-width: 640px){
-  .checklist-grid{ grid-template-columns:1fr; }
 }
 
 .pc-card{

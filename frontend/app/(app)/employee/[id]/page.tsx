@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -48,9 +47,6 @@ export default function EmployeeProfilePage() {
     return (
       <div className="ep-page">
         <div className="ep-wrap">
-          <Link href="/employee-directory" className="ep-back">
-            <span className="ep-back-arrow">←</span> Employee Directory
-          </Link>
           <div className="ep-glass ep-profile-card flex h-40 items-center justify-center">
             <span className="text-sm text-vantara-text-muted">
               Loading employee...
@@ -67,10 +63,6 @@ export default function EmployeeProfilePage() {
   return (
     <div className="ep-page">
       <div className="ep-wrap">
-        <Link href="/employee-directory" className="ep-back">
-          <span className="ep-back-arrow">←</span> Employee Directory
-        </Link>
-
         {/* ProfileHeader now sits inside the same white card box style
             used by the Onboarding Progress card below it. */}
         <div className="ep-glass ep-profile-card">

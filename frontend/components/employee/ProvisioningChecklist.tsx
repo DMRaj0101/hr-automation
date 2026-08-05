@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   Clock,
   XOctagon,
-  ShieldOff,
   Hourglass,
   ChevronDown,
   ChevronRight,
@@ -15,8 +14,16 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 // No CSS module import — these classes live in your global stylesheet
 // (e.g. app/globals.css), which must already define .pcPills, .pcSection, etc.
 
+// Simplified display statuses — "blocked" items from the data are folded into "failed"
+type DisplayStatus = "done" | "inProgress" | "failed" | "pending";
+
+function toDisplayStatus(status: ChecklistStatus): DisplayStatus {
+  if (status === "blocked") return "failed";
+  return status as DisplayStatus;
+}
+
 const iconMap: Record<
-  ChecklistStatus,
+  DisplayStatus,
   { icon: React.ElementType; iconBg: string; iconColor: string }
 > = {
   done: {
@@ -34,11 +41,6 @@ const iconMap: Record<
     iconBg: "#FEE2E2",
     iconColor: "#DC2626",
   },
-  blocked: {
-    icon: ShieldOff,
-    iconBg: "#FEE2E2",
-    iconColor: "#DC2626",
-  },
   pending: {
     icon: Hourglass,
     iconBg: "#F1F5F9",
@@ -46,51 +48,47 @@ const iconMap: Record<
   },
 };
 
-const statusLabelMap: Record<ChecklistStatus, string> = {
+const statusLabelMap: Record<DisplayStatus, string> = {
   done: "Completed",
   inProgress: "In Progress",
   failed: "Failed",
-  blocked: "Blocked",
   pending: "Pending",
 };
 
-const pillLabelMap: Record<ChecklistStatus, string> = {
+const pillLabelMap: Record<DisplayStatus, string> = {
   done: "Done",
   inProgress: "In Progress",
   failed: "Failed",
-  blocked: "Blocked",
-  pending: "Pending",
+  pending: "Not Started",
 };
 
 export function ProvisioningChecklist({ items }: { items: ChecklistItem[] }) {
   const [completedOpen, setCompletedOpen] = useState(false);
   const [notStartedOpen, setNotStartedOpen] = useState(false);
 
-  const attentionItems = items.filter(
-    (item) =>
-      item.status === "failed" ||
-      item.status === "blocked" ||
-      item.status === "inProgress"
-  );
+  // Needs Attention = Failed (incl. blocked) + In Progress
+  const attentionItems = items.filter((item) => {
+    const status = toDisplayStatus(item.status);
+    return status === "failed" || status === "inProgress";
+  });
   const completedItems = items.filter((item) => item.status === "done");
   const notStartedItems = items.filter((item) => item.status === "pending");
 
-  const statusCounts: Record<ChecklistStatus, number> = {
+  const statusCounts: Record<DisplayStatus, number> = {
     done: 0,
     inProgress: 0,
     failed: 0,
-    blocked: 0,
     pending: 0,
   };
   items.forEach((item) => {
-    statusCounts[item.status] += 1;
+    statusCounts[toDisplayStatus(item.status)] += 1;
   });
 
   return (
     <div>
       {/* ================= SUMMARY PILLS ================= */}
       <div className="pcPills">
-        {(Object.keys(statusCounts) as ChecklistStatus[])
+        {(Object.keys(statusCounts) as DisplayStatus[])
           .filter((status) => statusCounts[status] > 0)
           .map((status) => (
             <span
@@ -106,7 +104,7 @@ export function ProvisioningChecklist({ items }: { items: ChecklistItem[] }) {
           ))}
       </div>
 
-      {/* ================= NEEDS ATTENTION ================= */}
+      {/* ================= NEEDS ATTENTION (Failed + In Progress) ================= */}
       {attentionItems.length > 0 && (
         <div className="pcSection">
           <div className="pcSectionHeader pcSectionHeaderAttention">
@@ -120,7 +118,8 @@ export function ProvisioningChecklist({ items }: { items: ChecklistItem[] }) {
 
           <div className="pcSectionBody">
             {attentionItems.map((item, idx) => {
-              const { icon: Icon, iconBg, iconColor } = iconMap[item.status];
+              const displayStatus = toDisplayStatus(item.status);
+              const { icon: Icon, iconBg, iconColor } = iconMap[displayStatus];
               return (
                 <div key={idx} className="pcRow">
                   <div
@@ -135,7 +134,7 @@ export function ProvisioningChecklist({ items }: { items: ChecklistItem[] }) {
                     <span className="pcRowPlatform">{item.platform}</span>
                   </div>
                   <div>
-                    <StatusBadge status={statusLabelMap[item.status]} />
+                    <StatusBadge status={statusLabelMap[displayStatus]} />
                   </div>
                 </div>
               );
