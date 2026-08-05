@@ -15,6 +15,8 @@ load_dotenv()
 import asyncio
 
 from fastapi import FastAPI
+
+
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
@@ -49,7 +51,7 @@ app.include_router(agent_ticketing.router)
 app.include_router(healthcheck.router)
 app.include_router(employeeDirectory.router)
 app.include_router(onboardingDetails.router)
-app.include_router(kimai_routes.kimai_router)
+app.include_router(kimai_routes.router)
 # TODO: app.include_router(approvals.router) -- see routers/approvals.py's
 # module docstring, this is intentionally not wired in yet.
 
