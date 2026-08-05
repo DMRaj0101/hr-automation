@@ -39,3 +39,33 @@ def get_team_routing() -> dict:
     """PDD Section 4.4 -- which generic team a ticket for a given
     provisioning item routes to (IT / Admin / Security / Facilities / Payroll)."""
     return _load("team_routing.json")
+
+class Config:
+    """Loads and exposes all environment-based configuration."""
+
+    def __init__(self, env_path: str = r".env"):
+        load_dotenv(dotenv_path=env_path)
+
+        # self.glpi_api_url = self._require("GLPI_API_URL")
+        # self.glpi_app_token = self._require("GLPI_APP_TOKEN")
+        # self.glpi_user_token = self._require("GLPI_USER_TOKEN")
+
+        # self.pg_host = self._require("PG_HOST")
+        # self.pg_port = self._require("PG_PORT")
+        # self.pg_database = self._require("PG_DATABASE")
+        # self.pg_user = self._require("PG_USER")
+        # self.pg_password = self._require("PG_PASSWORD")
+        # self.database_url = self._require("DATABASE_URL")
+        self.kimai_api_url = self._require("KIMAI_API_URL")
+        self.kimai_admin_token = self._require("KIMAI_ADMIN_TOKEN")
+
+    @staticmethod
+    def _require(key: str) -> str:
+        value = os.getenv(key)
+        if not value:
+            raise ValueError(f"Missing required environment variable: {key}")
+        return value
+
+if __name__=="__main__":
+    config=Config()
+    print(config.kimai_admin_token)
