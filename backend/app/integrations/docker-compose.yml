@@ -1,0 +1,57 @@
+services:
+
+  db:
+    image: mysql:8.3
+    container_name: kimai-db
+
+    environment:
+      MYSQL_DATABASE: kimai
+      MYSQL_USER: kimaiuser
+      MYSQL_PASSWORD: kimaipassword
+      MYSQL_ROOT_PASSWORD: rootpassword
+
+    volumes:
+      - kimai_mysql:/var/lib/mysql
+
+    command: --default-storage-engine innodb
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+    restart: unless-stopped
+
+
+  kimai:
+    image: kimai/kimai2:stable
+    container_name: kimai-app
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    ports:
+      - "8001:8001"
+
+    environment:
+      APP_SECRET: "change-this-to-a-long-random-secret-key"
+      TRUSTED_HOSTS: "localhost|127.0.0.1"
+
+      ADMINMAIL: "admin@kimai.local"
+      ADMINPASS: "admin123"
+
+      DATABASE_URL: "mysql://kimaiuser:kimaipassword@db/kimai?charset=utf8mb4&serverVersion=8.3.0"
+
+    volumes:
+      - kimai_data:/opt/kimai/var/data
+      - kimai_plugins:/opt/kimai/var/plugins
+
+    restart: unless-stopped
+
+
+volumes:
+  kimai_mysql:
+  kimai_data:
+  kimai_plugins:
