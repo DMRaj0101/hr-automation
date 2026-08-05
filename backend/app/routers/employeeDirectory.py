@@ -99,7 +99,7 @@ def _employee_out(employee: Employee, checklist: list[dict]) -> dict:
         "dept": employee.department,
         # TODO: no "experienced" | "fresher" classification exists anywhere
         # in the backend yet -- Employee has no matching column.
-        "type": None,
+        "type": "experienced",#MOCK
         "manager": employee.manager,
         "status": employee.status,
         "progress": round(100 * done / total) if total else 0,
@@ -109,11 +109,11 @@ def _employee_out(employee: Employee, checklist: list[dict]) -> dict:
         # ProvisioningRecord only record actual timestamps), so "est" and the
         # "remaining" days derived from it can't be populated without
         # inventing a new estimate -- left None per instructions.
-        "est": None,
-        "remaining": None,
+        "est": "8/15",#MOCK
+        "remaining": 16,#MOCK
         "email": employee.email,
         # TODO: Employee has no phone column.
-        "phone": None,
+        "phone": 984156,#MOCK
         "office": employee.office,
         # Employee only stores one manager field -- mirrored here since
         # there's no second "employment manager" column to source empManager
@@ -122,9 +122,9 @@ def _employee_out(employee: Employee, checklist: list[dict]) -> dict:
         "hireDate": employee.joining_date,
         # TODO: computing years-of-service from joining_date would require
         # date-math business logic this router isn't meant to invent.
-        "yearsOfService": None,
+        "yearsOfService": 1.0,#MOCK
         # TODO: no job-level column exists on Employee.
-        "jobLevel": None,
+        "jobLevel": "Associate",#MOCK
         "title": employee.title,
     }
 
