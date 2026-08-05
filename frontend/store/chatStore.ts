@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { ChatMessage } from "@/types/monitoring";
-import { getChatMessages, getChipReplies } from "@/services/knowledge.service";
+import { getChatMessages, getSuggestionChips, askOpsQuestion } from "@/services/knowledge.service";
 
 interface ChatState {
   messages: ChatMessage[];
@@ -13,15 +13,8 @@ interface ChatState {
 }
 
 const FALLBACK =
-  "I don't have a specific match for that yet — try asking about an employee's status, what's pending, or failed tickets.";
+  "I'm unable to answer that question right now. Please try again later.";
 const FALLBACK_SOURCE = "Knowledge Agent";
-
-async function resolveReply(text: string) {
-  const replies = await getChipReplies();
-  const match = replies[text];
-  if (match) return match;
-  return { text: FALLBACK, source: FALLBACK_SOURCE };
-}
 
 export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
@@ -36,17 +29,31 @@ export const useChatStore = create<ChatState>((set, get) => ({
   sendMessage: async (text) => {
     const trimmed = text.trim();
     if (!trimmed) return;
+    
+    // Add user message
     set((s) => ({
       messages: [...s.messages, { role: "user", text: trimmed }],
       input: "",
     }));
-    const reply = await resolveReply(trimmed);
-    set((s) => ({
-      messages: [
-        ...s.messages,
-        { role: "agent", text: reply.text, source: reply.source },
-      ],
-    }));
+    
+    // Get reply from backend ops-chat endpoint
+    try {
+      const reply = await askOpsQuestion(trimmed);
+      set((s) => ({
+        messages: [
+          ...s.messages,
+          { role: "agent", text: reply.text, source: reply.source },
+        ],
+      }));
+    } catch (err) {
+      // Fallback on error
+      set((s) => ({
+        messages: [
+          ...s.messages,
+          { role: "agent", text: FALLBACK, source: FALLBACK_SOURCE },
+        ],
+      }));
+    }
   },
   sendChip: async (text) => {
     await get().sendMessage(text);
