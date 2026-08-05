@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LogOut, User } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ArrowLeft, LogOut, User } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { Avatar } from "@/components/common/Avatar";
 import type { ReactNode } from "react";
@@ -18,8 +18,12 @@ export function Header({
 }) {
   const { user, logout } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const showBack =
+  pathname.startsWith("/employee/") || pathname.startsWith("/onboarding/");
 
   const handleLogout = () => {
     logout();
@@ -41,12 +45,22 @@ export function Header({
     <header className="header-glass relative flex h-20 shrink-0 items-center justify-between border-b border-vantara-border px-6">
       {/* Left */}
       <div className="relative z-10 flex items-center gap-3 min-w-0">
-        {icon && (
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FBEFD9] text-[#B8862E]">
-            <div className="scale-95">
-              {icon}
+        {showBack ? (
+          <button
+            onClick={() => router.back()}
+            aria-label="Back"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FBEFD9] text-[#B8862E] hover:opacity-80"
+          >
+            <ArrowLeft size={20} />
+          </button>
+        ) : (
+          icon && (
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FBEFD9] text-[#B8862E]">
+              <div className="scale-95">
+                {icon}
+              </div>
             </div>
-          </div>
+          )
         )}
 
         {title && (

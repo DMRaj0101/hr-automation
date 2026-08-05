@@ -1,133 +1,205 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { User, RefreshCcw, Rocket, IdCard, Briefcase, Sparkles } from "lucide-react";
+
 import { useOnboardingDetail } from "@/hooks/useOnboardingDetail";
 import { useChecklist } from "@/hooks/useEmployee";
-import { useMonitoring } from "@/hooks/useMonitoring";
-import { Avatar } from "@/components/common/Avatar";
+
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { ProgressBar } from "@/components/common/ProgressBar";
+
 import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
 import { OnboardingSummaryCards } from "@/components/onboarding/OnboardingSummaryCards";
-import { AlertCard } from "@/components/onboarding/AlertCard";
-import { SystemHealthGrid } from "@/components/onboarding/SystemHealthGrid";
-import { Button } from "@/components/ui/button";
+import ActiveAlerts from "@/components/onboarding/ActiveAlerts";
+
 import { OnboardingAlert } from "@/types/onboarding";
 
 export default function OnboardingDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const id = params.id;
+
   const { employee, detail } = useOnboardingDetail(id);
   const { data: checklist } = useChecklist(id);
-  const { systemHealth } = useMonitoring();
 
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const alerts: OnboardingAlert[] = detail.data?.alerts ?? [];
 
-  const alerts: OnboardingAlert[] =
-    detail.data?.alerts.filter((a) => !dismissedIds.has(a.id)) ?? [];
+  const handleAlertClick = (alert: OnboardingAlert) => {
+    console.log("Alert Clicked:", alert);
 
-  const dismissAlert = (alertId: string) => {
-    setDismissedIds((prev) => new Set(prev).add(alertId));
+    // Later you can
+    // router.push(...)
+    // or open a modal
   };
 
   if (employee.isLoading || !employee.data) {
-    return <div className="page-content text-vantara-text-muted">Loading...</div>;
+    return (
+      <div className="page-content text-vantara-text-muted">
+        Loading...
+      </div>
+    );
   }
 
   const emp = employee.data;
   const od = detail.data;
 
+  const initials = emp.name
+    .split(" ")
+    .map((n: string) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <div className="page-content space-y-5">
-      <Link
-        href="/onboarding"
-        className="inline-block text-[13px] font-semibold"
-        style={{ color: "#D9A653", marginBottom: 20 }}
-      >
-        ← Onboarding Tracker
-      </Link>
+      {/* Employee hero */}
 
-      <div className="flex items-center gap-4">
-        <Avatar name={emp.name} size={56} />
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold text-vantara-navy">{emp.name}</h1>
-            <StatusBadge status={od?.status ?? emp.status} />
-            <span
-              className="rounded-full px-3 py-1 text-xs font-semibold"
-              style={{ backgroundColor: "#FEF3C7", color: "#92400E" }}
+      <div className="ob-hero-card">
+        <div className="ob-hero-left">
+          <div className="ob-hero-avatar-wrap">
+            <div
+              className="flex items-center justify-center rounded-full bg-vantara-navy text-white font-medium"
+              style={{ width: 64, height: 64, fontSize: 20 }}
             >
-              {od?.type ?? "Onboarding"}
-            </span>
+              {initials}
+            </div>
+            <span className="ob-hero-avatar-dot" />
           </div>
-          <p className="mt-1 text-sm text-vantara-text-muted">
-            {emp.id} · {emp.title}
-          </p>
+
+          <div>
+            <div className="ob-hero-name-row">
+              <span className="ob-hero-name">{emp.name}</span>
+
+              <span className="ob-hero-badge">
+                <RefreshCcw size={13} strokeWidth={2.5} />
+                {od?.status ?? "In Progress"}
+              </span>
+
+              <span className="ob-hero-badge">
+                <Rocket size={13} strokeWidth={2.5} />
+                {od?.type ?? "Onboarding"}
+              </span>
+            </div>
+
+            <div className="ob-hero-pills">
+              <span className="ob-hero-pill">
+                <IdCard size={14} strokeWidth={2} />
+                {emp.id}
+              </span>
+              <span className="ob-hero-pill">
+                <Briefcase size={14} strokeWidth={2} />
+                {emp.title}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="ob-hero-art">
+          <div className="ob-hero-art-disc" />
+          <div className="ob-hero-art-card">
+            <div className="ob-hero-art-card-icon">
+              <User size={16} strokeWidth={2} />
+            </div>
+            <div className="ob-hero-art-card-line" />
+            <div className="ob-hero-art-card-line" style={{ width: 30 }} />
+          </div>
+          <Sparkles size={16} className="ob-hero-art-sparkle" style={{ top: 10, right: 20 }} />
+          <Sparkles size={12} className="ob-hero-art-sparkle" style={{ bottom: 40, left: 4 }} />
         </div>
       </div>
+
+      {/* Summary */}
 
       <OnboardingSummaryCards
         fields={[
-          { label: "Manager", value: emp.manager },
-          { label: "Start Date", value: od?.startDate ?? emp.start ?? "—" },
-          { label: "Planned Completion", value: od?.plannedCompletion ?? emp.est ?? "—" },
-          { label: "Days Remaining", value: `${od?.daysRemaining ?? emp.remaining ?? "—"}` },
+          {
+            label: "Manager",
+            value: emp.manager,
+          },
+          {
+            label: "Start Date",
+            value: od?.startDate ?? emp.start ?? "—",
+          },
+          {
+            label: "Planned Completion",
+            value:
+              od?.plannedCompletion ??
+              emp.est ??
+              "—",
+          },
+          {
+            label: "Days Remaining",
+            value: `${
+              od?.daysRemaining ??
+              emp.remaining ??
+              "—"
+            }`,
+          },
         ]}
       />
 
+      {/* Progress */}
+
       <div className="card">
         <div className="flex items-center justify-between text-sm">
-          <span className="font-semibold text-vantara-navy">Overall Progress</span>
-          <span className="font-semibold text-vantara-navy">{emp.progress}%</span>
-        </div>
-        <ProgressBar value={emp.progress} className="mt-3" />
-      </div>
+          <span className="font-semibold text-vantara-navy">
+            Overall Progress
+          </span>
 
-      <div className="grid gap-5" style={{ gridTemplateColumns: "1.4fr 1fr" }}>
-        <div className="card">
-          <h3 className="font-semibold text-vantara-navy">Provisioning Checklist</h3>
-          <div className="mt-4">
-            <OnboardingChecklist items={checklist ?? []} />
-          </div>
-        </div>
-        <div className="card">
-          <h3 className="font-semibold text-vantara-navy">Active Alerts</h3>
-          <div className="mt-4 flex flex-col gap-3.5">
-            {alerts.length === 0 && (
-              <p className="text-sm text-vantara-text-muted">No active alerts.</p>
-            )}
-            {alerts.map((alert) => (
-              <AlertCard key={alert.id} alert={alert} onDismiss={dismissAlert} />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-vantara-navy">System Health Status</h3>
-          <span
-            className="rounded-full px-3 py-1 text-xs font-semibold"
-            style={{ backgroundColor: "#FEF3C7", color: "#92400E" }}
-          >
-            Attention Needed
+          <span className="font-semibold text-vantara-navy">
+            {emp.progress}%
           </span>
         </div>
-        <div className="mt-4">
-          <SystemHealthGrid items={systemHealth.data ?? []} />
-        </div>
+
+        <ProgressBar
+          value={emp.progress}
+          className="mt-3"
+        />
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        <Button variant="secondary" onClick={() => router.push("/tickets")}>
-          View Tickets
-        </Button>
-        <Button variant="secondary">View Timeline</Button>
-        <Button variant="secondary">View System Details</Button>
-        <Button>Export</Button>
+      {/* Main Grid */}
+
+      <div
+        className="grid gap-5"
+        style={{
+         gridTemplateColumns: "1.7fr 1fr",
+        }}
+      >
+        {/* Provisioning */}
+
+        <div className="card">
+          <h3 className="font-semibold text-vantara-navy">
+            Provisioning Checklist
+          </h3>
+
+          <div className="mt-4">
+            <OnboardingChecklist
+              items={checklist ?? []}
+            />
+          </div>
+        </div>
+
+        {/* Active Alerts */}
+
+        <div className="card p-0 overflow-hidden">
+
+          {alerts.length === 0 ? (
+
+            <div className="p-6 text-sm text-vantara-text-muted">
+              No active alerts.
+            </div>
+
+          ) : (
+
+            <ActiveAlerts
+              alerts={alerts}
+              onAlertClick={handleAlertClick}
+            />
+
+          )}
+
+        </div>
+
       </div>
     </div>
   );

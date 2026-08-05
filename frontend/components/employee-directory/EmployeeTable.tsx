@@ -23,15 +23,7 @@ export function EmployeeTable({
   const isTablet = useMediaQuery("(max-width: 1024px)");
 
   const goToProfile = (id: string) => {
-    const navigate = () => router.push(`/employee/${id}`);
-
-    // @ts-ignore - startViewTransition isn't in all TS lib targets yet
-    if (typeof document !== "undefined" && document.startViewTransition) {
-      // @ts-ignore
-      document.startViewTransition(navigate);
-    } else {
-      navigate();
-    }
+    router.push(`/employee/${id}`);
   };
 
   // ---------- MOBILE: card list ----------
