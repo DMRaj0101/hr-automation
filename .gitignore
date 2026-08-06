@@ -24,7 +24,7 @@ frontend/*.tsbuildinfo
 
 # Env files -- never commit real secrets
 .env
-mailu.env
+
 backend/.env
 backend/mailu.env
 

@@ -47,12 +47,13 @@ STEPS = [
     STEP_PROVISIONING, STEP_TICKETING, STEP_MONITORING,
 ]
 
-# agent_key -> connector function. TODO: Kimai/Snipe-IT still raise
-# NotImplementedError -- see the matching integrations/*_connector.py
-# file. Wired here (rather than inline below) so adding a connector is
-# a one-line change once it's implemented.
+# agent_key -> connector function. TODO: Snipe-IT still raises
+# NotImplementedError -- see integrations/snipeit_connector.py. Wired
+# here (rather than inline below) so adding a connector is a one-line
+# change once it's implemented.
 #
-# Keycloak (identity) and MailU (email) are real implementations.
+# Keycloak (identity), MailU (email), and Kimai (time_billing) are real
+# implementations.
 # Lambdas take (emp, item) instead of just (emp) -- needed to fix a
 # real dispatch bug: IT Support has TWO separate "identity" provisioning
 # items (regular account + scoped Helpdesk Admin role), and the
@@ -368,4 +369,3 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
         "functional_items": len(plan["functional_items"]),
         "mock_items": len(plan["mock_items"]),
     }
-

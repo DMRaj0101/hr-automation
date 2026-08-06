@@ -3,10 +3,10 @@ Monitoring Agent -- PDD Section 5. Polling-based (not event-driven): checks
 each in-progress ProvisioningRecord on a schedule rather than waiting for
 agents to push status.
 
-identity (Keycloak), email (MailU), and document_management (OpenKM) are
-wired to real status-check functions. time_billing (Kimai) and asset
-(Snipe-IT) are still None -- poll_once() skips those cleanly until
-those two connectors exist.
+identity (Keycloak), email (MailU), document_management (OpenKM), and
+time_billing (Kimai) are wired to real status-check functions. asset
+(Snipe-IT) is still None -- poll_once() skips that cleanly until that
+connector exists.
 
 Retry backoff, failure-ticket creation, and SLA breach detection are
 now implemented (previously all three were TODO stubs) -- see
@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import ProvisioningRecord, Ticket, AuditLog, Employee
 from app.agents import ticket_agent
-from app.integrations import openkm_connector, keycloak_connector, mailu_connector
+from app.integrations import openkm_connector, keycloak_connector, mailu_connector, kimai_connector
 from app import email_client
 
 POLL_INTERVAL_SECONDS = int(os.getenv("MONITORING_POLL_INTERVAL_SECONDS", "30"))
@@ -38,15 +38,15 @@ MANAGER_TEAM_EMAIL = os.getenv("MANAGER_TEAM_EMAIL", "")
 # "give up, create a ticket" case, not a further backoff wait.
 RETRY_BACKOFF_SECONDS = [0, 30, 120]
 
-# TODO: wire the remaining two to integrations/<system>_connector.py's
-# get_*_status(external_ref) function once Kimai/Snipe-IT are
-# implemented. Left as None so poll_once() below can skip cleanly (and
-# log a clear "not implemented yet" note) rather than crashing the
-# whole poll loop over one missing piece.
+# TODO: wire the remaining one to integrations/snipeit_connector.py's
+# get_asset_status(external_ref) once Snipe-IT is implemented. Left as
+# None so poll_once() below can skip cleanly (and log a clear "not
+# implemented yet" note) rather than crashing the whole poll loop over
+# one missing piece.
 STATUS_CHECKERS = {
     "identity": keycloak_connector.get_user_status,  # implemented
     "email": mailu_connector.get_mailbox_status,      # implemented
-    "time_billing": None,  # TODO: app.integrations.kimai_connector.get_user_status
+    "time_billing": kimai_connector.get_user_status,  # implemented
     "asset": None,         # TODO: app.integrations.snipeit_connector.get_asset_status
     "document_management": openkm_connector.get_workspace_status,  # implemented
 }
