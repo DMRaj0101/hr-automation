@@ -23,7 +23,7 @@ def get_roles() -> dict:
     return _load("roles.json")
 
 
-def get_provisioning_matrix() -> dict:
+def get_provisioning_matrix() -> dict[str, list[dict]]:
     """The PDD Section 3 tables (3.1 Tax, 3.2 Audit, 3.3 Law, 3.4 IT Support),
     structured as: role -> list of provisioning items, each with the
     software name, whether it's Functional (real API call) or Mock
