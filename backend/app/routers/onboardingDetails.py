@@ -124,7 +124,7 @@ def _build_alerts(db: Session, employee_id: str) -> list[dict]:
 
 @router.get("/{employee_id}")
 def get_onboarding_details(employee_id: str, db: Session = Depends(get_db)):
-    employee = db.query(Employee).filter(Employee.id == employee_id).first()
+    employee = db.query(Employee).filter(Employee.employee_id == employee_id).first()
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
 

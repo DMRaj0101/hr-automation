@@ -34,6 +34,21 @@ def _map_ticket_status(status: str) -> str:
     }.get(status, "pending")
 
 
+def _map_employee_status(status: str) -> str:
+    """Map backend employee status to frontend Employment Lifecycle display values."""
+    return {
+        "provisioning": "Onboarding",
+        "onboarding": "Onboarding",
+        "in-progress": "Onboarding",
+        "in_progress": "Onboarding",
+        "registered": "Active",
+        "active": "Active",
+        "offboarding": "Offboarding",
+        "inactive": "Offboarding",
+        "pending": "Pending",
+    }.get(status.lower() if status else "", status or "Pending")
+
+
 def _provisioning_detail(record: ProvisioningRecord) -> str:
     if record.status == "completed":
         return f"Completed{f' on {record.completed_at.date()}' if record.completed_at else ''}"
@@ -64,9 +79,6 @@ def _build_checklist(db: Session, employee_id: str) -> list[dict]:
             "status": _map_provisioning_status(r.status),
             "kind": "Functional",
             "detail": _provisioning_detail(r),
-            # external_ref is the field models/employee.py's ProvisioningRecord
-            # docstring earmarks for "the real system's ID" / API outcome, but
-            # no connector populates it yet -- TODO once one does.
             "outcome": r.external_ref,
         }
         for r in provisioning
@@ -78,9 +90,6 @@ def _build_checklist(db: Session, employee_id: str) -> list[dict]:
             "status": _map_ticket_status(t.status),
             "kind": "Mock",
             "detail": t.notes,
-            # TODO: Ticket has no dedicated "outcome"/system-response field
-            # (only status_history, which is JSON and better read via the
-            # existing GET /tickets/{ticket_id} endpoint if ever needed here).
             "outcome": None,
         }
         for t in tickets
@@ -95,36 +104,25 @@ def _employee_out(employee: Employee, checklist: list[dict]) -> dict:
 
     return {
         "id": employee.id,
+        "employee_id": employee.employee_id,
         "name": employee.name,
         "dept": employee.department,
-        # TODO: no "experienced" | "fresher" classification exists anywhere
-        # in the backend yet -- Employee has no matching column.
-        "type": "experienced",#MOCK
+        "type": "experienced",  # MOCK
         "manager": employee.manager,
-        "status": employee.status,
+        "status": _map_employee_status(employee.status),  # MAP: provisioning -> Onboarding
         "progress": round(100 * done / total) if total else 0,
         "blockers": blocked,
         "start": employee.joining_date,
-        # TODO: no estimated-completion-date field exists (OnboardingTracker/
-        # ProvisioningRecord only record actual timestamps), so "est" and the
-        # "remaining" days derived from it can't be populated without
-        # inventing a new estimate -- left None per instructions.
-        "est": "8/15",#MOCK
-        "remaining": 16,#MOCK
+        "est": "8/15",  # MOCK
+        "remaining": 16,  # MOCK
         "email": employee.email,
-        # TODO: Employee has no phone column.
-        "phone": 984156,#MOCK
+        "phone": 7598986411,  # MOCK
         "office": employee.office,
-        # Employee only stores one manager field -- mirrored here since
-        # there's no second "employment manager" column to source empManager
-        # from separately.
+        "employee location": "miami",  # MOCK
         "empManager": employee.manager,
         "hireDate": employee.joining_date,
-        # TODO: computing years-of-service from joining_date would require
-        # date-math business logic this router isn't meant to invent.
-        "yearsOfService": 1.0,#MOCK
-        # TODO: no job-level column exists on Employee.
-        "jobLevel": "Associate",#MOCK
+        "yearsOfService": 1.0,  # MOCK
+        "jobLevel": "Associate",  # MOCK
         "title": employee.title,
     }
 

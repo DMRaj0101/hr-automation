@@ -19,7 +19,7 @@ from sqlalchemy import func
 from app.database import get_db
 from app.models import Employee, Ticket, ProvisioningRecord
 from app.config import get_provisioning_matrix
-from app.orchestrators import health_check_orchestrator
+from app.orchestrators.health_check_orchestrator import get_cached_health
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -46,6 +46,8 @@ def _build_integration_coverage() -> dict:
     real_systems: set[str] = set()
     mock_systems: set[str] = set()
     for items in matrix.values():
+        if not isinstance(items, list):
+            continue
         for item in items:
             names = {n.strip() for n in (item.get("software") or "").split(",") if n.strip()}
             if item.get("status") == "functional":
@@ -141,7 +143,7 @@ def _build_system_health() -> list[dict]:
     health_check_orchestrator.py) -- never triggers a live sweep from a
     router, per that module's own caching requirement. Empty list if the
     background loop hasn't completed its first sweep yet."""
-    health = health_check_orchestrator.get_cached_health()
+    health = get_cached_health()
     return [{"name": d.get("name"), "status": d.get("status")} for d in health.get("systemHealthDetail", [])]
 
 
