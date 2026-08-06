@@ -1,5 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from typing import Optional
+from decimal import Decimal
 
 
 class KimaiUserCreateRequest(BaseModel):
@@ -44,3 +45,22 @@ class KimaiTimesheetUpdateRequest(BaseModel):
     begin: Optional[str] = None
     end: Optional[str] = None
     description: Optional[str] = None
+
+class CustomerCreateRequest(BaseModel):
+    name: str
+    number: str | None = None
+
+class CustomerResponse(BaseModel):
+    id: int
+    name: str
+    number: str | None = None
+
+class TimesheetResponse(BaseModel):
+    timesheet_id: int
+    duration_hours: float
+    hourly_rate: Decimal
+    bill: Decimal
+
+class UserRateRequest(BaseModel):
+    hourly_rate: Decimal = Field(ge=0)
+    internal_rate: Decimal = Field(ge=0)

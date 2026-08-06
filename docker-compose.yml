@@ -26,30 +26,38 @@ services:
       OLLAMA_MODEL: gpt-oss:120b-cloud
       JWT_SECRET: poc-dev-secret-change-me
 
-      # Identity Agent -- Keycloak. Realm/client/roles (Tax, Audit, Law,
-      # IT Support + the scoped helpdesk role) must exist in Keycloak
-      # before onboarding will succeed -- see keycloak service below.
+      # Identity Agent -- Keycloak. Realm/client/roles are now pre-baked
+      # via keycloak/import/onboarding-poc-realm.json (see the keycloak
+      # service's volumes below) -- no manual admin-console setup
+      # needed, and the secret below is FIXED (matches the import file
+      # exactly), so it won't drift out of sync on a fresh volume like
+      # it did when using master + a manually-created client. Using a
+      # dedicated realm rather than `master` -- mixing application
+      # clients into Keycloak's own admin realm is best avoided even
+      # for a POC.
       KEYCLOAK_URL: http://keycloak:8080
-      KEYCLOAK_REALM: master
+      KEYCLOAK_REALM: onboarding-poc
       KEYCLOAK_ADMIN_CLIENT_ID: identity_agent
       KEYCLOAK_ADMIN_CLIENT_SECRET: DjkweDhG279JIKxuuXZTC8Mdu9QfhooU
+      KEYCLOAK_SCOPED_HELPDESK_ROLE: helpdesk-admin-scoped
 
       # Email Agent -- MailU. MAILU_URL points at `front` (the nginx
-      # entry point) rather than `admin` directly -- MailU's Admin API
-      # is served at {front}/api/v1/... via the WEB_API=/api path
-      # prefix in mailu.env, reverse-proxied internally to the admin
-      # container. Pointing straight at `admin` would miss that prefix
-      # entirely and 404. MAILU_DOMAIN and MAILU_ADMIN_TOKEN below match
-      # the dev's actual mailu.env (DOMAIN=company.local, API_TOKEN=...)
-      # -- note this means employee mailboxes land on @company.local,
-      # NOT @vantara.com like their business email in the HRMS fixture
-      # data. Worth confirming whether that's intentional or whether
-      # mailu.env's DOMAIN should be changed to vantara.com to match.
+      # entry point) rather than `admin` directly, and rather than
+      # `localhost` (which inside the backend container refers to the
+      # backend container itself, not front) -- MailU's Admin API is
+      # served at {front}/api/v1/... via the WEB_API=/api path prefix
+      # in mailu.env, reverse-proxied internally to the admin
+      # container. MAILU_DOMAIN must have a matching domain actually
+      # created in MailU first (Mailu does not auto-create domains from
+      # the DOMAIN env var) -- see admin UI or POST /api/v1/domain.
       MAILU_URL: http://front
       MAILU_DOMAIN: vantara.com
       MAILU_ADMIN_TOKEN: NDZGBWZKE82BF4DA8W0FB2594DGWAAQD
 
-      # Document Management Agent -- OpenKM. Defaults match the official
+      # Document Management Agent -- OpenKM. OPENKM_URL uses the
+      # container's own internal port (8080), not the host-mapped one
+      # (8082) -- container-to-container traffic never goes through
+      # the host port mapping. Defaults match the official
       # openkm/openkm-ce image's out-of-the-box superuser account.
       OPENKM_URL: http://openkm:8080/OpenKM/services/rest
       OPENKM_USER: okmAdmin
@@ -100,7 +108,7 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
-    command: start-dev
+    command: ["start-dev", "--import-realm"]
     restart: always
     depends_on:
       - keycloak-db
@@ -115,6 +123,17 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: admin
     ports:
       - "8080:8080"
+    volumes:
+      # Realm/client/roles are pre-baked here with a FIXED secret, so
+      # `docker compose up` is fully reproducible -- no more manual
+      # admin-console clicking to recreate the client, and no more
+      # secret drift between what's in this file and what Keycloak
+      # actually generated. Only imports on first boot of a given
+      # keycloak-db-data volume -- if the realm already exists (e.g.
+      # you're restarting, not starting fresh), --import-realm won't
+      # overwrite your existing one. To force a re-import, wipe
+      # keycloak-db-data (docker compose down -v) first.
+      - ./keycloak/import:/opt/keycloak/data/import
 
 ################################################################################
 # OPENKM
@@ -286,7 +305,7 @@ services:
       retries: 10
 
     restart: unless-stopped
-    
+
   kimai:
     image: kimai/kimai2:stable
     container_name: kimai-app
@@ -302,10 +321,10 @@ services:
       APP_SECRET: "change-this-to-a-long-random-secret-key"
       TRUSTED_HOSTS: "localhost|127.0.0.1"
 
-      ADMINMAIL: "admin@vantara.com"
+      ADMINMAIL: "admin@kimai.local"
       ADMINPASS: "admin123"
 
-      DATABASE_URL: "mysql://kimaiuser:kimaipassword@db/kimai?charset=utf8mb4&serverVersion=8.3.0"
+      DATABASE_URL: "mysql://kimaiuser:kimaipassword@kimai_db/kimai?charset=utf8mb4&serverVersion=8.3.0"
 
     volumes:
       - kimai_data:/opt/kimai/var/data

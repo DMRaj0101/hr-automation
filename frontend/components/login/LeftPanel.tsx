@@ -33,13 +33,14 @@ export default function LeftPanel() {
 
           <div className="flex items-center gap-6">
 
-            {/* ---- V Logo Box (rotating) ---- */}
-            <div className="v-box-wrap">
-              <div className="v-box">
-                <span className="v-box-shine" />
-                <span className="v-letter">V</span>
-              </div>
-            </div>
+            {/* ---- V Logo (static, cropped) ---- */}
+            <img
+              src="/assets/v-logo-tight.png"
+                alt="Vantara"
+                className="w-[108px] h-auto flex-shrink-0 object-contain"
+                style={{ backgroundColor: "transparent", mixBlendMode: "screen" }}
+              />
+
 
             {/* ---- Wordmark ---- */}
             <div>

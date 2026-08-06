@@ -3,7 +3,7 @@ from app.config import Config
 from app.error_logger import ErrorLogger
 from app.services import KimaiApiClient
 from app.integrations.kimai_connector import KimaiUserService,KimaiTimesheetService,KimaiCustomerService,KimaiProjectService,KimaiActivityService
-from app.schemas.kimai_schemas import (KimaiUserCreateRequest, KimaiTimesheetCreateRequest,KimaiProjectCreateRequest, KimaiProjectUpdateRequest,KimaiActivityCreateRequest, KimaiActivityUpdateRequest,KimaiTimesheetUpdateRequest)
+from app.schemas.kimai_schemas import (KimaiUserCreateRequest, KimaiTimesheetCreateRequest,KimaiProjectCreateRequest, KimaiProjectUpdateRequest,KimaiActivityCreateRequest, KimaiActivityUpdateRequest,KimaiTimesheetUpdateRequest, CustomerCreateRequest,CustomerResponse, TimesheetResponse)
 from app.exceptions.kimai_exceptions import KimaiClientServiceError
 
 router = APIRouter(prefix="/kimai", tags=["Kimai"])
@@ -32,7 +32,7 @@ def create_user(request: KimaiUserCreateRequest):
 @router.post("/timesheets", operation_id="kimai_create_timesheet")
 def create_timesheet(request: KimaiTimesheetCreateRequest):
     try:
-        return _timesheet_service.create_timesheet(
+        kimai_data = _timesheet_service.create_timesheet(
             kimai_user_id=request.kimai_user_id,
             project_id=request.project_id,
             activity_id=request.activity_id,
@@ -40,13 +40,22 @@ def create_timesheet(request: KimaiTimesheetCreateRequest):
             end=request.end,
             description=request.description,
         )
+        print(f"Kimai timesheet created: {kimai_data}")
+        return TimesheetResponse(
+        timesheet_id=kimai_data["id"],
+        duration_hours=kimai_data["duration"] / 3600,
+        hourly_rate=kimai_data["hourlyRate"],
+        bill=kimai_data["rate"]
+    )
+    
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
 @router.get("/customers", operation_id="kimai_list_customers")
 def list_customers():
     try:
-        return _customer_service.list_customers()
+        response=_customer_service.list_customers()
+        return [CustomerResponse(**customer) for customer in response]
     except KimaiClientServiceError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
@@ -147,7 +156,7 @@ def list_employee_timesheets(kimai_user_id: int):
 @router.get("/employees/{kimai_user_id}/projects", operation_id="kimai_list_employee_projects")
 def list_employee_projects(kimai_user_id: int):
     try:
-        return _timesheet_service.get_projects_used_by_user(kimai_user_id)
+        return _project_service.get_projects_used_by_user(kimai_user_id)
     except KimaiClientServiceError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
@@ -175,5 +184,22 @@ def delete_timesheet(timesheet_id: int):
     try:
         _timesheet_service.delete_timesheet(timesheet_id)
         return {"timesheet_id": timesheet_id, "deleted": True}
+    except KimaiClientServiceError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+
+@router.post("/customers")
+def create_customer(customer: CustomerCreateRequest)-> CustomerResponse:
+    try:
+        response=_customer_service.create_customer(customer.name,customer.number)
+        return CustomerResponse(**response)
+    except KimaiClientServiceError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+
+@router.put("/activities/{activity_id}/rates", operation_id="kimai_set_activity_rates")
+def set_activity_rates(activity_id: int, hourly_rate: float, internal_rate: float): 
+    try:
+        return _activity_service.set_rates_for_activity(activity_id, hourly_rate, internal_rate)
     except KimaiClientServiceError as e:
         raise HTTPException(status_code=502, detail=str(e))

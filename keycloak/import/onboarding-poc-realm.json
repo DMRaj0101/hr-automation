@@ -1,0 +1,46 @@
+{
+  "realm": "onboarding-poc",
+  "enabled": true,
+  "displayName": "Onboarding POC",
+
+  "roles": {
+    "realm": [
+      {"name": "Tax", "description": "Default role for Tax employees"},
+      {"name": "Audit", "description": "Default role for Audit employees"},
+      {"name": "Law", "description": "Default role for Law employees"},
+      {"name": "IT Support", "description": "Default role for IT Support employees"},
+      {"name": "helpdesk-admin-scoped", "description": "Scoped Helpdesk Admin role -- IT Support only, deliberately NOT full realm-admin access. Matches KEYCLOAK_SCOPED_HELPDESK_ROLE."}
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "identity_agent",
+      "name": "Identity Agent (backend service account)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "secret": "DjkweDhG279JIKxuuXZTC8Mdu9QfhooU",
+      "attributes": {
+        "clientAuthenticatorType": "client-secret"
+      }
+    }
+  ],
+
+  "users": [
+    {
+      "username": "service-account-identity_agent",
+      "enabled": true,
+      "serviceAccountClientId": "identity_agent",
+      "clientRoles": {
+        "realm-management": ["manage-users", "view-users", "query-users", "view-realm"]
+      }
+    }
+  ]
+}
