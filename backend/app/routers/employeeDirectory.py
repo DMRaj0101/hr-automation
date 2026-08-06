@@ -104,6 +104,7 @@ def _employee_out(employee: Employee, checklist: list[dict]) -> dict:
 
     return {
         "id": employee.id,
+        "employee_id": employee.employee_id,
         "name": employee.name,
         "dept": employee.department,
         "type": "experienced",  # MOCK
@@ -117,6 +118,7 @@ def _employee_out(employee: Employee, checklist: list[dict]) -> dict:
         "email": employee.email,
         "phone": 7598986411,  # MOCK
         "office": employee.office,
+        "employee location": "miami",  # MOCK
         "empManager": employee.manager,
         "hireDate": employee.joining_date,
         "yearsOfService": 1.0,  # MOCK
