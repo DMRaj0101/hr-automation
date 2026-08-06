@@ -15,6 +15,8 @@ load_dotenv()
 import asyncio
 
 from fastapi import FastAPI
+
+
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
@@ -25,6 +27,7 @@ from app.routers import (
     hr_assistant, tickets, monitoring,agent_ticketing,healthcheck,employeeDirectory,onboardingDetails,kimai_routes
 )
 from app.agents.monitoring_agent import monitoring_loop
+from app.orchestrators.health_check_orchestrator import health_check_loop
 
 app = FastAPI(title="AI Orchestration POC API -- Employee Onboarding (v3)")
 
@@ -49,7 +52,7 @@ app.include_router(agent_ticketing.router)
 app.include_router(healthcheck.router)
 app.include_router(employeeDirectory.router)
 app.include_router(onboardingDetails.router)
-app.include_router(kimai_routes.kimai_router)
+app.include_router(kimai_routes.router)
 # TODO: app.include_router(approvals.router) -- see routers/approvals.py's
 # module docstring, this is intentionally not wired in yet.
 
@@ -63,6 +66,10 @@ def on_startup():
     # time_billing/asset (Kimai/Snipe-IT) will just be skipped per-record
     # by poll_once() until those connectors exist -- safe to run now.
     asyncio.create_task(monitoring_loop())
+    # Health Check Orchestrator background sweep (orchestrators/
+    # health_check_orchestrator.py) -- powers the cache GET /system-health
+    # and the dashboard's systemHealth field read from.
+    asyncio.create_task(health_check_loop())
 
 
 @app.get("/")

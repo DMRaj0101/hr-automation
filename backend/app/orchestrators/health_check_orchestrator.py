@@ -22,13 +22,12 @@ connector, router, or main.py is touched:
     than re-reading the env vars under new names, so there's exactly one
     source of truth per integration's base URL.
 
-Follows agents/monitoring_agent.py's own "not self-registering"
-convention: this module exposes a background loop (health_check_loop())
-and a cache reader (get_cached_health()) but does not wire itself into
-main.py's on_startup() or any router -- see the TODO at the bottom of
-this file for the two one-line hookups needed once you're ready to
-expose GET /system-health, the same pattern monitoring_agent.py already
-leaves open for its own loop.
+Follows agents/monitoring_agent.py's own "not self-registering" convention:
+this module exposes a background loop (health_check_loop()) and a cache
+reader (get_cached_health()) rather than triggering itself. main.py's
+on_startup() calls asyncio.create_task(health_check_loop()) (same pattern
+as monitoring_loop()), and routers/healthcheck.py's GET /system-health
+reads the cache via get_cached_health() -- never triggers a live sweep.
 """
 from __future__ import annotations
 
@@ -52,10 +51,9 @@ from app.integrations import (
 
 logger = logging.getLogger(__name__)
 
-# How often the background loop refreshes the cache. 30 minutes per spec;
-# overridable via env var the same way monitoring_agent.py's
-# MONITORING_POLL_INTERVAL_SECONDS is.
-CHECK_INTERVAL_SECONDS = int(os.getenv("SYSTEM_HEALTH_CHECK_INTERVAL_SECONDS", str(30 * 60)))
+# How often the background loop refreshes the cache. 5 minutes; overridable
+# via env var the same way monitoring_agent.py's MONITORING_POLL_INTERVAL_SECONDS is.
+CHECK_INTERVAL_SECONDS = int(os.getenv("SYSTEM_HEALTH_CHECK_INTERVAL_SECONDS", str(5 * 60)))
 
 _TIMEOUT_SECONDS = 10.0
 _DEGRADED_THRESHOLD_MS = 1000  # UP but >= this many ms -> "Degraded", not "Operational"
@@ -226,17 +224,3 @@ async def health_check_loop():
         except Exception as exc:
             logger.error("[HEALTH CHECK ORCHESTRATOR] Sweep failed: %s", exc)
         await asyncio.sleep(CHECK_INTERVAL_SECONDS)
-
-
-# TODO (wiring -- deliberately not done in this change; this file is the
-# only file touched, per instruction). Once you're ready to expose this:
-#   1. main.py's on_startup(): add
-#        from app.orchestrators import health_check_orchestrator
-#        asyncio.create_task(health_check_orchestrator.health_check_loop())
-#      same pattern as agents/monitoring_agent.py's own (currently also
-#      unwired) monitoring_loop().
-#   2. A GET /system-health endpoint (e.g. in routers/monitoring.py, or a
-#      new router) whose body is just
-#        return health_check_orchestrator.get_cached_health()
-#      -- must call get_cached_health(), never run_health_checks() /
-#      refresh_health_cache() directly, per the caching requirement.

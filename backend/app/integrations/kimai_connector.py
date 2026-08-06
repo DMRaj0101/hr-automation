@@ -112,6 +112,11 @@ class KimaiCustomerService:
     def list_customers(self) -> list:
         return self._api_client.get("/customers", self._admin_token)
 
+    def create_customer(self, name: str, number:str) -> dict:
+        payload = {"name": name, "number": number}
+        return self._api_client.post("/customers", self._admin_token, payload)
+    
+
 
 class KimaiProjectService:
     """Full CRUD for Kimai Projects."""
@@ -185,3 +190,10 @@ class KimaiActivityService:
 
     def delete_activity(self, activity_id: int) -> bool:
         return self._api_client.delete(f"/activities/{activity_id}", self._admin_token)
+
+    def set_rates_for_activity(self, activity_id: int, hourly_rate: float, internal_rate: float) -> dict:
+        payload = {
+            "hourlyRate": hourly_rate,
+            "internalRate": internal_rate
+        }
+        return self._api_client.put(f"/activities/{activity_id}/rates", self._admin_token, payload)
