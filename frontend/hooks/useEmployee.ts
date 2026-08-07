@@ -1,10 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  getChecklist,
-  getEmployee,
-  getEmployeeAlerts,
-} from "@/services/employee.service";
-
+import { getChecklist, getEmployee } from "@/services/employee.service";
+ 
 export function useEmployee(id: string) {
   return useQuery({
     queryKey: ["employee", id],
@@ -12,7 +8,7 @@ export function useEmployee(id: string) {
     enabled: !!id,
   });
 }
-
+ 
 export function useChecklist(id: string) {
   return useQuery({
     queryKey: ["checklist", id],
@@ -20,11 +16,4 @@ export function useChecklist(id: string) {
     enabled: !!id,
   });
 }
-
-export function useEmployeeAlerts(id: string) {
-  return useQuery({
-    queryKey: ["employee-alerts", id],
-    queryFn: () => getEmployeeAlerts(id),
-    enabled: !!id,
-  });
-}
+ 

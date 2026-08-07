@@ -5,6 +5,7 @@ export interface Employee {
   name: string;
   dept: string;
   type: "experienced" | "fresher";
+  employee_id: string;
   manager: string;
   status: string;
   progress: number;

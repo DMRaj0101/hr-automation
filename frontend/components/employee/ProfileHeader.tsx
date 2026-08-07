@@ -66,7 +66,7 @@ export function ProfileHeader({ employee }: { employee: Employee }) {
           iconBg="#7C5CFC"
           iconColor="#ffffff"
           label="EMP ID"
-          value={employee.id}
+          value={employee.employee_id}
         />
         <InfoPill
           icon={<FileText size={17} />}

@@ -103,7 +103,7 @@ export default function EmployeeProfilePage() {
                 iconColor: "#2563EB",
               },
               {
-                label: "Office",
+                label: "Location",
                 value: employee.office,
                 icon: MapPin,
                 iconBg: "#FDEDDD",

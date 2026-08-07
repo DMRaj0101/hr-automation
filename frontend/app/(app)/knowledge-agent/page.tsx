@@ -26,12 +26,12 @@ export default function KnowledgeAgentChatPage() {
   }, [messages]);
 
   return (
-    <div className="flex flex-col" style={{ height: "100vh" }}>
+    <div className="flex flex-col overflow-hidden" style={{ height: "100vh" }}>
       <div className="shrink-0" style={{ padding: "40px 48px 24px" }}>
         <h1 className="page-title" style={{ marginBottom: 0 }}>Onboarding Q&amp;A</h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto" style={{ padding: "0 48px" }}>
+      <div className="flex-1 overflow-y-auto scrollbar-thin" style={{ padding: "0 48px", minHeight: 0 }}>
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           {messages.map((m, idx) => (
             <ChatMessage key={idx} message={m} />

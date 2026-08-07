@@ -25,7 +25,7 @@
       "empManager": "Divya Rao", "hireDate": "2026-07-15", "yearsOfService": "0.2",
       "jobLevel": "Associate", "title": "Tax Associate" }
   ],
-
+ 
   "tickets": [
     { "id": "TKT-1001", "employee": "Priya Sharma", "dept": "Tax", "issue": "Tax Preparation",
       "system": "CCH Axcess Tax", "team": "IT", "priority": "High", "status": "Closed", "time": "10:45 AM" },
@@ -38,7 +38,7 @@
     { "id": "TKT-2004", "employee": "Priya Sharma", "dept": "Tax", "issue": "Client Document Repository",
       "system": "OpenKM", "team": "IT", "priority": "Critical", "status": "Failed", "time": "10:11 AM" }
   ],
-
+ 
   "ticketDetails": {
     "TKT-2004": {
       "slaTotalHours": 8, "slaRemainingHours": 2.5, "slaPercentElapsed": 31,
@@ -54,109 +54,17 @@
         "text": "Escalated to OpenKM admin, investigating connectivity." } ]
     }
   },
-
+ 
   "checklists": {
     "EMP-2001": [
-      {
-  "system": "Identity Account Creation",
-  "platform": "Keycloak",
-  "status": "done",
-  "kind": "Functional",
-  "detail": "Completed 7/28",
-  "outcome": "Real Keycloak Admin REST API response — user id: a3f9e21c-88b4-4a2d-9c17-5e6d8b41f0a2",
-
-  "responseTitle": "Keycloak Admin REST API Response",
-  "requestStatus": "Success (HTTP 201 Created)",
-  "userId": "a3f9e21c-88b4-4a2d-9c17-5e6d8b41f0a2",
-  "username": "john.doe",
-  "realm": "HR-Onboarding",
-  "role": "Employee",
-  "endpoint": "POST /admin/realms/hr/users",
-  "responseTime": "248 ms",
-  "executedAt": "28 Jul 2026 • 10:24 AM",
-  "executedBy": "Provisioning Service",
-
-  "steps": [
-    "User account created successfully.",
-    "Initial password email triggered.",
-    "Role mapping completed."
-  ]
-},
-     {
-  "system": "Email Account Creation",
-  "platform": "MailU",
-  "status": "done",
-  "kind": "Functional",
-  "detail": "Completed 7/28",
-  "outcome": "Real MailU API response — mailbox created: priya.sharma@vantara.com",
-
-  "responseTitle": "MailU REST API Response",
-  "requestStatus": "Success (HTTP 201 Created)",
-  "mailbox": "priya.sharma@vantara.com",
-  "domain": "vantara.com",
-  "quota": "10 GB",
-  "endpoint": "POST /api/v1/mailboxes",
-  "responseTime": "173 ms",
-  "executedAt": "28 Jul 2026 • 10:25 AM",
-  "executedBy": "Provisioning Service",
-
-  "steps": [
-    "Mailbox created successfully.",
-    "SMTP account enabled.",
-    "Welcome email queued."
-  ]
-},
-      {
-  "system": "Time & Billing",
-  "platform": "Kimai",
-  "status": "done",
-  "kind": "Functional",
-  "detail": "Completed 7/28",
-  "outcome": "Real Kimai API response — {\"id\":2001,\"username\":\"priya.sharma\",\"timesheet\":\"active\"}",
-
-  "responseTitle": "Kimai REST API Response",
-  "requestStatus": "Success (HTTP 200 OK)",
-  "employeeId": "2001",
-  "username": "priya.sharma",
-  "timesheetStatus": "Active",
-  "defaultProject": "Tax Onboarding",
-  "endpoint": "POST /api/users",
-  "responseTime": "198 ms",
-  "executedAt": "28 Jul 2026 • 10:27 AM",
-  "executedBy": "Provisioning Service",
-
-  "steps": [
-    "Employee profile created.",
-    "Timesheet initialized.",
-    "Default project assigned."
-  ]
-},
-      {
-  "system": "Asset Allocation",
-  "platform": "Snipe-IT",
-  "status": "inProgress",
-  "kind": "Functional",
-  "detail": "Delivery expected 8/1",
-  "outcome": "Real Snipe-IT API response — {\"asset_tag\":\"SNP-4471\",\"checkout\":\"pending\"}",
-
-  "responseTitle": "Snipe-IT REST API Response",
-  "requestStatus": "Processing (HTTP 202 Accepted)",
-  "assetTag": "SNP-4471",
-  "assetType": "Dell Latitude 7450 Laptop",
-  "serialNumber": "DL7450-8K29X1",
-  "assignedTo": "Priya Sharma",
-  "checkoutStatus": "Pending",
-  "endpoint": "POST /api/v1/hardware/checkout",
-  "responseTime": "312 ms",
-  "executedAt": "28 Jul 2026 • 10:30 AM",
-  "executedBy": "Provisioning Service",
-
-  "steps": [
-    "Laptop reserved successfully.",
-    "Asset assignment initiated.",
-    "Awaiting IT desk handover."
-  ]
-},
+      { "system": "Identity Account Creation", "platform": "Keycloak", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/28", "outcome": "Real Keycloak Admin REST API response — user id: a3f9e21c-88b4-4a2d-9c17-5e6d8b41f0a2" },
+      { "system": "Email Account Creation", "platform": "MailU", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/28", "outcome": "Real MailU API response — mailbox created: priya.sharma@vantara.com" },
+      { "system": "Time & Billing", "platform": "Kimai", "status": "done", "kind": "Functional",
+        "detail": "Completed 7/28", "outcome": "Real Kimai API response — {\"id\":2001,\"username\":\"priya.sharma\",\"timesheet\":\"active\"}" },
+      { "system": "Asset Allocation", "platform": "Snipe-IT", "status": "inProgress", "kind": "Functional",
+        "detail": "Delivery expected 8/1", "outcome": "Real Snipe-IT API response — {\"asset_tag\":\"SNP-4471\",\"checkout\":\"pending\"}" },
       { "system": "Access Recommendation", "platform": "M365 / CCH Axcess Tax / NetDocuments / Kimai", "status": "inProgress", "kind": "Mock",
         "detail": "75% complete — ticket TKT-2003", "outcome": "M365 real: {\"skuId\":\"3b555118-da6a-4418-894f-7df1e2096870\"} — CCH Axcess Tax & NetDocuments illustrative only" },
       { "system": "Client Document Repository", "platform": "OpenKM", "status": "failed", "kind": "Mock",
@@ -237,7 +145,7 @@
         "detail": "Pending", "outcome": "" }
     ]
   },
-
+ 
   "dashboard": {
     "stats": { "total": 24, "completed": 19, "inProgress": 3, "failed": 2 },
     "integrationCoverage": { "realCount": 5, "mockCount": 7, "realPct": 44, "mockPct": 56,
@@ -257,7 +165,7 @@
     ],
     "ticketStatus": { "open": 6, "inProgress": 3, "pending": 1, "closed": 14 }
   },
-
+ 
   "systemHealthDetail": [
     { "name": "Keycloak", "status": "Operational", "latency": "145ms" },
     { "name": "MailU", "status": "Operational", "latency": "203ms" },
@@ -267,7 +175,7 @@
     { "name": "Microsoft 365", "status": "Degraded", "latency": "1500ms" },
     { "name": "GLPI", "status": "Operational", "latency": "—" }
   ],
-
+ 
   "onboardingDetails": {
     "EMP-2001": {
       "status": "In Progress", "type": "Onboarding",
@@ -283,7 +191,7 @@
       ]
     }
   },
-
+ 
   "monitoring": {
     "lastEvent": "Identity Agent completed for EMP-2001, 2s ago",
     "activeRequests": [
@@ -294,7 +202,7 @@
     "slaWarning": { "ticketId": "TKT-1002", "employee": "Rohan Mehta",
       "item": "Client Engagement Repository", "team": "IT", "since": "05:40 AM", "duration": "4h 24m" }
   },
-
+ 
   "chatMessages": [
     { "role": "user", "text": "What's Priya's onboarding status?" },
     { "role": "agent", "text": "Priya Sharma (EMP-2001, Tax) is 55% complete. 3 items done, 2 in progress, 1 failed (Client Document Repository — OpenKM timeout), 1 blocked (Tax Prep — Finance approval), 2 pending.",
@@ -303,16 +211,164 @@
     { "role": "agent", "text": "1 failed ticket: TKT-2004, Client Document Repository (OpenKM), Priya Sharma — retry scheduled 8/1 10:00 AM.",
       "source": "Ticket Queue" }
   ],
-
+ 
   "suggestionChips": ["What's pending right now?", "Show failed tickets", "Is OpenKM working?"],
-
+ 
   "chipReplies": {
     "What's pending right now?": { "text": "2 items are pending for Priya Sharma: Network Access (Cisco AnyConnect VPN) and Ticketing/ITSM (GLPI).", "source": "Provisioning Agent" },
     "Show failed tickets": { "text": "1 failed ticket: TKT-2004, Client Document Repository (OpenKM), Priya Sharma — retry scheduled 8/1 10:00 AM.", "source": "Ticket Queue" },
     "Is OpenKM working?": { "text": "No — OpenKM is currently down (API timeout). It's blocking the Client Document Repository step for Priya Sharma. Auto-retry scheduled for 8/1 10:00 AM.", "source": "Monitoring Agent" }
   },
-
+ 
+  "ProvisionalStatus": {
+    "EMP-1001": [
+      {
+        "platform": "Keycloak","ticketID": "TKT:001","ticketStatus": "Success","startTime": "05-08-2026 18:30:00","endtime": "05-08-2026 18:30:00",       "credentials": {
+          "username": "Michael Turner",
+          "password": "MichaelTurner"
+        },
+        "note": "The Keycloak Access for {username} has been successfully created"
+      },
+      {
+        "platform": "Mailu","ticketID": "TKT:001","ticketStatus": "Success","startTime": "05-08-2026 18:30:00","endtime": "05-08-2026 18:30:00",
+        "credentials": {
+          "username": "Michael Turner",
+          "password": "MichaelTurner"
+        },
+        "note": "The MailID account for {username} has been successfully created"
+      },
+      {
+        "platform": "Kimi",
+        "ticketID": "TKT:001",
+        "ticketStatus": "Success",
+        "startTime": "05-08-2026 18:30:00",
+        "endtime": "05-08-2026 18:30:00",
+        "credentials": {
+          "username": "Michael Turner",
+          "password": "MichaelTurner"
+        },
+        "note": "The Kimi account for {username} has been successfully created"
+      },
+      {
+        "platform": "OpenKM",
+        "ticketID": "TKT:001",
+        "ticketStatus": "Success",
+        "startTime": "05-08-2026 18:30:00",
+        "endtime": "05-08-2026 18:30:00",
+        "credentials": {
+          "username": "Michael Turner",
+          "password": "MichaelTurner"
+        },
+        "note": "The OpenKM account for {username} has been successfully created"
+      }
+    ],
+ 
+    "EMP-1002": [
+      {
+        "platform": "Keycloak",
+        "ticketID": "TKT:001",
+        "ticketStatus": "Success",
+        "startTime": "05-08-2026 18:30:00",
+        "endtime": "05-08-2026 18:30:00",
+        "credentials": {
+          "username": "Rachel Bennett",
+          "password": "RachelBennett"
+        },
+        "note": "The Keycloak Access for {username} has been successfully created"
+      },
+      {
+        "platform": "Mailu",
+        "ticketID": "TKT:001",
+        "ticketStatus": "Success",
+        "startTime": "05-08-2026 18:30:00",
+        "endtime": "05-08-2026 18:30:00",
+        "credentials": {
+          "username": "Rachel Bennett",
+          "password": "RachelBennett"
+        },
+        "note": "The MailID account for {username} has been successfully created"
+      },
+      {
+        "platform": "Kimi",
+        "ticketID": "TKT:001",
+        "ticketStatus": "Success",
+        "startTime": "05-08-2026 18:30:00",
+        "endtime": "05-08-2026 18:30:00",
+        "credentials": {
+          "username": "Rachel Bennett",
+          "password": "RachelBennett"
+        },
+        "note": "The Kimi account for {username} has been successfully created"
+      },
+      {
+        "platform": "OpenKM",
+        "ticketID": "TKT:001",
+        "ticketStatus": "Success",
+        "startTime": "05-08-2026 18:30:00",
+        "endtime": "05-08-2026 18:30:00",
+        "credentials": {
+          "username": "Rachel Bennett",
+          "password": "RachelBennett"
+        },
+        "note": "The OpenKM account for {username} has been successfully created"
+      }
+    ],
+ 
+    "EMP-1003": [
+      {
+        "platform": "Keycloak",
+        "ticketID": "TKT:001",
+        "ticketStatus": "Success",
+        "startTime": "05-08-2026 18:30:00",
+        "endtime": "05-08-2026 18:30:00",
+        "credentials": {
+          "username": "David Coleman",
+          "password": "DavidColeman"
+        },
+        "note": "The Keycloak Access for {username} has been successfully created"
+      },
+      {
+        "platform": "Mailu",
+        "ticketID": "TKT:001",
+        "ticketStatus": "Success",
+        "startTime": "05-08-2026 18:30:00",
+        "endtime": "05-08-2026 18:30:00",
+        "credentials": {
+          "username": "David Coleman",
+          "password": "DavidColeman"
+        },
+        "note": "The MailID account for {username} has been successfully created"
+      },
+      {
+        "platform": "Kimi",
+        "ticketID": "TKT:001",
+        "ticketStatus": "Success",
+        "startTime": "05-08-2026 18:30:00",
+        "endtime": "05-08-2026 18:30:00",
+        "credentials": {
+          "username": "David Coleman",
+          "password": "DavidColeman"
+        },
+        "note": "The Kimi account for {username} has been successfully created"
+      },
+      {
+        "platform": "OpenKM",
+        "ticketID": "TKT:001",
+        "ticketStatus": "Success",
+        "startTime": "05-08-2026 18:30:00",
+        "endtime": "05-08-2026 18:30:00",
+        "credentials": {
+          "username": "David Coleman",
+          "password": "DavidColeman"
+        },
+        "note": "The OpenKM account for {username} has been successfully created"
+      }
+    ]
+  },
+ 
   "meta": { "depts": ["All", "Tax", "Audit", "Law"], "teams": ["All", "IT", "Admin", "Security"], "roles": ["All", "Tax", "Audit", "Law"] },
-
+ 
   "users": [ { "id": 1, "email": "admin@gmail.com", "password": "admin@123", "name": "HR Admin", "role": "hr" } ]
 }
+ 
+ 

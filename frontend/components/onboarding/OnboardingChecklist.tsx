@@ -13,6 +13,20 @@ import {
 import type { ChecklistItem, ChecklistStatus } from "@/types/employee";
 import { StatusBadge } from "@/components/common/StatusBadge";
 
+// Shape of one entry inside db.json -> ProvisionalStatus[employeeId][]
+export type ProvisionalStatusEntry = {
+  platform: string;
+  ticketID: string;
+  ticketStatus: string;
+  startTime: string;
+  endtime: string;
+  credentials?: {
+    username?: string;
+    password?: string;
+  };
+  note?: string;
+};
+
 const iconMap: Record<ChecklistStatus, { icon: ElementType; bg: string; color: string }> = {
   done: { icon: CheckCircle2, bg: "#DCFCE7", color: "#16A34A" },
   inProgress: { icon: Clock, bg: "#FEF3C7", color: "#D97706" },
@@ -32,8 +46,14 @@ const statusLabelMap: Record<ChecklistStatus, string> = {
 const pcModalStyles = `
 .checklist-grid{
   display:grid;
-  grid-template-columns:1fr;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
   gap:14px;
+}
+
+@media (max-width: 640px){
+  .checklist-grid{
+    grid-template-columns:1fr;
+  }
 }
 
 .pc-card{
@@ -113,11 +133,78 @@ const pcModalStyles = `
   padding:8px 10px;
   color:#374151;
 }
+
+.pc-section-title{
+  margin-top:14px;
+  margin-bottom:6px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+  color:#6B7280;
+}
+
+.pc-cred-box{
+  margin-top:8px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  background:#F9FAFB;
+  border:1px solid #E5E7EB;
+  border-radius:10px;
+  padding:10px 12px;
+}
+.pc-cred-row{
+  display:flex;justify-content:space-between;
+  font-size:12.5px;
+}
+.pc-cred-label{ color:#6B7280; }
+.pc-cred-value{ font-family:monospace; color:#14213D; }
+
+.pc-note{
+  margin-top:8px;
+  font-size:12.5px;
+  color:#374151;
+  background:#EEF2FF;
+  border:1px solid #E0E7FF;
+  border-radius:10px;
+  padding:8px 10px;
+}
 `;
 
-export function OnboardingChecklist({ items }: { items: ChecklistItem[] }) {
+/**
+ * Finds the matching provisioning result for the currently open checklist
+ * item, by comparing platform names (case-insensitive, loose match since
+ * a checklist item's "platform" can list several systems e.g.
+ * "M365 / CCH Axcess Tax / OpenKM" while ProvisionalStatus entries are
+ * single-system).
+ */
+function findProvisionalMatch(
+  item: ChecklistItem,
+  provisionalStatus: ProvisionalStatusEntry[] | undefined,
+): ProvisionalStatusEntry | undefined {
+  if (!provisionalStatus || provisionalStatus.length === 0) return undefined;
+
+  const platformText = item.platform.toLowerCase();
+
+  return provisionalStatus.find((entry) =>
+    platformText.includes(entry.platform.toLowerCase()),
+  );
+}
+
+export function OnboardingChecklist({
+  items,
+  provisionalStatus,
+}: {
+  items: ChecklistItem[];
+  /** ProvisionalStatus[employeeId] from db.json, for the employee these items belong to */
+  provisionalStatus?: ProvisionalStatusEntry[];
+}) {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const selectedItem = selectedIdx !== null ? items[selectedIdx] : null;
+  const selectedProvisional = selectedItem
+    ? findProvisionalMatch(selectedItem, provisionalStatus)
+    : undefined;
 
   return (
     <div>
@@ -341,6 +428,61 @@ export function OnboardingChecklist({ items }: { items: ChecklistItem[] }) {
                             <li key={index}>{step}</li>
                           ))}
                         </ul>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ---- ProvisionalStatus block (from db.json) ---- */}
+                {selectedProvisional && (
+                  <>
+                    <div className="pc-section-title">Provisioning Result</div>
+
+                    <div className="checklist-detail-row">
+                      <span>Ticket ID</span>
+                      <span>{selectedProvisional.ticketID}</span>
+                    </div>
+
+                    <div className="checklist-detail-row">
+                      <span>Ticket Status</span>
+                      <span>{selectedProvisional.ticketStatus}</span>
+                    </div>
+
+                    <div className="checklist-detail-row">
+                      <span>Start Time</span>
+                      <span>{selectedProvisional.startTime}</span>
+                    </div>
+
+                    <div className="checklist-detail-row">
+                      <span>End Time</span>
+                      <span>{selectedProvisional.endtime}</span>
+                    </div>
+
+                    {selectedProvisional.credentials?.username && (
+                      <div className="pc-cred-box">
+                        <div className="pc-cred-row">
+                          <span className="pc-cred-label">Username</span>
+                          <span className="pc-cred-value">
+                            {selectedProvisional.credentials.username}
+                          </span>
+                        </div>
+                        {selectedProvisional.credentials?.password && (
+                          <div className="pc-cred-row">
+                            <span className="pc-cred-label">Password</span>
+                            <span className="pc-cred-value">
+                              {selectedProvisional.credentials.password}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedProvisional.note && (
+                      <div className="pc-note">
+                        {selectedProvisional.note.replace(
+                          "{username}",
+                          selectedProvisional.credentials?.username ?? "",
+                        )}
                       </div>
                     )}
                   </>

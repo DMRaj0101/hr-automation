@@ -77,7 +77,7 @@ export default function OnboardingDetailPage() {
             <div className="ob-hero-pills">
               <span className="ob-hero-pill">
                 <IdCard size={14} strokeWidth={2} />
-                {emp.id}
+                {emp.employee_id}
               </span>
 
               <span className="ob-hero-pill">

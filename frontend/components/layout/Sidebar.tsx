@@ -8,30 +8,25 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/common/Logo";
 import { useAuthStore } from "@/store/authStore";
 import { NAV_ITEMS, NAV_GROUP_ORDER, isNavItemActive, type NavItem } from "@/lib/nav-items";
-import {
-  PanelLeft,
-  LayoutDashboard,
-  Users,
-  UserPlus,
-  Ticket,
-  Activity,
-  MessageSquareText,
-  Circle,
-} from "lucide-react";
+import { PanelLeft } from "lucide-react";
 import { useNavProgressStore } from "@/store/navProgressStore";
 
-// Icon mapping — keyed by nav item label. Add new items here as they're added to NAV_ITEMS.
-const NAV_ICON_MAP: Record<string, React.ElementType> = {
-  "Dashboard": LayoutDashboard,
-  "Employee Directory": Users,
-  "Onboarding Tracker": UserPlus,
-  "Ticket Queue": Ticket,
-  "Monitoring Agent": Activity,
-  "Knowledge Agent Chat": MessageSquareText,
-};
+// Formats the stored user name into a friendly display name.
+// Handles cases like "hr" -> "HR Admin", or general names -> Title Case.
+function formatDisplayName(name?: string | null): string {
+  if (!name) return "HR Admin";
+  const trimmed = name.trim();
+  if (trimmed.toLowerCase() === "hr") return "HR Admin";
+  return trimmed
+    .split(" ")
+    .map((word) => (word.length > 0 ? word[0].toUpperCase() + word.slice(1) : word))
+    .join(" ");
+}
 
-function getNavIcon(label: string): React.ElementType {
-  return NAV_ICON_MAP[label] ?? Circle;
+// Formats the initials shown in the avatar badge, always uppercase.
+function formatInitials(name?: string | null): string {
+  const display = formatDisplayName(name);
+  return display.slice(0, 2).toUpperCase();
 }
 
 export function Sidebar() {
@@ -46,6 +41,9 @@ export function Sidebar() {
       items: NAV_ITEMS.filter((item) => item.group === group),
     })).filter((section) => section.items.length > 0);
   }, []);
+
+  const displayName = formatDisplayName(user?.name);
+  const initials = formatInitials(user?.name);
 
   return (
     <motion.aside
@@ -128,7 +126,7 @@ export function Sidebar() {
             <div className={cn("relative flex flex-col", collapsed ? "items-center gap-3" : "gap-0.5")}>
               {items.map((item: NavItem) => {
                 const active = isNavItemActive(pathname, item.href);
-                const Icon = getNavIcon(item.label);
+                const Icon = item.icon;
                 return (
                   <Link
                     key={item.key}
@@ -197,10 +195,10 @@ export function Sidebar() {
         )}
       >
         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-vantara-gold text-[10px] font-medium text-vantara-navy">
-          {(user?.name ?? "HR").slice(0, 2).toUpperCase()}
+          {initials}
         </div>
         {!collapsed && (
-          <span className="whitespace-nowrap text-xs font-medium text-white">{user?.name ?? "HR Admin"}</span>
+          <span className="whitespace-nowrap text-xs font-medium text-white">{displayName}</span>
         )}
       </div>
     </motion.aside>

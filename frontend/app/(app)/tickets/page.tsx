@@ -32,11 +32,6 @@ export default function TicketQueuePage() {
 
   return (
     <div className="page-content">
-      <h1 className="page-title">Ticket Queue</h1>
-      <p className="page-subtitle">
-        Monitor and triage tickets raised during onboarding.
-      </p>
-
       <div className="mb-5">
         {dashboard && <TicketStatRow data={dashboard.ticketStatus} />}
       </div>
