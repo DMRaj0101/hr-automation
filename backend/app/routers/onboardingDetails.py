@@ -121,6 +121,62 @@ def _build_alerts(db: Session, employee_id: str) -> list[dict]:
 
     return alerts
 
+PLATFORM_NOTE_TEMPLATES = {
+    "Keycloak": "The Keycloak Access for {username} has been successfully created",
+    "MailU": "The MailID account for {username} has been successfully created",
+    "Kimai": "The Kimi account for {username} has been successfully created",
+    "OpenKM": "The OpenKM account for {username} has been successfully created",
+}
+
+FUNCTIONAL_AGENT_KEYS = ["identity", "email", "time_billing", "document_management"]
+
+
+def _format_dt(value):
+    return value.strftime("%d-%m-%Y %H:%M:%S") if value else None
+
+
+@router.get("/{employee_id}/provisional-status")
+def provisional_status(employee_id: str, db: Session = Depends(get_db)):
+    """Functional-item provisioning status per employee, shaped for the
+    Provisional Status screen. platform/startTime/endtime/credentials.username
+    are read straight off ProvisioningRecord/Employee (null if the backend
+    row/column has no value yet); ticketID, ticketStatus, credentials.password
+    and note are mocked since this codebase has no ticket, credential, or
+    note concept for Functional items."""
+    employees = (
+        db.query(Employee)
+        .filter(Employee.employee_id == employee_id)
+        .all()
+    )
+
+    result = {}
+    for employee in employees:
+        records = (
+            db.query(ProvisioningRecord)
+            .filter(ProvisioningRecord.employee_id == employee.id)
+            .filter(ProvisioningRecord.agent_key.in_(FUNCTIONAL_AGENT_KEYS))
+            .all()
+        )
+        username = employee.name  # real
+        password = username.replace(" ", "") if username else None  # mock -- no credential storage in the schema
+        result[employee.employee_id] = [
+            {
+                "platform": record.software_name,  # real
+                "ticketID": "TKT:001",  # mock -- Functional items never get a Ticket row
+                "ticketStatus": "Success",  # mock -- no ticket lifecycle exists for Functional items
+                "startTime": _format_dt(record.last_attempted_at),  # real
+                #"endtime": _format_dt(record.completed_at),  # real
+                "endtime":"05-08-2026 09:17:45", #mock
+                "credentials": {
+                    "username": username,  # real
+                    "password": password,  # mock
+                },
+                "note": PLATFORM_NOTE_TEMPLATES.get(record.software_name, "").format(username=username),  # mock
+            }
+            for record in records
+        ]
+
+    return {"ProvisionalStatus": result}
 
 @router.get("/{employee_id}")
 def get_onboarding_details(employee_id: str, db: Session = Depends(get_db)):
