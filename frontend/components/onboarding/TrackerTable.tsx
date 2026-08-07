@@ -1,5 +1,5 @@
 "use client";
-
+ 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
@@ -7,15 +7,15 @@ import { Employee } from "@/types/employee";
 import { DataTable } from "@/components/common/DataTable";
 import { Avatar } from "@/components/common/Avatar";
 import { StatusBadge } from "@/components/common/StatusBadge";
-
+ 
 export function TrackerTable({ employees }: { employees: Employee[] }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-
+ 
   const goToDetail = (id: string) => {
     router.push(`/onboarding/${id}`);
   };
-
+ 
   const columns: ColumnDef<Employee>[] = [
     {
       id: "name",
@@ -31,7 +31,7 @@ export function TrackerTable({ employees }: { employees: Employee[] }) {
               {row.original.name}
             </div>
             <div className="mt-0.5 text-xs text-vantara-text-muted">
-              {row.original.id}
+              {row.original.employee_id}
             </div>
           </div>
         </div>
@@ -132,7 +132,7 @@ export function TrackerTable({ employees }: { employees: Employee[] }) {
       ),
     },
   ];
-
+ 
   return (
     <DataTable
       columns={columns}
@@ -144,3 +144,4 @@ export function TrackerTable({ employees }: { employees: Employee[] }) {
     />
   );
 }
+ 

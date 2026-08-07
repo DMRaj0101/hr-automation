@@ -9,7 +9,7 @@
     "location": "New York",
     "manager_name": "David Klein",
     "start_date": "2026-07-10",
-    "synced": true,
+    "synced": false,
     "documents_files": [
       "../mock_employee_docs/EMP-1001/Michael_Turner_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1001/Michael_Turner_Resume.pdf",
@@ -31,7 +31,7 @@
     "location": "Chennai",
     "manager_name": "Priya Nair",
     "start_date": "2026-07-08",
-    "synced": true,
+    "synced": false,
     "documents_files": [
       "../mock_employee_docs/EMP-1002/Rachel_Bennett_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1002/Rachel_Bennett_Resume.pdf",
@@ -53,7 +53,7 @@
     "location": "Bengaluru",
     "manager_name": "Divya Rao",
     "start_date": "2026-07-09",
-    "synced": true,
+    "synced": false,
     "documents_files": [
       "../mock_employee_docs/EMP-1003/David_Coleman_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1003/David_Coleman_Resume.pdf",
@@ -73,7 +73,7 @@
     "location": "Mumbai",
     "manager_name": "Arjun Kapoor",
     "start_date": "2026-07-11",
-    "synced": true,
+    "synced": false,
     "role": null,
     "documents_files": [
       "../mock_employee_docs/EMP-1004/Jessica_Palmer_OfferLetter.pdf",
@@ -96,7 +96,7 @@
     "location": "Chennai",
     "manager_name": "David Klein",
     "start_date": "2026-07-12",
-    "synced": true,
+    "synced": false,
     "documents_files": [
       "../mock_employee_docs/EMP-1005/Andrew_Mitchell_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1005/Andrew_Mitchell_Resume.pdf",
@@ -118,7 +118,7 @@
     "location": "New York",
     "manager_name": "Priya Nair",
     "start_date": "2026-07-13",
-    "synced": true,
+    "synced": false,
     "documents_files": [
       "../mock_employee_docs/EMP-1006/Emily_Sanders_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1006/Emily_Sanders_Resume.pdf",
@@ -140,7 +140,7 @@
     "location": "New York",
     "manager_name": "Priya Nair",
     "start_date": "2026-07-14",
-    "synced": true,
+    "synced": false,
     "documents_files": [
       "../mock_employee_docs/EMP-1007/Christopher_Hayes_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1007/Christopher_Hayes_Resume.pdf",
@@ -162,7 +162,7 @@
     "location": "New York",
     "manager_name": "Priya Nair",
     "start_date": "2026-07-15",
-    "synced": true,
+    "synced": false,
     "documents_files": [
       "../mock_employee_docs/EMP-1008/Olivia_Foster_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1008/Olivia_Foster_Resume.pdf",
@@ -183,7 +183,7 @@
     "location": "New York",
     "manager_name": "Priya Nair",
     "start_date": "2026-07-16",
-    "synced": true,
+    "synced": false,
     "documents_files": [
       "../mock_employee_docs/EMP-1009/Brandon_Walsh_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1009/Brandon_Walsh_Resume.pdf",
@@ -204,7 +204,7 @@
     "location": "New York",
     "manager_name": "Priya Nair",
     "start_date": "2026-07-17",
-    "synced": true,
+    "synced": false,
     "documents_files": [
       "../mock_employee_docs/EMP-1010/Natalie_Reyes_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1010/Natalie_Reyes_Resume.pdf",

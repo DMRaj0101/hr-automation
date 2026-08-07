@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { SimpleSelect } from "@/components/ui/select";
 
 
-const DEPTS = ["All", "Tax", "Audit", "Law"];
+const DEPTS = ["All", "Legal", "IT", "Compliance","Marketing","Finance"];
 
 export default function EmployeeDirectoryPage() {
   const { data: employees, isLoading } = useEmployees();

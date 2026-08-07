@@ -13,6 +13,20 @@ import {
 import type { ChecklistItem, ChecklistStatus } from "@/types/employee";
 import { StatusBadge } from "@/components/common/StatusBadge";
 
+// Shape of one entry inside db.json -> ProvisionalStatus[employeeId][]
+export type ProvisionalStatusEntry = {
+  platform: string;
+  ticketID: string;
+  ticketStatus: string;
+  startTime: string;
+  endtime: string;
+  credentials?: {
+    username?: string;
+    password?: string;
+  };
+  note?: string;
+};
+
 const iconMap: Record<ChecklistStatus, { icon: ElementType; bg: string; color: string }> = {
   done: { icon: CheckCircle2, bg: "#DCFCE7", color: "#16A34A" },
   inProgress: { icon: Clock, bg: "#FEF3C7", color: "#D97706" },
@@ -29,104 +43,17 @@ const statusLabelMap: Record<ChecklistStatus, string> = {
   pending: "Pending",
 };
 
-export function OnboardingChecklist({ items }: { items: ChecklistItem[] }) {
-  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
-  const selectedItem = selectedIdx !== null ? items[selectedIdx] : null;
-
-  return (
-    <div>
-      <style>{pcModalStyles}</style>
-
-      <div className="checklist-grid">
-        {items.map((item, idx) => {
-          const { icon: Icon, bg, color } = iconMap[item.status];
-          return (
-            <div key={idx} className="pc-card flex flex-col gap-2.5" onClick={() => setSelectedIdx(idx)}>
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-                  style={{ background: bg, color }}
-                >
-                  <Icon size={17} />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-vantara-navy">{item.system}</span>
-                  </div>
-                  <span className="pc-kind-pill">{item.kind}</span>
-                  <div className="mt-0.5 text-xs text-vantara-text-muted">{item.platform}</div>
-                </div>
-              </div>
-
-              <div className="mt-auto flex items-center justify-between pt-1">
-                <StatusBadge status={statusLabelMap[item.status]} />
-                <span className="checklist-hint">view details →</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {selectedItem &&
-        createPortal(
-          <div className="pc-overlay" onClick={() => setSelectedIdx(null)}>
-            <div className="pc-modal" onClick={(e) => e.stopPropagation()}>
-              <button className="pc-modal-close" onClick={() => setSelectedIdx(null)} aria-label="Close">
-                <CloseIcon size={16} />
-              </button>
-
-              <div className="pc-modal-header">
-                <div
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-                  style={{
-                    background: iconMap[selectedItem.status].bg,
-                    color: iconMap[selectedItem.status].color,
-                  }}
-                >
-                  {(() => {
-                    const Icon = iconMap[selectedItem.status].icon;
-                    return <Icon size={18} />;
-                  })()}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="pc-modal-title">{selectedItem.system}</span>
-                    <span className="pc-kind-pill">{selectedItem.kind}</span>
-                  </div>
-                  <div className="text-xs text-vantara-text-muted">{selectedItem.platform}</div>
-                </div>
-              </div>
-
-              <div className="pc-modal-status">
-                <StatusBadge status={statusLabelMap[selectedItem.status]} />
-              </div>
-
-              <div className="pc-modal-body">
-                <div className="checklist-detail-row">
-                  <span>Type</span>
-                  <span>{selectedItem.kind}</span>
-                </div>
-                <div className="checklist-detail-row">
-                  <span>Detail</span>
-                  <span>{selectedItem.detail}</span>
-                </div>
-                {selectedItem.outcome && (
-                  <div className="checklist-detail-mono">{selectedItem.outcome}</div>
-                )}
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
-    </div>
-  );
-}
-
 const pcModalStyles = `
 .checklist-grid{
   display:grid;
-  grid-template-columns:1fr;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
   gap:14px;
+}
+
+@media (max-width: 640px){
+  .checklist-grid{
+    grid-template-columns:1fr;
+  }
 }
 
 .pc-card{
@@ -206,4 +133,365 @@ const pcModalStyles = `
   padding:8px 10px;
   color:#374151;
 }
+
+.pc-section-title{
+  margin-top:14px;
+  margin-bottom:6px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+  color:#6B7280;
+}
+
+.pc-cred-box{
+  margin-top:8px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  background:#F9FAFB;
+  border:1px solid #E5E7EB;
+  border-radius:10px;
+  padding:10px 12px;
+}
+.pc-cred-row{
+  display:flex;justify-content:space-between;
+  font-size:12.5px;
+}
+.pc-cred-label{ color:#6B7280; }
+.pc-cred-value{ font-family:monospace; color:#14213D; }
+
+.pc-note{
+  margin-top:8px;
+  font-size:12.5px;
+  color:#374151;
+  background:#EEF2FF;
+  border:1px solid #E0E7FF;
+  border-radius:10px;
+  padding:8px 10px;
+}
 `;
+
+/**
+ * Finds the matching provisioning result for the currently open checklist
+ * item, by comparing platform names (case-insensitive, loose match since
+ * a checklist item's "platform" can list several systems e.g.
+ * "M365 / CCH Axcess Tax / OpenKM" while ProvisionalStatus entries are
+ * single-system).
+ */
+function findProvisionalMatch(
+  item: ChecklistItem,
+  provisionalStatus: ProvisionalStatusEntry[] | undefined,
+): ProvisionalStatusEntry | undefined {
+  if (!provisionalStatus || provisionalStatus.length === 0) return undefined;
+
+  const platformText = item.platform.toLowerCase();
+
+  return provisionalStatus.find((entry) =>
+    platformText.includes(entry.platform.toLowerCase()),
+  );
+}
+
+export function OnboardingChecklist({
+  items,
+  provisionalStatus,
+}: {
+  items: ChecklistItem[];
+  /** ProvisionalStatus[employeeId] from db.json, for the employee these items belong to */
+  provisionalStatus?: ProvisionalStatusEntry[];
+}) {
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const selectedItem = selectedIdx !== null ? items[selectedIdx] : null;
+  const selectedProvisional = selectedItem
+    ? findProvisionalMatch(selectedItem, provisionalStatus)
+    : undefined;
+
+  return (
+    <div>
+      <style>{pcModalStyles}</style>
+
+      <div className="checklist-grid">
+        {items.map((item, idx) => {
+          const { icon: Icon, bg, color } = iconMap[item.status];
+          return (
+            <div key={idx} className="pc-card flex flex-col gap-2.5" onClick={() => setSelectedIdx(idx)}>
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                  style={{ background: bg, color }}
+                >
+                  <Icon size={17} />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-vantara-navy">{item.system}</span>
+                  </div>
+                  <span className="pc-kind-pill">{item.kind}</span>
+                  <div className="mt-0.5 text-xs text-vantara-text-muted">{item.platform}</div>
+                </div>
+              </div>
+
+              <div className="mt-auto flex items-center justify-between pt-1">
+                <StatusBadge status={statusLabelMap[item.status]} />
+                <span className="checklist-hint">view details →</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {selectedItem &&
+        createPortal(
+          <div className="pc-overlay" onClick={() => setSelectedIdx(null)}>
+            <div className="pc-modal" onClick={(e) => e.stopPropagation()}>
+              <button className="pc-modal-close" onClick={() => setSelectedIdx(null)} aria-label="Close">
+                <CloseIcon size={16} />
+              </button>
+
+              <div className="pc-modal-header">
+                <div
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                  style={{
+                    background: iconMap[selectedItem.status].bg,
+                    color: iconMap[selectedItem.status].color,
+                  }}
+                >
+                  {(() => {
+                    const Icon = iconMap[selectedItem.status].icon;
+                    return <Icon size={18} />;
+                  })()}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="pc-modal-title">{selectedItem.system}</span>
+                    <span className="pc-kind-pill">{selectedItem.kind}</span>
+                  </div>
+                  <div className="text-xs text-vantara-text-muted">{selectedItem.platform}</div>
+                </div>
+              </div>
+
+              <div className="pc-modal-status">
+                <StatusBadge status={statusLabelMap[selectedItem.status]} />
+              </div>
+
+              <div className="pc-modal-body">
+                <div className="checklist-detail-row">
+                  <span>Type</span>
+                  <span>{selectedItem.kind}</span>
+                </div>
+
+                <div className="checklist-detail-row">
+                  <span>Detail</span>
+                  <span>{selectedItem.detail}</span>
+                </div>
+
+                {selectedItem.responseTitle && (
+                  <>
+                    <div className="pc-response-title">{selectedItem.responseTitle}</div>
+
+                    <div className="checklist-detail-row">
+                      <span>Status</span>
+                      <span>{selectedItem.requestStatus}</span>
+                    </div>
+
+                    <div className="checklist-detail-row">
+                      <span>Endpoint</span>
+                      <span>{selectedItem.endpoint}</span>
+                    </div>
+
+                    <div className="checklist-detail-row">
+                      <span>Response Time</span>
+                      <span>{selectedItem.responseTime}</span>
+                    </div>
+
+                    <div className="checklist-detail-row">
+                      <span>Executed At</span>
+                      <span>{selectedItem.executedAt}</span>
+                    </div>
+
+                    <div className="checklist-detail-row">
+                      <span>Executed By</span>
+                      <span>{selectedItem.executedBy}</span>
+                    </div>
+
+                    {selectedItem.userId && (
+                      <div className="checklist-detail-row">
+                        <span>User ID</span>
+                        <span>{selectedItem.userId}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.username && (
+                      <div className="checklist-detail-row">
+                        <span>Username</span>
+                        <span>{selectedItem.username}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.realm && (
+                      <div className="checklist-detail-row">
+                        <span>Realm</span>
+                        <span>{selectedItem.realm}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.role && (
+                      <div className="checklist-detail-row">
+                        <span>Role</span>
+                        <span>{selectedItem.role}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.mailbox && (
+                      <div className="checklist-detail-row">
+                        <span>Mailbox</span>
+                        <span>{selectedItem.mailbox}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.domain && (
+                      <div className="checklist-detail-row">
+                        <span>Domain</span>
+                        <span>{selectedItem.domain}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.quota && (
+                      <div className="checklist-detail-row">
+                        <span>Quota</span>
+                        <span>{selectedItem.quota}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.employeeId && (
+                      <div className="checklist-detail-row">
+                        <span>Employee ID</span>
+                        <span>{selectedItem.employeeId}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.timesheetStatus && (
+                      <div className="checklist-detail-row">
+                        <span>Timesheet</span>
+                        <span>{selectedItem.timesheetStatus}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.defaultProject && (
+                      <div className="checklist-detail-row">
+                        <span>Project</span>
+                        <span>{selectedItem.defaultProject}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.assetTag && (
+                      <div className="checklist-detail-row">
+                        <span>Asset Tag</span>
+                        <span>{selectedItem.assetTag}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.assetType && (
+                      <div className="checklist-detail-row">
+                        <span>Asset</span>
+                        <span>{selectedItem.assetType}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.serialNumber && (
+                      <div className="checklist-detail-row">
+                        <span>Serial</span>
+                        <span>{selectedItem.serialNumber}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.assignedTo && (
+                      <div className="checklist-detail-row">
+                        <span>Assigned To</span>
+                        <span>{selectedItem.assignedTo}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.checkoutStatus && (
+                      <div className="checklist-detail-row">
+                        <span>Checkout</span>
+                        <span>{selectedItem.checkoutStatus}</span>
+                      </div>
+                    )}
+
+                    {selectedItem.steps && (
+                      <div className="pc-steps">
+                        <div className="pc-steps-title">Workflow</div>
+
+                        <ul>
+                          {selectedItem.steps.map((step, index) => (
+                            <li key={index}>{step}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ---- ProvisionalStatus block (from db.json) ---- */}
+                {selectedProvisional && (
+                  <>
+                    <div className="pc-section-title">Provisioning Result</div>
+
+                    <div className="checklist-detail-row">
+                      <span>Ticket ID</span>
+                      <span>{selectedProvisional.ticketID}</span>
+                    </div>
+
+                    <div className="checklist-detail-row">
+                      <span>Ticket Status</span>
+                      <span>{selectedProvisional.ticketStatus}</span>
+                    </div>
+
+                    <div className="checklist-detail-row">
+                      <span>Start Time</span>
+                      <span>{selectedProvisional.startTime}</span>
+                    </div>
+
+                    <div className="checklist-detail-row">
+                      <span>End Time</span>
+                      <span>{selectedProvisional.endtime}</span>
+                    </div>
+
+                    {selectedProvisional.credentials?.username && (
+                      <div className="pc-cred-box">
+                        <div className="pc-cred-row">
+                          <span className="pc-cred-label">Username</span>
+                          <span className="pc-cred-value">
+                            {selectedProvisional.credentials.username}
+                          </span>
+                        </div>
+                        {selectedProvisional.credentials?.password && (
+                          <div className="pc-cred-row">
+                            <span className="pc-cred-label">Password</span>
+                            <span className="pc-cred-value">
+                              {selectedProvisional.credentials.password}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedProvisional.note && (
+                      <div className="pc-note">
+                        {selectedProvisional.note.replace(
+                          "{username}",
+                          selectedProvisional.credentials?.username ?? "",
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+    </div>
+  );
+}

@@ -9,7 +9,7 @@ import { TrackerTable } from "@/components/onboarding/TrackerTable";
 import { Input } from "@/components/ui/input";
 import { SimpleSelect } from "@/components/ui/select";
 
-const DEPTS = ["All", "Tax", "Audit", "Law"];
+const DEPTS = ["All", "Legal", "IT", "Compliance","Marketing","Finance"];
 
 export default function OnboardingTrackerPage() {
   const { data: employees, isLoading } = useOnboarding();

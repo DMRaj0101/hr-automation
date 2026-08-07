@@ -1,6 +1,6 @@
-import { backendApiClient } from "./backend-api-client";
+import { apiClient } from "./api-client";
 import { DashboardData } from "@/types/onboarding";
-
+ 
 interface BackendDashboardSummary {
   total_employees: number;
   active_onboarding: number;
@@ -18,7 +18,7 @@ interface BackendDashboardSummary {
     employee_id: string;
   }[];
 }
-
+ 
 // Adapter: the backend's /dashboard/summary shape (employee/ticket/
 // provisioning counts + recent activity) doesn't match DashboardData
 // (stats/integrationCoverage/slaWarning/departments/systemHealth/
@@ -31,7 +31,7 @@ interface BackendDashboardSummary {
 // tolerates the empty arrays fine -- it just renders those cards blank.
 function toDashboardData(s: BackendDashboardSummary): DashboardData {
   const failed = s.provisioning_by_status["failed"] ?? 0;
-
+ 
   return {
     stats: {
       total: s.total_employees,
@@ -74,9 +74,9 @@ function toDashboardData(s: BackendDashboardSummary): DashboardData {
     },
   };
 }
-
+ 
 export async function getDashboard(): Promise<DashboardData> {
-  const { data } = await backendApiClient.get<BackendDashboardSummary>(
+  const { data } = await apiClient.get<BackendDashboardSummary>(
     "/dashboard/summary"
   );
   return toDashboardData(data);

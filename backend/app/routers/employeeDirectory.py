@@ -106,6 +106,7 @@ def _employee_out(employee: Employee, checklist: list[dict]) -> dict:
         "id": employee.id,
         "employee_id": employee.employee_id,
         "name": employee.name,
+        "employee_id":employee.employee_id,
         "dept": employee.department,
         "type": "experienced",  # MOCK
         "manager": employee.manager,

@@ -8,7 +8,7 @@ export function DepartmentCard({ dept }: { dept: DepartmentSummary }) {
       <p className="mt-1 text-sm text-vantara-text-muted">
         {dept.employees} employees · {dept.openTickets} open tickets
       </p>
-      <ProgressBar value={dept.avgCompletion} className="mt-3" height={8} fillColor="#D9A653" />
+      <ProgressBar value={dept.avgCompletion} className="mt-3" height={8} fillBackground="#D9A653" />
       <p className="mt-1.5 text-xs text-vantara-text-muted">
         {dept.avgCompletion}% avg completion
       </p>
