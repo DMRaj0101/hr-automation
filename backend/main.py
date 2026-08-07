@@ -53,6 +53,7 @@ app.include_router(healthcheck.router)
 app.include_router(employeeDirectory.router)
 app.include_router(onboardingDetails.router)
 app.include_router(kimai_routes.router)
+
 # TODO: app.include_router(approvals.router) -- see routers/approvals.py's
 # module docstring, this is intentionally not wired in yet.
 
