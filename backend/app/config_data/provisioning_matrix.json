@@ -17,7 +17,7 @@
     },
     {
       "item": "Access Recommendation",
-      "software": "Microsoft 365, CCH Axcess Tax, NetDocuments, Kimai",
+      "software": "Microsoft 365, CCH Axcess Tax, NetDocuments",
       "status": "mock",
       "agent_key": null,
       "remarks": "License bundle recommendation -- Mock for the POC, no real provisioning call."
@@ -89,7 +89,7 @@
     },
     {
       "item": "Access Recommendation",
-      "software": "Microsoft 365, CaseWare IDEA, NetDocuments, Kimai",
+      "software": "Microsoft 365, CaseWare IDEA, NetDocuments",
       "status": "mock",
       "agent_key": null,
       "remarks": "License bundle recommendation -- Mock only."
@@ -161,7 +161,7 @@
     },
     {
       "item": "Access Recommendation",
-      "software": "Microsoft 365, iManage Work, NetDocuments, Kimai",
+      "software": "Microsoft 365, iManage Work, NetDocuments",
       "status": "mock",
       "agent_key": null,
       "remarks": "License bundle recommendation -- Mock only."
