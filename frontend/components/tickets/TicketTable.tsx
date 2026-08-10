@@ -6,30 +6,53 @@ import { Ticket } from "@/types/ticket";
 import { DataTable } from "@/components/common/DataTable";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { PriorityBadge } from "@/components/common/PriorityBadge";
-import { Button } from "@/components/ui/button";
+
+function TruncatedCell({ value, className }: { value: string; className?: string }) {
+  return (
+    <span className={`block truncate ${className ?? ""}`} title={value}>
+      {value}
+    </span>
+  );
+}
 
 export function TicketTable({ tickets }: { tickets: Ticket[] }) {
   const router = useRouter();
 
   const columns: ColumnDef<Ticket>[] = [
     {
-      header: "Ticket",
+      header: "Ticket ID",
       accessorKey: "id",
       cell: ({ row }) => (
-        <span className="font-semibold text-vantara-navy">{row.original.id}</span>
+        <TruncatedCell value={row.original.id} className="font-semibold text-vantara-navy" />
       ),
     },
-    { header: "Employee", accessorKey: "employee" },
-    { header: "Dept", accessorKey: "dept" },
-    { header: "Issue", accessorKey: "issue" },
+    {
+      header: "Employee ID",
+      accessorKey: "employeeId",
+      cell: ({ row }) => <TruncatedCell value={row.original.employeeId} />,
+    },
+    {
+      header: "Employee Name",
+      accessorKey: "employeeName",
+      cell: ({ row }) => <TruncatedCell value={row.original.employeeName} />,
+    },
+    {
+      header: "Department",
+      accessorKey: "department",
+      cell: ({ row }) => <TruncatedCell value={row.original.department} />,
+    },
+    {
+      header: "Request",
+      accessorKey: "request",
+      cell: ({ row }) => <TruncatedCell value={row.original.request} />,
+    },
     {
       header: "System",
       accessorKey: "system",
       cell: ({ row }) => (
-        <span className="text-xs text-vantara-text-muted">{row.original.system}</span>
+        <TruncatedCell value={row.original.system} className="text-xs text-vantara-text-muted" />
       ),
     },
-    { header: "Team", accessorKey: "team" },
     {
       header: "Priority",
       accessorKey: "priority",
@@ -40,18 +63,10 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
       accessorKey: "status",
       cell: ({ row }) => <StatusBadge status={row.original.status} />,
     },
-    { header: "Time", accessorKey: "time" },
     {
-      header: "",
-      id: "actions",
-      cell: ({ row }) => (
-        <Button
-          variant="secondary"
-          onClick={() => router.push(`/tickets/${row.original.id}`)}
-        >
-          View
-        </Button>
-      ),
+      header: "Created",
+      accessorKey: "created",
+      cell: ({ row }) => <TruncatedCell value={row.original.created} className="whitespace-nowrap" />,
     },
   ];
 
@@ -59,7 +74,8 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
     <DataTable
       columns={columns}
       data={tickets}
-      gridTemplateColumns="0.8fr 1.1fr 0.9fr 1.3fr 1.2fr 0.7fr 0.8fr 0.9fr 0.8fr 0.6fr"
+      gridTemplateColumns="0.9fr 1fr 1.2fr 1fr 1.4fr 1.3fr 0.9fr 1fr 1fr"
+      onRowClick={(ticket) => router.push(`/tickets/${ticket.id}`)}
     />
   );
 }

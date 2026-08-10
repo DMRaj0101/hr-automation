@@ -1,13 +1,13 @@
 export interface Ticket {
   id: string;
-  employee: string;
-  dept: string;
-  issue: string;
+  employeeId: string;
+  employeeName: string;
+  department: string;
+  request: string;
   system: string;
-  team: string;
   priority: "Critical" | "High" | "Medium";
   status: "Open" | "In Progress" | "Pending" | "Closed" | "Failed";
-  time: string;
+  created: string;
 }
 
 export interface StatusHistoryEntry {

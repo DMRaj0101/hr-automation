@@ -9,13 +9,12 @@ import { TicketStatRow } from "@/components/tickets/TicketStatRow";
 import { Input } from "@/components/ui/input";
 import { SimpleSelect } from "@/components/ui/select";
 
-const TEAMS = ["All", "IT", "Admin", "Security"];
 const ROLES = ["All", "Tax", "Audit", "Law"];
 
 export default function TicketQueuePage() {
   const { data: tickets, isLoading } = useTickets();
   const { data: dashboard } = useDashboard();
-  const { search, team, role, setSearch, setTeam, setRole } = useTicketStore();
+  const { search, role, setSearch, setRole } = useTicketStore();
 
   const filtered = useMemo(() => {
     if (!tickets) return [];
@@ -23,12 +22,11 @@ export default function TicketQueuePage() {
       const matchesSearch =
         !search ||
         t.id.toLowerCase().includes(search.toLowerCase()) ||
-        t.employee.toLowerCase().includes(search.toLowerCase());
-      const matchesTeam = team === "All" || t.team === team;
-      const matchesRole = role === "All" || t.dept === role;
-      return matchesSearch && matchesTeam && matchesRole;
+        t.employeeName.toLowerCase().includes(search.toLowerCase());
+      const matchesRole = role === "All" || t.department === role;
+      return matchesSearch && matchesRole;
     });
-  }, [tickets, search, team, role]);
+  }, [tickets, search, role]);
 
   return (
     <div className="page-content">
@@ -43,7 +41,6 @@ export default function TicketQueuePage() {
           onChange={(e) => setSearch(e.target.value)}
           style={{ maxWidth: 320, flex: 1 }}
         />
-        <SimpleSelect options={TEAMS} value={team} onChange={(e) => setTeam(e.target.value)} />
         <SimpleSelect options={ROLES} value={role} onChange={(e) => setRole(e.target.value)} />
         <span
           className="text-[13px] font-semibold text-vantara-navy"
