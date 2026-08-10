@@ -1,6 +1,9 @@
 import { ChatMessage as ChatMessageType } from "@/types/monitoring";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Sparkles } from "lucide-react";
 import { useState } from "react";
+
+const NAVY = "#14213D";
+const GOLD = "#D9A653";
 
 export function ChatMessage({ message }: { message: ChatMessageType }) {
   const isUser = message.role === "user";
@@ -13,71 +16,73 @@ export function ChatMessage({ message }: { message: ChatMessageType }) {
   };
 
   return (
-    <div
-      className="flex flex-col gap-1 animate-fade-in"
-      style={{
-        alignSelf: isUser ? "flex-end" : "flex-start",
-        alignItems: isUser ? "flex-end" : "flex-start",
-        maxWidth: "70%",
-      }}
-    >
+    <div className="flex w-full vt-msg-in" style={{ justifyContent: isUser ? "flex-end" : "flex-start" }}>
       <div
-        className="rounded-lg px-4 py-3 text-sm leading-relaxed shadow-sm transition-all hover:shadow-md"
-        style={
-          isUser
-            ? {
-                backgroundColor: "#14213D",
-                color: "#fff",
-                borderRadius: "16px 16px 4px 16px",
-              }
-            : {
-                backgroundColor: "#f8f9fa",
-                color: "#14213D",
-                border: "1px solid #e5e7eb",
-                borderRadius: "16px 16px 16px 4px",
-              }
-        }
+        className="flex items-end gap-2.5"
+        style={{ flexDirection: isUser ? "row-reverse" : "row", maxWidth: "78%", minWidth: 0 }}
       >
-        <p className="whitespace-pre-wrap break-words">{message.text}</p>
+        <div
+          className="flex items-center justify-center shrink-0 rounded-full font-bold"
+          style={{
+            width: 30,
+            height: 30,
+            minWidth: 30,
+            fontSize: 12,
+            backgroundColor: isUser ? NAVY : "#fff",
+            color: isUser ? "#fff" : NAVY,
+            border: isUser ? "none" : `1.5px solid ${GOLD}`,
+            boxShadow: isUser ? "0 2px 6px rgba(20,33,61,0.25)" : "0 2px 6px rgba(217,166,83,0.2)",
+          }}
+        >
+          {isUser ? "U" : <Sparkles size={14} strokeWidth={2.5} style={{ color: GOLD }} />}
+        </div>
 
-        {/* Copy button for agent messages */}
-        {!isUser && (
-          <button
-            onClick={copyToClipboard}
-            className="mt-2 flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors"
-            style={{
-              color: "#666",
-              backgroundColor: "#f0f0f0",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#e0e0e0";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#f0f0f0";
-            }}
+        <div className="flex flex-col gap-1.5 min-w-0" style={{ alignItems: isUser ? "flex-end" : "flex-start" }}>
+          <div
+            className="relative px-4 py-3 text-sm leading-relaxed transition-all duration-200 hover:-translate-y-[1px]"
+            style={
+              isUser
+                ? {
+                    backgroundColor: NAVY,
+                    backgroundImage: "linear-gradient(135deg, #14213D 0%, #1c2c52 100%)",
+                    color: "#fff",
+                    borderRadius: "16px 16px 4px 16px",
+                    boxShadow: "0 4px 14px rgba(20,33,61,0.22)",
+                  }
+                : {
+                    backgroundColor: "#fffdf8",
+                    color: NAVY,
+                    border: "1px solid #ece6d8",
+                    borderLeft: `3px solid ${GOLD}`,
+                    borderRadius: "4px 16px 16px 16px",
+                    boxShadow: "0 2px 8px rgba(20,33,61,0.06)",
+                  }
+            }
           >
-            {copied ? (
-              <>
-                <Check size={14} /> Copied
-              </>
-            ) : (
-              <>
-                <Copy size={14} /> Copy
-              </>
+            <p className="whitespace-pre-wrap break-words">{message.text}</p>
+
+            {!isUser && (
+              <button
+                onClick={copyToClipboard}
+                className="mt-2.5 flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold transition-colors"
+                style={{
+                  color: copied ? "#2f7a4d" : "#8b8371",
+                  backgroundColor: copied ? "rgba(47,122,77,0.1)" : "rgba(217,166,83,0.1)",
+                }}
+                onMouseEnter={(e) => { if (!copied) e.currentTarget.style.backgroundColor = "rgba(217,166,83,0.2)"; }}
+                onMouseLeave={(e) => { if (!copied) e.currentTarget.style.backgroundColor = "rgba(217,166,83,0.1)"; }}
+              >
+                {copied ? (<><Check size={12} /> Copied</>) : (<><Copy size={12} /> Copy</>)}
+              </button>
             )}
-          </button>
-        )}
+          </div>
+        </div>
       </div>
 
-      {/* Source badge only */}
-      {!isUser && message.source && (
-        <span
-          className="px-2 py-0.5 text-[11px] font-medium rounded-full"
-          style={{ backgroundColor: "#dbeafe", color: "#0ea5e9" }}
-        >
-          {message.source}
-        </span>
-      )}
+      <style>{`
+        @keyframes vt-msg-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .vt-msg-in { animation: vt-msg-in 280ms ease-out; }
+      `}</style>
     </div>
   );
-} 
+}

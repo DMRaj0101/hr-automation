@@ -1,6 +1,6 @@
 export interface DashboardStats {
   total: number;
-  completed: number;
+  closed: number;
   inProgress: number;
   failed: number;
 }
@@ -37,7 +37,7 @@ export interface SystemHealthBrief {
 export interface TicketStatusSummary {
   open: number;
   inProgress: number;
-  pending: number;
+  failed: number;
   closed: number;
 }
 

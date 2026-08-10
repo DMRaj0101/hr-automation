@@ -19,11 +19,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
  
 from app.database import get_db
-
-from app.models import Employee, ProvisioningRecord, Ticket
-
+from app.models import Employee, ProvisioningRecord, Ticket, AgentTicket
 from app.orchestrators import health_check_orchestrator
- 
+from app.orchestrators.onboarding_orchestrator import AGENT_DISPLAY_NAMES
+
 router = APIRouter(prefix="/onboarding-details", tags=["onboarding-details"])
  
 # Employee.status ("registered" | "provisioning" | "active") -> the
@@ -217,86 +216,54 @@ def _build_alerts(db: Session, employee_id: str) -> list[dict]:
     return alerts
  
  
-# Generic, status-driven note templates -- platform is no longer a lookup
+FUNCTIONAL_AGENT_KEYS = ["Identity Agent", "Email Agent", "Time & Billing Agent", "Document Management Agent"]
 
-# key, it's just interpolated into whichever status template applies.
+# AgentTicket.agent_name (display name, e.g. "Time & Billing Agent") ->
+# ProvisioningRecord.agent_key (e.g. "time_billing"). Reuses
+# onboarding_orchestrator.AGENT_DISPLAY_NAMES (the source of truth for
+# agent_key -> display name) instead of re-deriving it -- comparing the
+# display name directly against agent_key (as this file previously did)
+# never matches anything, since "Identity Agent" != "identity".
+_AGENT_DISPLAY_TO_KEY = {display: key for key, display in AGENT_DISPLAY_NAMES.items()}
 
-PLATFORM_NOTE_TEMPLATES = {
 
-    "Success": "The {platform} account for {username} has been successfully created",
-
-    "In Progress": "The {platform} account for {username} is in progress",
-
-    "Pending": "The {platform} account for {username} creation is pending",
-
-    "Failed": "The {platform} account for {username} creation failed",
-
-}
- 
-# ProvisioningRecord.status (backend vocabulary) -> the four note-template
-
-# buckets above. This is the *only* place status strings are compared --
-
-# add new backend status values here, never in the note-generation logic.
-
-STATUS_TEMPLATE_MAPPING = {
-
-    "completed": "Success",
-
-    "success": "Success",
-
-    "active": "Success",
-
-    "provisioning": "In Progress",
-
-    "in_progress": "In Progress",
-
-    "running": "In Progress",
-
-    "pending": "Pending",
-
-    "failed": "Failed",
-
-}
- 
-FUNCTIONAL_AGENT_KEYS = ["identity", "email", "time_billing", "document_management"]
- 
- 
 def _format_dt(value):
 
     return value.strftime("%d-%m-%Y %H:%M:%S") if value else None
- 
- 
-def _display_status(status: str) -> str:
 
-    """Maps a ProvisioningRecord's raw status to the note-template
+from datetime import datetime, timedelta
 
-    vocabulary. Falls back to "Pending" for any status not yet in
+def _planned_date(joining_date):
+    if not joining_date:
+        return None
 
-    STATUS_TEMPLATE_MAPPING, rather than raising -- a new/unmapped
+    if isinstance(joining_date, str):
+        joining_date = datetime.strptime(joining_date, "%Y-%m-%d").date()
 
-    backend status shouldn't 500 this endpoint."""
+    return joining_date - timedelta(days=3)
 
-    return STATUS_TEMPLATE_MAPPING.get(status, "Pending")
- 
- 
-def _provisioning_note(record: ProvisioningRecord, username: str) -> str:
 
-    """Builds the Provisional Status note from record.status + platform,
+def _days_remaining(joining_date):
+    """
+    Returns the number of days remaining until the planned
+    completion date.
+    """
+    planned_date = _planned_date(joining_date)
 
-    per PLATFORM_NOTE_TEMPLATES. No per-platform or per-status branching --
+    if not planned_date:
+        return None
 
-    adding a platform needs no code change, adding a status only needs an
+    today = datetime.now().date()
 
-    entry in STATUS_TEMPLATE_MAPPING."""
+    # If planned_date is a datetime, convert it to a date
+    if hasattr(planned_date, "date"):
+        planned_date = planned_date.date()
 
-    display_status = _display_status(record.status)
+    return (planned_date - today).days
 
-    template = PLATFORM_NOTE_TEMPLATES[display_status]
+    
 
-    return template.format(platform=record.software_name, username=username)
- 
- 
+
 @router.get("/{employee_id}/provisional-status")
 
 def provisional_status(employee_id: str, db: Session = Depends(get_db)):
@@ -307,13 +274,11 @@ def provisional_status(employee_id: str, db: Session = Depends(get_db)):
 
     are read straight off ProvisioningRecord/Employee (null if the backend
 
-    row/column has no value yet); ticketID, ticketStatus, credentials.password
+    row/column has no value yet); ticketID, ticketStatus, note are read
 
-    are mocked since this codebase has no ticket or credential concept for
+    straight off the matching AgentTicket; credentials.password is mocked
 
-    Functional items. note is generated dynamically from record.status and
-
-    record.software_name via PLATFORM_NOTE_TEMPLATES/STATUS_TEMPLATE_MAPPING."""
+    since this codebase has no credential-storage concept."""
 
     employees = (
 
@@ -328,58 +293,46 @@ def provisional_status(employee_id: str, db: Session = Depends(get_db)):
     result = {}
 
     for employee in employees:
-
-        records = (
-
-            db.query(ProvisioningRecord)
-
-            .filter(ProvisioningRecord.employee_id == employee.id)
-
-            .filter(ProvisioningRecord.agent_key.in_(FUNCTIONAL_AGENT_KEYS))
-
-            .all()
-
-        )
+        result[employee.employee_id] = []
 
         username = employee.name  # real
-
         password = username.replace(" ", "") if username else None  # mock -- no credential storage in the schema
 
-        result[employee.employee_id] = [
+        agent_details = (
+            db.query(AgentTicket)
+            .filter(AgentTicket.employee_id == employee.employee_id)
+            .filter(AgentTicket.agent_name.in_(FUNCTIONAL_AGENT_KEYS))
+            .all()
+        )
 
-            {
+        for agent in agent_details:
+            agent_key = _AGENT_DISPLAY_TO_KEY.get(agent.agent_name)
 
-                "platform": record.software_name,  # real
+            provisioning_records = (
+                db.query(ProvisioningRecord)
+                .filter(ProvisioningRecord.employee_id == employee.id)
+                .filter(ProvisioningRecord.agent_key == agent_key)
+                .all()
+            )
 
-                "ticketID": "TKT:001",  # mock -- Functional items never get a Ticket row
+            result[employee.employee_id].extend(
+                {
+                    "platform": record.software_name,  # real
+                    "ticketID": agent.ticket_id,
+                    "ticketStatus": agent.status,
+                    "startTime": _format_dt(record.created_at),
+                    "endtime": _format_dt(record.completed_at),
+                    "credentials": {
+                        "username": username,  # real
+                        "password": record.external_ref,  # mock
+                    },
+                    "note": agent.content,
+                }
+                for record in provisioning_records
+            )
 
-                "ticketStatus": "Success",  # mock -- no ticket lifecycle exists for Functional items
-
-                "startTime": _format_dt(record.last_attempted_at),  # real
-
-                #"endtime": _format_dt(record.completed_at),  # real
-
-                "endtime":"05-08-2026 09:17:45", #mock
-
-                "credentials": {
-
-                    "username": username,  # real
-
-                    "password": password,  # mock
-
-                },
-
-                "note": _provisioning_note(record, username),  # dynamic, status + platform driven
-
-            }
-
-            for record in records
-
-        ]
- 
     return {"ProvisionalStatus": result}
- 
- 
+
 @router.get("/{employee_id}")
 
 def get_onboarding_details(employee_id: str, db: Session = Depends(get_db)):
@@ -397,21 +350,8 @@ def get_onboarding_details(employee_id: str, db: Session = Depends(get_db)):
         "type": _WORKFLOW_TYPE,
 
         "startDate": employee.joining_date,
-
-        # TODO: no estimated-completion-date field exists anywhere
-
-        # (OnboardingTracker/ProvisioningRecord only record actual
-
-        # timestamps) -- populate once such a field/orchestrator exists.
-
-        "plannedCompletion": None,
-
-        # TODO: depends on plannedCompletion above; left None rather than
-
-        # inventing a days-remaining estimate with no backing date.
-
-        "daysRemaining": None,
-
+        "plannedCompletion": _planned_date(employee.joining_date),
+        "daysRemaining": _days_remaining(employee.joining_date),
         "alerts": _build_alerts(db, employee_id),
 
     }

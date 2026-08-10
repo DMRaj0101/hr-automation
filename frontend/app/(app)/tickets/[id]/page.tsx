@@ -65,7 +65,7 @@ export default function TicketDetailPage() {
           <StatusBadge status={t.status} />
         </div>
         <p className="mt-1 text-sm text-vantara-text-muted">
-          {t.issue} — {t.system} · {t.employee} ({t.dept})
+          {t.request} — {t.system} · {t.employeeName} ({t.department})
         </p>
       </div>
 

@@ -1,65 +1,204 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
+
 import { Ticket } from "@/types/ticket";
 import { DataTable } from "@/components/common/DataTable";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { PriorityBadge } from "@/components/common/PriorityBadge";
-import { Button } from "@/components/ui/button";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export function TicketTable({ tickets }: { tickets: Ticket[] }) {
-  const router = useRouter();
+  const isMobile = useMediaQuery("(max-width: 640px)");
+  const isTablet = useMediaQuery("(max-width: 1024px)");
 
+  // ---------- MOBILE: card list ----------
+  if (isMobile) {
+    return (
+      <div className="flex flex-col gap-3 p-3">
+        {tickets.map((t) => (
+          <div
+            key={t.id}
+            className="rounded-xl border border-vantara-border bg-white p-4"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[13px] font-semibold text-vantara-navy">
+                  {t.id}
+                </div>
+                <div className="text-xs text-vantara-text-muted">
+                  {t.employee} · {t.employee_id}
+                </div>
+              </div>
+              <StatusBadge status={t.status} />
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-[13px]">
+              <PriorityBadge priority={t.priority} />
+              <span className="text-vantara-text-muted">{t.dept}</span>
+            </div>
+
+            <div className="mt-2 truncate text-[13px] font-semibold text-vantara-navy">
+              {t.issue}
+            </div>
+
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-xs text-vantara-text-muted">{t.time}</span>
+            </div>
+          </div>
+        ))}
+
+        {tickets.length === 0 && (
+          <div className="flex h-40 items-center justify-center text-sm text-vantara-text-muted">
+            No tickets found.
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ---------- TABLET / DESKTOP: table, with fewer columns on tablet ----------
   const columns: ColumnDef<Ticket>[] = [
     {
-      header: "Ticket",
+      id: "id",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Ticket ID</div>
+      ),
       accessorKey: "id",
       cell: ({ row }) => (
-        <span className="font-semibold text-vantara-navy">{row.original.id}</span>
+        <div className="flex w-full items-center justify-center">
+          <span className="text-[13px] font-semibold text-vantara-navy">{row.original.id}</span>
+        </div>
       ),
     },
-    { header: "Employee", accessorKey: "employee" },
-    { header: "Dept", accessorKey: "dept" },
-    { header: "Issue", accessorKey: "issue" },
+
     {
-      header: "System",
-      accessorKey: "system",
+      id: "employeeId",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Employee ID</div>
+      ),
+      accessorKey: "employee_id",
       cell: ({ row }) => (
-        <span className="text-xs text-vantara-text-muted">{row.original.system}</span>
+        <div className="flex w-full items-center justify-center">
+          <span className="text-[13px] text-vantara-text-muted">{row.original.employee_id}</span>
+        </div>
       ),
     },
-    { header: "Team", accessorKey: "team" },
+
     {
-      header: "Priority",
+      id: "employee",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Employee Name</div>
+      ),
+      accessorKey: "employee",
+      cell: ({ row }) => (
+        <div className="flex w-full items-center justify-center">
+          <span className="truncate text-[13px] font-semibold text-vantara-navy">
+            {row.original.employee}
+          </span>
+        </div>
+      ),
+    },
+
+    {
+      id: "dept",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Department</div>
+      ),
+      accessorKey: "dept",
+      cell: ({ row }) => (
+        <div className="flex w-full items-center justify-center">
+          <span className="text-[13px] text-vantara-navy">{row.original.dept}</span>
+        </div>
+      ),
+    },
+
+    {
+      id: "issue",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Request</div>
+      ),
+      accessorKey: "issue",
+      cell: ({ row }) => (
+        <div className="flex w-full items-center justify-center">
+          <span className="truncate text-[13px] font-semibold text-vantara-navy">
+            {row.original.issue}
+          </span>
+        </div>
+      ),
+    },
+
+    // System column hidden on tablet — too cramped
+    ...(!isTablet
+      ? [
+          {
+            id: "system",
+            header: () => (
+              <div className="flex w-full items-center justify-center text-gray-700">System</div>
+            ),
+            accessorKey: "system",
+            cell: ({ row }: { row: { original: Ticket } }) => (
+              <div className="flex w-full items-center justify-center">
+                <span className="truncate text-xs text-vantara-text-muted">
+                  {row.original.system}
+                </span>
+              </div>
+            ),
+          } as ColumnDef<Ticket>,
+        ]
+      : []),
+
+    {
+      id: "priority",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Priority</div>
+      ),
       accessorKey: "priority",
-      cell: ({ row }) => <PriorityBadge priority={row.original.priority} />,
-    },
-    {
-      header: "Status",
-      accessorKey: "status",
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
-    },
-    { header: "Time", accessorKey: "time" },
-    {
-      header: "",
-      id: "actions",
       cell: ({ row }) => (
-        <Button
-          variant="secondary"
-          onClick={() => router.push(`/tickets/${row.original.id}`)}
-        >
-          View
-        </Button>
+        <div className="flex w-full items-center justify-center">
+          <PriorityBadge priority={row.original.priority} />
+        </div>
+      ),
+    },
+
+    {
+      id: "status",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Status</div>
+      ),
+      accessorKey: "status",
+      cell: ({ row }) => (
+        <div className="flex w-full items-center justify-center">
+          <StatusBadge status={row.original.status} />
+        </div>
+      ),
+    },
+
+    {
+      id: "time",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Created</div>
+      ),
+      accessorKey: "time",
+      cell: ({ row }) => (
+        <div className="flex w-full items-center justify-center">
+          <span className="text-xs text-vantara-text-muted">{row.original.time}</span>
+        </div>
       ),
     },
   ];
+
+  // Tablet: id, employeeId, employee, dept, issue, priority, status, time = 8 columns
+  // Desktop: id, employeeId, employee, dept, issue, system, priority, status, time = 9 columns
+  const gridTemplateColumns = isTablet
+    ? "minmax(80px,0.7fr) minmax(90px,0.7fr) minmax(120px,1fr) minmax(80px,0.7fr) minmax(140px,1.1fr) minmax(90px,0.8fr) minmax(90px,0.8fr) minmax(80px,0.7fr)"
+    : "minmax(80px,0.7fr) minmax(90px,0.7fr) minmax(130px,1.1fr) minmax(90px,0.7fr) minmax(140px,1.2fr) minmax(110px,0.9fr) minmax(90px,0.8fr) minmax(90px,0.8fr) minmax(80px,0.7fr)";
 
   return (
     <DataTable
       columns={columns}
       data={tickets}
-      gridTemplateColumns="0.8fr 1.1fr 0.9fr 1.3fr 1.2fr 0.7fr 0.8fr 0.9fr 0.8fr 0.6fr"
+      gridTemplateColumns={gridTemplateColumns}
     />
   );
 }

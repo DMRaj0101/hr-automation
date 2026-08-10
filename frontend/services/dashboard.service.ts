@@ -35,7 +35,7 @@ function toDashboardData(s: BackendDashboardSummary): DashboardData {
   return {
     stats: {
       total: s.total_employees,
-      completed: s.completed_onboarding,
+      closed: s.completed_onboarding,
       inProgress: s.active_onboarding,
       failed,
     },
@@ -69,7 +69,7 @@ function toDashboardData(s: BackendDashboardSummary): DashboardData {
     ticketStatus: {
       open: s.tickets_by_status["Open"] ?? 0,
       inProgress: s.tickets_by_status["In Progress"] ?? 0,
-      pending: s.tickets_by_status["Pending"] ?? 0,
+      failed: s.tickets_by_status["Pending"] ?? 0,
       closed: s.tickets_by_status["Closed"] ?? 0,
     },
   };
