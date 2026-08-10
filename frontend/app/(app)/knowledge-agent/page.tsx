@@ -52,35 +52,6 @@ export default function KnowledgeAgentChatPage() {
       className="flex flex-col overflow-hidden bg-gradient-to-br from-white via-white to-gray-50/50"
       style={{ height: "100vh" }}
     >
-      {/* Header */}
-      <div
-        className="shrink-0 border-b border-vantara-border bg-white/80 backdrop-blur-sm"
-        style={{ padding: "32px 48px" }}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className="flex items-center justify-center rounded-xl shrink-0"
-            style={{
-              width: 44,
-              height: 44,
-              backgroundColor: "#14213D",
-              backgroundImage: "linear-gradient(135deg, #14213D 0%, #1c2c52 100%)",
-              boxShadow: "0 4px 12px rgba(20,33,61,0.25)",
-            }}
-          >
-            <Bot size={22} style={{ color: "#D9A653" }} strokeWidth={2} />
-          </div>
-          <div>
-            <h1 className="page-title" style={{ marginBottom: 0 }}>
-              Knowledge agent chat
-            </h1>
-            <p className="text-sm text-vantara-text-muted">
-              Ask questions and get instant answers
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Messages area */}
       <div
         className="flex-1 overflow-y-auto scrollbar-thin"
