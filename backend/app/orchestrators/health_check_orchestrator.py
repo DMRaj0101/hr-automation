@@ -32,6 +32,7 @@ reads the cache via get_cached_health() -- never triggers a live sweep.
 from __future__ import annotations
 
 import asyncio
+import datetime
 import logging
 import os
 import threading
@@ -41,6 +42,7 @@ from typing import Callable
 
 import httpx
 
+from app.database import SessionLocal
 from app.integrations import (
     keycloak_connector,
     mailu_connector,
@@ -48,6 +50,7 @@ from app.integrations import (
     kimai_connector,
     openkm_connector,
 )
+from app.models import AgentHealth
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +154,11 @@ def _run_single_check(name: str, check_fn: Callable[[], dict]) -> dict:
         logger.error("Health check failed for %s: %s", name, exc)
         result = {"status": "DOWN", "status_code": None, "latency_ms": 0.0, "error": str(exc)}
 
-    return {"name": name, **_to_frontend_status(result)}
+    # latency_ms carries the raw numeric reading through to _persist_health()
+    # below -- the frontend-facing "latency" key from _to_frontend_status()
+    # is a formatted string ("123ms" / "Timeout"), not usable for the
+    # AgentHealth.latency_ms column.
+    return {"name": name, "latency_ms": result.get("latency_ms"), **_to_frontend_status(result)}
 
 
 def run_health_checks() -> dict:
@@ -192,14 +199,45 @@ def get_cached_health() -> dict:
         return _cached_result
 
 
+def _persist_health(details: list[dict]) -> None:
+    """
+    Inserts one new AgentHealth row per integration per sweep -- an
+    append-only history log (not an upsert-in-place snapshot), so
+    routers/healthcheck.py can read back each agent's last-24h latency
+    trend and uptime percentage. DB failures are logged and swallowed
+    here, same as _run_single_check's per-integration isolation: a
+    persistence error must not stop the cache from being refreshed by
+    the caller.
+    """
+    db = SessionLocal()
+    try:
+        now = datetime.datetime.utcnow()
+        for detail in details:
+            db.add(AgentHealth(
+                agent=detail["name"],
+                status=detail.get("status"),
+                latency_ms=detail.get("latency_ms"),
+                last_heartbeat=now,
+            ))
+        db.commit()
+    except Exception as exc:
+        logger.error("Failed to persist health sweep to AgentHealth table: %s", exc)
+        db.rollback()
+    finally:
+        db.close()
+
+
 def refresh_health_cache() -> dict:
-    """Runs a fresh sweep and stores it as the new cached result. Called
-    by health_check_loop() every CHECK_INTERVAL_SECONDS; also safe to
-    call directly (e.g. a manual-refresh admin action) if ever needed."""
+    """Runs a fresh sweep, stores it as the new cached result, and
+    persists each integration's latest status/latency to the AgentHealth
+    table. Called by health_check_loop() every CHECK_INTERVAL_SECONDS;
+    also safe to call directly (e.g. a manual-refresh admin action) if
+    ever needed."""
     global _cached_result
     result = run_health_checks()
     with _cache_lock:
         _cached_result = result
+    _persist_health(result["systemHealthDetail"])
     return result
 
 

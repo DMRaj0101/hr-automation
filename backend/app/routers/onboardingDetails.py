@@ -231,17 +231,14 @@ def _format_dt(value):
 
     return value.strftime("%d-%m-%Y %H:%M:%S") if value else None
 
-
 from datetime import datetime, timedelta
 
-
 def _planned_date(joining_date):
-    """
-    Returns the planned completion date, which is 3 days before
-    the employee's joining date.
-    """
     if not joining_date:
         return None
+
+    if isinstance(joining_date, str):
+        joining_date = datetime.strptime(joining_date, "%Y-%m-%d").date()
 
     return joining_date - timedelta(days=3)
 
