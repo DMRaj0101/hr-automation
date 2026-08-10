@@ -9,13 +9,13 @@ import { TicketStatRow } from "@/components/tickets/TicketStatRow";
 import { Input } from "@/components/ui/input";
 import { SimpleSelect } from "@/components/ui/select";
 
-const TEAMS = ["All", "IT", "Admin", "Security"];
 const ROLES = ["All", "Tax", "Audit", "Law"];
+const STATUSES = ["All", "Open", "In Progress", "Failed", "Closed"];
 
 export default function TicketQueuePage() {
   const { data: tickets, isLoading } = useTickets();
   const { data: dashboard } = useDashboard();
-  const { search, team, role, setSearch, setTeam, setRole } = useTicketStore();
+  const { search, role, status, setSearch, setRole, setStatus } = useTicketStore();
 
   const filtered = useMemo(() => {
     if (!tickets) return [];
@@ -24,47 +24,55 @@ export default function TicketQueuePage() {
         !search ||
         t.id.toLowerCase().includes(search.toLowerCase()) ||
         t.employee.toLowerCase().includes(search.toLowerCase());
-      const matchesTeam = team === "All" || t.team === team;
       const matchesRole = role === "All" || t.dept === role;
-      return matchesSearch && matchesTeam && matchesRole;
+      const matchesStatus = status === "All" || t.status === status;
+      return matchesSearch && matchesRole && matchesStatus;
     });
-  }, [tickets, search, team, role]);
+  }, [tickets, search, role, status]);
 
   return (
-    <div className="page-content">
-      <div className="mb-5">
-        {dashboard && <TicketStatRow data={dashboard.ticketStatus} />}
-      </div>
+    <div className="directory-bg">
+      <div className="directory-panel">
+        <div className="page-content flex h-full flex-col">
+          <div className="mb-1 shrink-0">
+            {dashboard && <TicketStatRow data={dashboard.ticketStatus} />}
+          </div>
 
-      <div className="mb-5 flex flex-wrap items-center gap-3">
-        <Input
-          placeholder="Search by ticket ID or employee..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ maxWidth: 320, flex: 1 }}
-        />
-        <SimpleSelect options={TEAMS} value={team} onChange={(e) => setTeam(e.target.value)} />
-        <SimpleSelect options={ROLES} value={role} onChange={(e) => setRole(e.target.value)} />
-        <span
-          className="text-[13px] font-semibold text-vantara-navy"
-          style={{
-            marginLeft: "auto",
-            background: "#fff",
-            border: "1px solid #E5E7EB",
-            borderRadius: 9999,
-            padding: "8px 18px",
-          }}
-        >
-          {filtered.length} Tickets
-        </span>
-      </div>
+          <div className="directory-toolbar shrink-0" style={{ padding: "8px 14px" }}>
+            <Input
+              className="directory-search"
+              style={{ height: 38 }}
+              placeholder="Search by ticket ID or employee..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <SimpleSelect
+              className="directory-select"
+              style={{ height: 38 }}
+              options={ROLES}
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            />
+            <SimpleSelect
+              className="directory-select"
+              style={{ height: 38 }}
+              options={STATUSES}
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            />
+            <span className="directory-count-pill" style={{ padding: "6px 16px" }}>
+              {filtered.length} Tickets
+            </span>
+          </div>
 
-      <div className="card !p-0">
-        {isLoading ? (
-          <div className="p-6 text-vantara-text-muted">Loading tickets...</div>
-        ) : (
-          <TicketTable tickets={filtered} />
-        )}
+          <div className="directory-card min-h-0 flex-1">
+            {isLoading ? (
+              <div className="p-6 text-vantara-text-muted">Loading tickets...</div>
+            ) : (
+              <TicketTable tickets={filtered} />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -107,7 +107,7 @@ def _employee_out(employee: Employee, checklist: list[dict]) -> dict:
         "employee_id": employee.employee_id,
         "name": employee.name,
         "employee_id":employee.employee_id,
-        "dept": employee.department,
+        "dept": employee.role,
         "type": "experienced",  # MOCK
         "manager": employee.manager,
         "status": _map_employee_status(employee.status),  # MAP: provisioning -> Onboarding
