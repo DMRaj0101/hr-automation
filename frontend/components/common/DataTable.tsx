@@ -60,8 +60,8 @@ export function DataTable<T>({
 
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="directory-table-wrap flex-1 overflow-auto">
-        <div className="w-full min-w-full">
+      <div className="directory-table-wrap flex-1 overflow-y-auto overflow-x-hidden">
+  <div className="w-full">
           {/* ================= HEADER ================= */}
 
           {table.getHeaderGroups().map((headerGroup) => (
