@@ -162,16 +162,10 @@ export default function OnboardingDetailPage() {
       {/* Provisioning Checklist */}
 
       <div className="card">
-        <h3 className="font-semibold text-vantara-navy">
-          Onboarding Checklist
-        </h3>
-
-        <div className="mt-4">
-          <OnboardingChecklist
-            items={checklist ?? []}
-            employeeId={emp.employee_id}
-          />
-        </div>
+        <OnboardingChecklist
+          items={checklist ?? []}
+          employeeId={emp.employee_id}
+        />
       </div>
     </div>
   );
