@@ -5,7 +5,6 @@ export interface Ticket {
   dept: string;
   issue: string;
   system: string;
-  team: string;
   priority: "Critical" | "High" | "Medium";
   status: "Open" | "In Progress" | "Failed" | "Completed";
   time: string;
