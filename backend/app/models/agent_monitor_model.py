@@ -12,6 +12,8 @@ class AgentTicket(Base):
     status = Column(String(20), nullable=False, default="NEW")  # NEW / PROCESSING / CLOSED
     agent_name = Column(String(100), nullable=False)
     employee_id = Column(String(50), nullable=False)
+    start_time = Column("start_time", DateTime, nullable=True)
+    end_time = Column("end_time", DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
