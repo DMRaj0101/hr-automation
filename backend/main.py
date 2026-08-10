@@ -24,7 +24,8 @@ from app import models  # noqa: F401 -- ensures models are registered before cre
 from app.ai_client import prewarm
 from app.routers import (
     auth, employees, hrms_sync, onboarding, dashboard, profile,
-    hr_assistant, tickets, monitoring,agent_ticketing,healthcheck,employeeDirectory,onboardingDetails,kimai_routes
+    hr_assistant, tickets, monitoring,agent_ticketing,healthcheck,employeeDirectory,onboardingDetails,kimai_routes,
+    ticketspage
 )
 from app.agents.monitoring_agent import monitoring_loop
 from app.orchestrators.health_check_orchestrator import health_check_loop
@@ -53,6 +54,7 @@ app.include_router(healthcheck.router)
 app.include_router(employeeDirectory.router)
 app.include_router(onboardingDetails.router)
 app.include_router(kimai_routes.router)
+app.include_router(ticketspage.router)
 
 # TODO: app.include_router(approvals.router) -- see routers/approvals.py's
 # module docstring, this is intentionally not wired in yet.
