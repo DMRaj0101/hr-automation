@@ -154,3 +154,13 @@ class AuditLog(Base):
     action = Column(String, nullable=False)
     detail = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class AgentHealth(Base):
+    __tablename__ = "Agent_Health"
+    id = Column(String, primary_key=True, default=gen_id)
+    agent = Column(String, nullable=False)
+    status = Column(String, default="Operational")  # Operational | down
+    latency_ms = Column(Float, nullable=True)  # round-trip latency from the last health_check_orchestrator sweep
+    last_heartbeat = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
