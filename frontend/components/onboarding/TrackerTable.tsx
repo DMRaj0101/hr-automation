@@ -49,6 +49,18 @@ export function TrackerTable({ employees }: { employees: Employee[] }) {
         </div>
       ),
     },
+    {
+      id: "status",
+      header: () => (
+        <div className="flex w-full items-center justify-center text-gray-700">Employment Lifecycle</div>
+      ),
+      accessorKey: "status",
+      cell: ({ row }) => (
+        <div className="flex w-full items-center justify-center">
+          <StatusBadge status={row.original.status} />
+        </div>
+      ),
+    },
     
     {
       id: "blockers",
@@ -129,7 +141,7 @@ export function TrackerTable({ employees }: { employees: Employee[] }) {
       getRowId={(row) => row.id}
       selectedRowId={selectedId}
       onRowClick={(row) => setSelectedId(row.id)}
-      gridTemplateColumns="minmax(200px,1.6fr) minmax(100px,0.9fr) minmax(140px,1.1fr) minmax(80px,0.6fr) minmax(80px,0.6fr) minmax(110px,0.9fr) minmax(90px,0.7fr) minmax(70px,0.6fr)"
+      gridTemplateColumns="minmax(160px,1.8fr) minmax(80px,0.8fr) minmax(110px,1fr) minmax(60px,0.5fr) minmax(70px,0.7fr) minmax(80px,0.8fr) minmax(60px,0.5fr) minmax(60px,0.5fr)"
     />
   );
 }
