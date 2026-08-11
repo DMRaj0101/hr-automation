@@ -6,7 +6,7 @@ import { Ticket, TicketDetail } from "@/types/ticket";
 // differ from the frontend's Ticket type.
 interface TicketPageRow {
   ticketID: string;
-  employee_id: string | null;
+  employeeID: string | null;
   employeeName: string | null;
   department: string | null;
   request: string;
@@ -19,14 +19,14 @@ interface TicketPageRow {
 function toTicket(row: TicketPageRow): Ticket {
   return {
     id: row.ticketID,
-    employee: row.employeeID ?? "—",
+    employee_id: row.employeeID ?? "—",
     employee: row.employeeName ?? "—",
-    department: row.department ?? "—",
-    request: row.request,
+    dept: row.department ?? "—",
+    issue: row.request,
     system: row.system ?? "—",
     priority: (row.priority as Ticket["priority"]) ?? "Medium",
     status: row.status as Ticket["status"],
-    created: row.created ?? "—",
+    time: row.created ?? "—",
   };
 }
 
