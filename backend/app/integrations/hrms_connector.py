@@ -47,7 +47,6 @@ def _map_new_hire(record: dict) -> EmployeeCreate:
         employee_id=record["hrms_employee_id"],
         email=record["work_email"],
         department=record["department"],
-        title=record.get("job_title"),
         role=record.get("role"),
         office=record.get("location"),
         manager=record.get("manager_name"),

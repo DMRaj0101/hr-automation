@@ -320,10 +320,10 @@ def provisional_status(employee_id: str, db: Session = Depends(get_db)):
                     "platform": record.software_name,  # real
                     "ticketID": agent.ticket_id,
                     "ticketStatus": agent.status,
-                    "startTime": _format_dt(record.created_at),
-                    "endtime": _format_dt(record.completed_at),
+                    "startTime": _format_dt(agent.start_time),
+                    "endtime": _format_dt(agent.end_time),
                     "credentials": {
-                        "username": username,  # real
+                        "username": record.username,  # real
                         "password": record.external_ref,  # mock
                     },
                     "note": agent.content,
