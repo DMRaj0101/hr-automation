@@ -13,6 +13,7 @@ class TicketService:
         content = f"Agent '{agent_name}' started onboarding processing for employee {employee_id}."
         ticket_id = self._repository.create_ticket(db, title, content, agent_name, employee_id)
         self._repository.update_status(db, ticket_id, "PROCESSING")
+        self._repository.set_start_time(db, ticket_id)
         return ticket_id
 
     def handle_agent_problem(self, db: Session, agent_name: str, employee_id: str, error_details: str):
@@ -22,9 +23,11 @@ class TicketService:
             title = f"Agent Onboarding Run - {agent_name} - Employee {employee_id}"
             content = f"Agent '{agent_name}' reported a problem for employee {employee_id}."
             ticket_id = self._repository.create_ticket(db, title, content, agent_name, employee_id)
-
+            self._repository.set_start_time(db, ticket_id)
+            
         self._repository.add_followup(db, ticket_id, f"Agent encountered a problem:\n{error_details}")
         self._repository.update_status(db, ticket_id, "PROBLEM")
+        self._repository.set_end_time(db, ticket_id)
         return ticket_id
 
     def handle_agent_completed(self, db: Session, agent_name: str, employee_id: str):
@@ -44,4 +47,5 @@ class TicketService:
 
         self._repository.add_followup(db, ticket_id, f"Agent '{agent_name}' completed processing successfully.")
         self._repository.close_ticket(db, ticket_id)
+        self._repository.set_end_time(db, ticket_id)
         return ticket_id

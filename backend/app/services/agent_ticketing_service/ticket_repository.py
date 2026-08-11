@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.models import AgentTicket, TicketFollowup
@@ -80,6 +82,18 @@ class TicketRepository:
         db.commit()
         return True
 
+    def set_start_time(self, db: Session, ticket_id: int, start_time: datetime = None):
+        ticket = db.query(AgentTicket).filter_by(ticket_id=ticket_id).first()
+        if ticket:
+            ticket.start_time = start_time or datetime.utcnow()
+            db.commit()
+
+    def set_end_time(self, db: Session, ticket_id: int, end_time: datetime = None):
+        ticket = db.query(AgentTicket).filter_by(ticket_id=ticket_id).first()
+        if ticket:
+            ticket.end_time = end_time or datetime.utcnow()
+            db.commit()
+
     @staticmethod
     def _to_dict(ticket: AgentTicket, include_latest_followup: bool = False) -> dict:
         result = {
@@ -89,6 +103,8 @@ class TicketRepository:
             "status": ticket.status,
             "agent_name": ticket.agent_name,
             "employee_id": ticket.employee_id,
+            "start_time": ticket.start_time,
+            "end_time": ticket.end_time,
             "created_at": ticket.created_at,
             "updated_at": ticket.updated_at,
         }
