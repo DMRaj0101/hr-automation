@@ -26,7 +26,7 @@ from app import email_client
 
 POLL_INTERVAL_SECONDS = int(os.getenv("MONITORING_POLL_INTERVAL_SECONDS", "30"))
 MAX_RETRIES = 3
-SLA_PENDING_HOURS = 4
+SLA_PENDING_HOURS = 0.01
 MANAGER_TEAM_EMAIL = os.getenv("MANAGER_TEAM_EMAIL", "")
 
 # PDD Section 5: "3 attempts, with backoff (immediate -> 30s -> 2min)".
@@ -96,7 +96,7 @@ def _check_sla_breaches(db: Session):
     (email_client.py), same infrastructure the welcome email uses."""
     cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=SLA_PENDING_HOURS)
     breaching = db.query(Ticket).filter(
-        Ticket.status == "Pending",
+        (Ticket.status == "Pending" or Ticket.status == "Open"),
         Ticket.status_changed_at < cutoff,
         Ticket.sla_flagged_at.is_(None),
     ).all()

@@ -143,7 +143,14 @@ def _build_checklist(db: Session, employee_id: str) -> list[dict]:
         for t in tickets
     ]
     return checklist
-
+def experience_type(years_of_experience: float) -> str:
+    if years_of_experience is None:
+        return "Unknown"
+    
+    elif  years_of_experience < 1:
+        return "Fresher"
+    else:
+        return "Experienced"
 
 def _employee_out(employee: Employee, checklist: list[dict], agent_progress: str) -> dict:
     total = len(checklist)
@@ -156,7 +163,7 @@ def _employee_out(employee: Employee, checklist: list[dict], agent_progress: str
         "name": employee.name,
         "employee_id":employee.employee_id,
         "dept": employee.role,
-        "type": "experienced",  # MOCK
+        "type": experience_type(employee.years_of_experience),  # MOCK
         "manager": employee.manager,
         "status": _map_employee_status(employee.status),  # MAP: provisioning -> Onboarding
         "progress": round(100 * done / total) if total else 0,
@@ -165,13 +172,13 @@ def _employee_out(employee: Employee, checklist: list[dict], agent_progress: str
         "est": agent_progress,  # "<completed>/<in progress>" from AgentTicket
         "remaining": _days_remaining(employee.joining_date),  # MOCK
         "email": employee.email,
-        "phone": 7598986411,  # MOCK
+        "phone": employee.phonenumber,  # MOCK
         "office": employee.office,
-        "employee location": "miami",  # MOCK
+        "employee location": employee.employee_location,
         "empManager": employee.manager,
         "hireDate": employee.joining_date,
-        "yearsOfService": 1.0,  # MOCK
-        "jobLevel": "Associate",  # MOCK
+        "yearsOfService": employee.years_of_experience,  # MOCK
+        "jobLevel": employee.job_Level,  # MOCK
         "title": employee.title,
     }
 

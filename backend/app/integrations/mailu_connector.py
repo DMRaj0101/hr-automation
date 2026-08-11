@@ -281,10 +281,10 @@ def create_mailbox(employee_name: str, desired_local_part: str) -> dict:
         _create_mailu_user(email, password, employee_name)
 
         return {
-            "external_ref": email,
             "email_address": email,
+            "external_ref": password,
             "temp_password": password,
-            "detail": "Mailbox created.",
+            "detail": f"{email}Mailbox created successfully for {employee_name}.",
         }
     except MailUConnectorError:
         raise

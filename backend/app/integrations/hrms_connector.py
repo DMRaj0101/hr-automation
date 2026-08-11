@@ -51,6 +51,10 @@ def _map_new_hire(record: dict) -> EmployeeCreate:
         role=record.get("role"),
         office=record.get("location"),
         manager=record.get("manager_name"),
+        years_of_experience=record.get("years_of_experience"),
+        phonenumber=record.get("phone_number"),
+        employee_location=record.get("employee_location"),
+        job_Level=record.get("job_Level"),
         joining_date=record.get("start_date"),
         sync_source="hrms",
     )

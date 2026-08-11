@@ -34,6 +34,9 @@ still leaves open.
 from __future__ import annotations
 import secrets
 import string
+import time
+
+import requests
 
 from app.services import KimaiApiClient
 from app.config import Config
@@ -261,6 +264,15 @@ _activity_service = KimaiActivityService(_api_client, _config.kimai_admin_token)
 
 _TEMP_PASSWORD_LENGTH = 16
 _DEFAULT_ACTIVITY_NAME = "General"
+_TIMEOUT_SECONDS = 10.0
+
+# Kimai's base REST URL, exposed at module level (same convention as
+# MAILU_URL/OPENKM_URL in their respective connectors) so
+# health_check_orchestrator.py has one source of truth instead of
+# re-reading KIMAI_API_URL under a new name. Reused from the
+# already-constructed KimaiApiClient rather than re-deriving from
+# _config, since KimaiApiClient.__init__ already did the .rstrip("/").
+KIMAI_URL = _api_client._base_url
 
 
 # ----------------------------------------------------------------------
@@ -429,3 +441,53 @@ def get_user_status(external_ref) -> dict:
         raise KimaiConnectorError(f"Failed to fetch Kimai user status for '{external_ref}': {exc}", status_code=status_code) from exc
     except Exception as exc:
         raise KimaiConnectorError(f"Failed to fetch Kimai user status for '{external_ref}': {exc}") from exc
+
+
+def check_kimai_latency() -> dict:
+    """
+    Measure round-trip latency to Kimai and report reachability.
+
+    Hits GET {KIMAI_URL}/users with the admin bearer token -- the same
+    endpoint _find_user_by_username() above already relies on via
+    KimaiUserService.list_users() -- since Kimai's REST API has no
+    dedicated unauthenticated ping/health endpoint. This is a raw
+    `requests` call rather than going through KimaiApiClient/
+    KimaiUserService, so a non-200 response is reported here as DOWN
+    with a status_code/latency reading instead of being raised as
+    KimaiClientServiceError -- same tradeoff (and same reason) as
+    openkm_connector.check_openkm_latency() / mailu_connector.check_mailu_latency().
+
+    Returns:
+        {
+            "status": "UP" | "DOWN",
+            "status_code": int | None,
+            "latency_ms": float,
+            "error": str | None,
+        }
+
+    Never raises KimaiConnectorError -- unreachable/misconfigured Kimai
+    is reported as status="DOWN" with the error message, since this
+    function IS the diagnostic for that situation.
+    """
+    start = time.perf_counter()
+    try:
+        response = requests.get(
+            f"{KIMAI_URL}/users",
+            headers={"Authorization": f"Bearer {_config.kimai_admin_token}"},
+            timeout=_TIMEOUT_SECONDS,
+        )
+        latency_ms = round((time.perf_counter() - start) * 1000, 2)
+        return {
+            "status": "UP" if response.status_code == 200 else "DOWN",
+            "status_code": response.status_code,
+            "latency_ms": latency_ms,
+            "error": None,
+        }
+    except requests.RequestException as exc:
+        latency_ms = round((time.perf_counter() - start) * 1000, 2)
+        return {
+            "status": "DOWN",
+            "status_code": None,
+            "latency_ms": latency_ms,
+            "error": str(exc),
+        }

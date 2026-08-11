@@ -107,7 +107,6 @@ def check_keycloak_latency() -> dict:
 
     url = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}"
     start = time.perf_counter()
-
     try:
         response = httpx.get(url, timeout=_TIMEOUT_SECONDS)
         latency_ms = round((time.perf_counter() - start) * 1000, 2)

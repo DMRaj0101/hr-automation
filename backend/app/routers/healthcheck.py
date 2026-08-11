@@ -15,7 +15,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import AgentHealth
+from app.models import AgentHealth, Employee, Ticket
+from app.agents.monitoring_agent import SLA_PENDING_HOURS
 from app.orchestrators import health_check_orchestrator
 
 logger = logging.getLogger(__name__)
@@ -89,3 +90,57 @@ def refresh_system_health():
     except Exception as exc:
         logger.error("Failed to refresh system health: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to refresh system health") from exc
+
+
+def _get_sla_warnings(db: Session) -> list[dict]:
+    """
+    Currently-breaching SLA tickets, for the Monitoring Agent Console's
+    "SLA Warning" panel. Filters on status == "Pending" (not just
+    sla_flagged_at.isnot(None) like monitoring.py's monitoring_console()
+    does) so a ticket that breached but has since moved out of Pending
+    (e.g. Closed) drops off this list instead of showing stale.
+
+    breach_cause is hardcoded to "human_pending", not actually
+    classified per-ticket -- the other two enum values from the original
+    spec (agent_stuck_retry / agent_not_escalated) describe
+    ProvisioningRecord-level agent-retry states, but a Ticket only ever
+    reaches "Pending" (the one status _check_sla_breaches() in
+    monitoring_agent.py flags) once a human team owns it -- by that
+    point the agent-retry loop is no longer what's blocking it. No
+    logic exists anywhere in this codebase to distinguish
+    agent_stuck_retry from agent_not_escalated at the ProvisioningRecord
+    level either, so those two values are never produced here; this
+    endpoint only reports the one cause it can actually back with real
+    data.
+    """
+    rows = (
+        db.query(Ticket, Employee)
+        .join(Employee, Ticket.employee_id == Employee.id)
+        .filter(Ticket.status == "Pending", Ticket.sla_flagged_at.isnot(None))
+        .order_by(Ticket.sla_flagged_at.asc())
+        .all()
+    )
+    return [
+        {
+            "ticket_id": ticket.ticket_id,
+            "employee_name": employee.name,
+            "system": ticket.provisioning_item,
+            "breach_cause": "human_pending",
+            "breach_since": ticket.status_changed_at,
+            "sla_hours": SLA_PENDING_HOURS,
+        }
+        for ticket, employee in rows
+    ]
+
+
+@router.get("/sla-warnings")
+def get_sla_warnings(db: Session = Depends(get_db)):
+    """Read-only, same convention as GET /system-health above -- reads
+    already-persisted Ticket rows (sla_flagged_at is set by
+    monitoring_agent.py's background poll loop), never runs a live
+    check on request."""
+    try:
+        return {"slaWarnings": _get_sla_warnings(db)}
+    except Exception as exc:
+        logger.error("Failed to read SLA warnings: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to read SLA warnings") from exc

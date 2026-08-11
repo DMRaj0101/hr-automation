@@ -39,7 +39,11 @@ class Employee(Base):
     role = Column(String, nullable=True)  # Tax | Audit | Law | IT Support -- from HRMS directly if provided; AI classifier (role_classifier.py) is fallback-only
     office = Column(String, nullable=True)
     manager = Column(String, nullable=True)
+    phonenumber = Column(String, nullable=True)
+    years_of_experience = Column(Float, nullable=True)  # 1 | 2 | 3 -- from HRMS directly if provided; AI classifier (role_classifier.py) is fallback-only
+    employee_location = Column(String, nullable=True)
     joining_date = Column(String, nullable=True)
+    job_Level = Column(String, nullable=True)
     sync_source = Column(String, default="manual")  # "manual" | "hrms"
     status = Column(String, default="registered")  # registered -> provisioning -> active
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
