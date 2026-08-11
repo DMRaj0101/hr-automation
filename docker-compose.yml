@@ -22,7 +22,7 @@ services:
     
     environment:
       KIMAI_API_URL: http://kimai:8001/api
-      KIMAI_ADMIN_TOKEN: feb4b0db4e9533e3dceeeda4c
+      KIMAI_ADMIN_TOKEN: dc2ae9ff11fa8d9714bdc9d34
       DATABASE_URL: postgresql://poc:poc@postgres:5432/onboarding_poc
       MOCK_HRMS_URL: http://mock_hrms:9000
       OLLAMA_URL: http://host.docker.internal:11434
@@ -325,7 +325,7 @@ services:
       APP_SECRET: "change-this-to-a-long-random-secret-key"
       TRUSTED_HOSTS: "localhost|127.0.0.1|kimai"
 
-      ADMINMAIL: "admin@kimai.local"
+      ADMINMAIL: "admin@vantara.com"
       ADMINPASS: "admin123"
 
       DATABASE_URL: "mysql://kimaiuser:kimaipassword@kimai_db/kimai?charset=utf8mb4&serverVersion=8.3.0"

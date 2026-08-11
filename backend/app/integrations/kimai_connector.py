@@ -38,10 +38,16 @@ import time
 
 import requests
 
+import os
 from app.services import KimaiApiClient
 from app.config import Config
 from app.error_logger import ErrorLogger
 from app.exceptions.kimai_exceptions import KimaiClientServiceError
+from dotenv import load_dotenv
+
+load_dotenv()
+
+KIMAI_URL = os.getenv("KIMAI_API_URL", "").rstrip("/")
 
 class KimaiTimesheetService:
     """Creates timesheets using the admin token, on behalf of any employee via the 'user' field.
