@@ -6,7 +6,7 @@ import { Ticket, TicketDetail } from "@/types/ticket";
 // differ from the frontend's Ticket type.
 interface TicketPageRow {
   ticketID: string;
-  employeeID: string | null;
+  employee_id: string | null;
   employeeName: string | null;
   department: string | null;
   request: string;
@@ -19,8 +19,8 @@ interface TicketPageRow {
 function toTicket(row: TicketPageRow): Ticket {
   return {
     id: row.ticketID,
-    employeeId: row.employeeID ?? "—",
-    employeeName: row.employeeName ?? "—",
+    employee: row.employeeID ?? "—",
+    employee: row.employeeName ?? "—",
     department: row.department ?? "—",
     request: row.request,
     system: row.system ?? "—",
