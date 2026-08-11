@@ -32,7 +32,7 @@ def _ticket_out(ticket: Ticket, employee: Employee, provisioning_record: Provisi
         "ticketID": ticket.ticket_id,  # real -- Ticket.ticket_id
         "employeeID": employee.employee_id if employee else None,  # real -- Employee.employee_id
         "employeeName": employee.name if employee else None,  # real -- Employee.name
-        "department": employee.role if employee else None,  # real -- Employee.department
+        "department": employee.department if employee else None,  # real -- Employee.department
         "request": ticket.title,  # real -- closest existing request description, Ticket.provisioning_item
         "system": provisioning_record.software_name,  # real -- Ticket.software_name
         "priority": "High",  # mock -- no priority column anywhere in the schema
