@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import AgentHealth, Employee, Ticket
+from app.models import AgentHealth, Employee, Ticket, AuditLog
 from app.agents.monitoring_agent import SLA_PENDING_HOURS
 from app.orchestrators import health_check_orchestrator
 
@@ -58,7 +58,44 @@ def _latency_history_and_uptime(db: Session) -> tuple[dict[str, list], dict[str,
         for agent, total in totals.items()
     }
     return latency_history, uptime_percentage
+def _format_dt(value):
 
+    return value.strftime("%d-%m-%Y %H:%M:%S") if value else None
+
+def _recent_logs(db: Session) -> dict:
+    """System-wide recent activity feed (not scoped to one employee --
+    this endpoint has no employee_id path/query param), for the System
+    Health panel's recent-logs view. Same shape as profile.py's
+    per-employee recent_activity block, just unfiltered.
+
+    Left-outer-joined to Employee (not an inner join) since
+    AuditLog.employee_id is nullable -- some log rows aren't tied to a
+    specific employee, and those should still show up with
+    employee_name=None rather than being silently dropped."""
+    recent_activity = (
+        db.query(AuditLog, Employee)
+        .outerjoin(Employee, AuditLog.employee_id == Employee.id)
+        .order_by(AuditLog.timestamp.desc())
+        .limit(10)
+        .all()
+    )
+    return {
+        "recent_activity": [
+            {
+                "timestamp": _format_dt(a.timestamp),
+                "agent": a.agent,
+                "action": a.action,
+                "detail": a.detail,
+                "employee_name": employee.name if employee else None,
+                "employee_id": employee.employee_id if employee else None,
+            }
+            for a, employee in recent_activity
+        ]
+    }
+
+@router.get("/recent-logs")
+def get_recent_logs(db: Session = Depends(get_db)):
+    return _recent_logs(db)
 
 @router.get("")
 def get_system_health(db: Session = Depends(get_db)):
