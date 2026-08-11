@@ -29,7 +29,7 @@ def _format_dt(value):
 
 def _ticket_out(ticket: Ticket, employee: Employee, provisioning_record: ProvisioningRecord) -> dict:
     return {
-        "ticketID": ticket.ticket_id,  # real -- Ticket.ticket_id
+        "ticketID": ticket.ticket_reference,  # real -- Ticket.ticket_id
         "employeeID": employee.employee_id if employee else None,  # real -- Employee.employee_id
         "employeeName": employee.name if employee else None,  # real -- Employee.name
         "department": employee.department if employee else None,  # real -- Employee.department

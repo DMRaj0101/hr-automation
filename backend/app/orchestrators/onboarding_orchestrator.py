@@ -42,6 +42,7 @@ STEP_PROVISIONING = "Provisioning"
 STEP_TICKETING = "Ticketing"
 STEP_MONITORING = "Monitoring"
 
+
 STEPS = [
     STEP_REGISTERED, STEP_ROLE_RESOLUTION, STEP_DECISION,
     STEP_PROVISIONING, STEP_TICKETING, STEP_MONITORING,
@@ -100,18 +101,18 @@ def _audit(db: Session, employee_id: str, agent: str, action: str, detail: str =
 def _resolve_role(db: Session, employee: Employee) -> str:
     """HRMS role is source of truth; AI classifier is FALLBACK ONLY --
     same rule the previous version used, unchanged."""
-    if employee.role:
-        return employee.role
+    if not employee.department:
+        return employee.department
 
-    result = classify_role(employee.department, employee.title, employee.office)
+    result = classify_role(employee.department, employee.office)
     db.add(RoleClassification(
-        employee_id=employee.id, predicted_role=result["role"],
+        employee_id=employee.id, predicted_role=result["department"],
         confidence=result.get("confidence", 0.0), reasoning=result.get("reasoning"),
     ))
-    employee.role = result["role"]
+    employee.department = result["department"]
     db.commit()
-    _audit(db, employee.id, "Role Classifier", f"Classified as {result['role']}", result.get("reasoning", ""))
-    return employee.role
+    _audit(db, employee.id, "Role Classifier", f"Classified as {result['department']}", result.get("reasoning", ""))
+    return employee.department
 
 
 def _draft_and_queue_welcome_email(db: Session, employee: Employee, credentials: list[dict]):
@@ -216,12 +217,12 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
 
     # --- Step 3: Role Resolution + Decision Agent ---
     _mark(db, employee_id, STEP_ROLE_RESOLUTION, "running")
-    role = _resolve_role(db, employee)
-    _mark(db, employee_id, STEP_ROLE_RESOLUTION, "completed", detail=f"Role: {role}")
+    department = _resolve_role(db, employee)
+    _mark(db, employee_id, STEP_ROLE_RESOLUTION, "completed", detail=f"Role: {department}")
 
     _mark(db, employee_id, STEP_DECISION, "running")
     try:
-        plan = decide(role)
+        plan = decide(department)
     except KeyError as e:
         _mark(db, employee_id, STEP_DECISION, "failed", detail=str(e))
         _audit(db, employee_id, "Decision Agent", "No provisioning matrix for role", str(e))
@@ -272,6 +273,18 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
             result = call(employee, item)  # TODO: raises NotImplementedError until Kimai/Snipe-IT are built
             record.status = "completed"
             record.external_ref = result.get("external_ref")
+            # Same per-connector key-name fallback as the credentials
+            # capture below (openkm_connector -> "openkm_username",
+            # keycloak/kimai connectors -> "username", mailu_connector ->
+            # "email_address") -- confirmed by checking each connector's
+            # actual return value, not assumed. None (not employee.email)
+            # when a connector doesn't return one, so this column
+            # accurately reflects what the connector actually reported.
+            record.username = (
+                result.get("openkm_username")
+                or result.get("username")
+                or result.get("email_address")
+            )
             record.completed_at = datetime.datetime.utcnow()
             db.commit()
             agent_ticket.report_completed()
@@ -359,7 +372,7 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
             employee_id=employee.employee_id
         )
         try:
-            ticket_agent.create_ticket(db, employee_id, role, mock_item)
+            ticket_agent.create_ticket(db, employee_id, department, mock_item)
             agent_ticket.report_started()
         except Exception as e:
             agent_ticket.report_problem(str(e))
@@ -374,7 +387,7 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
 
     return {
         "status": "provisioning",
-        "role": role,
+        "role": department,
         "functional_items": len(plan["functional_items"]),
         "mock_items": len(plan["mock_items"]),
     }

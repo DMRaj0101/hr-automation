@@ -46,7 +46,7 @@ def get_profile(employee_id: str, db: Session = Depends(get_db)):
             "email": employee.email, "office": employee.office,
         },
         "employment_details": {
-            "department": employee.department, "title": employee.title, "role": employee.role,
+            "department": employee.department, "role": employee.role,
             "manager": employee.manager, "joining_date": employee.joining_date,
             "status": employee.status, "sync_source": employee.sync_source,
         },
