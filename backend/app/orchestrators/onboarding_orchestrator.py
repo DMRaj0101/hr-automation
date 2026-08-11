@@ -354,7 +354,16 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
     # --- Ticket Generation Agent for Mock items ---
     _mark(db, employee_id, STEP_TICKETING, "running")
     for mock_item in plan["mock_items"]:
-        ticket_agent.create_ticket(db, employee_id, role, mock_item)
+        agent_ticket = AgentTicketClient(
+            agent_name=f"{mock_item['item']} Agent",
+            employee_id=employee.employee_id
+        )
+        try:
+            ticket_agent.create_ticket(db, employee_id, role, mock_item)
+            agent_ticket.report_started()
+        except Exception as e:
+            agent_ticket.report_problem(str(e))
+            raise
     _mark(db, employee_id, STEP_TICKETING, "completed",
           detail=f"{len(plan['mock_items'])} ticket(s) created")
 
