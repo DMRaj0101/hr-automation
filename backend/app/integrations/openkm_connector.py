@@ -49,6 +49,7 @@ import os
 import re
 import secrets
 import string
+import time
 import requests
 from dotenv import load_dotenv
 load_dotenv()
@@ -409,3 +410,60 @@ def get_workspace_status(external_ref: str) -> dict:
     except requests.RequestException as e:
         raise OpenKMConnectorError(f"Failed to check OpenKM folder status for '{external_ref}': {e}")
     return {"exists": exists}
+
+
+def check_openkm_latency() -> dict:
+    """
+    Measure round-trip latency to OpenKM and report reachability.
+
+    Hits GET /auth/getUsers -- the same endpoint _list_usernames() above
+    already relies on -- since OpenKM's REST layer has no dedicated
+    unauthenticated ping/health endpoint (unlike Keycloak's plain
+    /realms/{realm}). This means a misconfigured OPENKM_USER/
+    OPENKM_PASSWORD is reported as DOWN here too, not just a genuinely
+    unreachable server -- same tradeoff mailu_connector.check_mailu_latency()
+    makes for the same reason.
+
+    Returns:
+        {
+            "status": "UP" | "DOWN",
+            "status_code": int | None,
+            "latency_ms": float,
+            "error": str | None,
+        }
+
+    Never raises OpenKMConnectorError -- unreachable/misconfigured OpenKM
+    is reported as status="DOWN" with the error message, since this
+    function IS the diagnostic for that situation.
+    """
+    if not OPENKM_URL or not OPENKM_USER or not OPENKM_PASSWORD:
+        return {
+            "status": "DOWN",
+            "status_code": None,
+            "latency_ms": 0.0,
+            "error": "Missing OPENKM_URL/OPENKM_USER/OPENKM_PASSWORD environment variables",
+        }
+
+    start = time.perf_counter()
+    try:
+        response = requests.get(
+            f"{OPENKM_URL}/auth/getUsers",
+            headers={"Accept": "application/json"},
+            auth=(OPENKM_USER, OPENKM_PASSWORD),
+            timeout=_TIMEOUT,
+        )
+        latency_ms = round((time.perf_counter() - start) * 1000, 2)
+        return {
+            "status": "UP" if response.status_code == 200 else "DOWN",
+            "status_code": response.status_code,
+            "latency_ms": latency_ms,
+            "error": None,
+        }
+    except requests.RequestException as exc:
+        latency_ms = round((time.perf_counter() - start) * 1000, 2)
+        return {
+            "status": "DOWN",
+            "status_code": None,
+            "latency_ms": latency_ms,
+            "error": str(exc),
+        }

@@ -7,20 +7,20 @@ shape the frontend's System Health panel expects.
 Self-contained by design -- this file is the ONLY change; no existing
 connector, router, or main.py is touched:
 
-  - Keycloak already exposes integrations/keycloak_connector.py's
-    check_keycloak_latency() -- called directly here, unmodified.
-  - MailU / Snipe-IT / Kimai / OpenKM connectors don't have a
-    check_*_latency() function yet, and Microsoft 365 / GLPI have no
-    connector module in this project at all. Rather than edit those
-    files (or add two brand-new connector modules) just to add one, the
-    equivalent lightweight reachability probe is implemented once,
-    locally, as _ping() below -- same {"status","status_code",
-    "latency_ms","error"} contract as check_keycloak_latency() -- and
-    reused for every integration that doesn't have its own real check
-    function. Existing connectors' own URL constants (MAILU_URL,
-    SNIPEIT_URL, KIMAI_URL, OPENKM_URL) are imported and reused rather
-    than re-reading the env vars under new names, so there's exactly one
-    source of truth per integration's base URL.
+  - Keycloak, MailU, Kimai, and OpenKM already expose their own
+    check_keycloak_latency() / check_mailu_latency() / check_kimai_latency() /
+    check_openkm_latency() -- called directly here, unmodified.
+  - Snipe-IT doesn't have a check_*_latency() function yet, and
+    Microsoft 365 / GLPI have no connector module in this project at
+    all. Rather than edit that file (or add two brand-new connector
+    modules) just to add one, the equivalent lightweight reachability
+    probe is implemented once, locally, as _ping() below -- same
+    {"status","status_code","latency_ms","error"} contract as
+    check_keycloak_latency() -- and reused for every integration that
+    doesn't have its own real check function. Snipe-IT's own URL
+    constant (SNIPEIT_URL) is imported and reused rather than
+    re-reading the env var under a new name, so there's exactly one
+    source of truth for its base URL.
 
 Follows agents/monitoring_agent.py's own "not self-registering" convention:
 this module exposes a background loop (health_check_loop()) and a cache
@@ -113,8 +113,8 @@ _HEALTH_CHECKS: list[tuple[str, Callable[[], dict]]] = [
     ("Keycloak", keycloak_connector.check_keycloak_latency),
     ("MailU", mailu_connector.check_mailu_latency),
     ("Snipe-IT", lambda: _ping(snipeit_connector.SNIPEIT_URL)),
-    ("Kimai", lambda: _ping(kimai_connector.KIMAI_URL)),
-    ("OpenKM", lambda: _ping(openkm_connector.OPENKM_URL)),
+    ("Kimai", kimai_connector.check_kimai_latency),
+    ("OpenKM", openkm_connector.check_openkm_latency),
     ("Microsoft 365", lambda: _ping(MICROSOFT365_HEALTH_URL)),
     ("GLPI", lambda: _ping(GLPI_URL)),
 ]
