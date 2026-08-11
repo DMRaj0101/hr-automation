@@ -63,7 +63,7 @@ frontend/
 │   ├── onboarding/         TrackerTable, OnboardingSummaryCards, AlertCard, SystemHealthGrid
 │   │                        (SystemHealthGrid is reused by Monitoring)
 │   ├── tickets/            TicketTable, TicketStatRow, ErrorDetailsCard, StatusHistory
-│   ├── monitoring/         LiveBanner, ActiveRequestsTable
+│   ├── monitoring/         LiveBanner, AgentActivityTable
 │   ├── knowledge-agent/    ChatMessage, SuggestionChips, ChatInput
 │   └── providers/          QueryProvider (TanStack Query client)
 │

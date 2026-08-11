@@ -166,16 +166,6 @@
     "ticketStatus": { "open": 6, "inProgress": 3, "pending": 1, "closed": 14 }
   },
  
-  "systemHealthDetail": [
-    { "name": "Keycloak", "status": "Operational", "latency": "145ms" },
-    { "name": "MailU", "status": "Operational", "latency": "203ms" },
-    { "name": "Snipe-IT", "status": "Operational", "latency": "175ms" },
-    { "name": "Kimai", "status": "Operational", "latency": "250ms" },
-    { "name": "OpenKM", "status": "Down", "latency": "Timeout" },
-    { "name": "Microsoft 365", "status": "Degraded", "latency": "1500ms" },
-    { "name": "GLPI", "status": "Operational", "latency": "—" }
-  ],
- 
   "onboardingDetails": {
     "EMP-2001": {
       "status": "In Progress", "type": "Onboarding",
@@ -190,17 +180,6 @@
           "body": "Response time 1.5s, above 500ms baseline.", "kind": "ack" }
       ]
     }
-  },
- 
-  "monitoring": {
-    "lastEvent": "Identity Agent completed for EMP-2001, 2s ago",
-    "activeRequests": [
-      { "name": "Priya Sharma", "dept": "Tax", "status": "In Progress", "retries": "0/3", "tickets": 3 },
-      { "name": "Rohan Mehta", "dept": "Audit", "status": "Failed", "retries": "3/3", "tickets": 1 },
-      { "name": "Ananya Sharma", "dept": "Law", "status": "Completed", "retries": "0/3", "tickets": 0 }
-    ],
-    "slaWarning": { "ticketId": "TKT-1002", "employee": "Rohan Mehta",
-      "item": "Client Engagement Repository", "team": "IT", "since": "05:40 AM", "duration": "4h 24m" }
   },
  
   "chatMessages": [
