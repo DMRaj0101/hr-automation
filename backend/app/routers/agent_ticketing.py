@@ -53,7 +53,7 @@ def close_ticket(ticket_id: int, db: Session = Depends(get_db)):
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
     repository.close_ticket(db, ticket_id)
-    return {"ticket_id": ticket_id, "status": "CLOSED"}
+    return {"ticket_id": ticket_id, "status": "Closed"}
 
 
 @router.delete("/{ticket_id}", operation_id="agent_ticketing_delete_ticket")
