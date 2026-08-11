@@ -17,8 +17,8 @@ ai_client.call_ollama_json with a fallback to this same rule-based path
 from app.config import get_provisioning_matrix, get_team_routing
 
 
-def decide(role: str) -> dict:
-    """Returns the full provisioning plan for a role:
+def decide(department: str) -> dict:
+    """Returns the full provisioning plan for a department:
     {
       "role": "Tax",
       "functional_items": [ {item, software_name, agent_key, scoped_role}, ... ],
@@ -40,13 +40,13 @@ def decide(role: str) -> dict:
     matrix = get_provisioning_matrix()
     team_routing = get_team_routing()
 
-    if role not in matrix:
-        raise KeyError(f"No provisioning matrix entry for role '{role}'")
+    if department not in matrix:
+        raise KeyError(f"No provisioning matrix entry for department '{department}'")
 
     functional_items = []
     mock_items = []
 
-    for entry in matrix[role]:
+    for entry in matrix[department]:
         if entry["status"] == "functional":
             functional_items.append({
                 "item": entry["item"],
@@ -62,4 +62,4 @@ def decide(role: str) -> dict:
                 "remarks": entry.get("remarks", ""),
             })
 
-    return {"role": role, "functional_items": functional_items, "mock_items": mock_items}
+    return {"role": department, "functional_items": functional_items, "mock_items": mock_items}

@@ -35,7 +35,6 @@ class Employee(Base):
     employee_id = Column(String, unique=True, nullable=False)
     email = Column(String, nullable=False)
     department = Column(String, nullable=False)
-    title = Column(String, nullable=True)
     role = Column(String, nullable=True)  # Tax | Audit | Law | IT Support -- from HRMS directly if provided; AI classifier (role_classifier.py) is fallback-only
     office = Column(String, nullable=True)
     manager = Column(String, nullable=True)
@@ -101,6 +100,7 @@ class ProvisioningRecord(Base):
     status = Column(String, default="not_started")  # not_started | in_progress | completed | failed
     external_ref = Column(String, nullable=True)  # TODO: populate with the real system's ID for this record once the connector returns one
     retry_count = Column(Integer, default=0)
+    username = Column(String, nullable=True)  # e.g. the Kimai username, the Snipe-IT asset tag, the Keycloak user UUID
     last_attempted_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     error_detail = Column(Text, nullable=True)  # set on failure, read by Monitoring Agent + surfaced on auto-created ticket

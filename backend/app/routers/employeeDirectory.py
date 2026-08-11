@@ -162,8 +162,8 @@ def _employee_out(employee: Employee, checklist: list[dict], agent_progress: str
         "employee_id": employee.employee_id,
         "name": employee.name,
         "employee_id":employee.employee_id,
-        "dept": employee.role,
-        "type": experience_type(employee.years_of_experience),  # MOCK
+        "dept": employee.department,
+        "type": employee.job_Level,  # MOCK
         "manager": employee.manager,
         "status": _map_employee_status(employee.status),  # MAP: provisioning -> Onboarding
         "progress": round(100 * done / total) if total else 0,
@@ -179,7 +179,7 @@ def _employee_out(employee: Employee, checklist: list[dict], agent_progress: str
         "hireDate": employee.joining_date,
         "yearsOfService": employee.years_of_experience,  # MOCK
         "jobLevel": employee.job_Level,  # MOCK
-        "title": employee.title,
+        "title": employee.role,
     }
 
 
