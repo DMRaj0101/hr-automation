@@ -12,7 +12,7 @@ class TicketService:
         title = f"Agent Onboarding Run - {agent_name} - Employee {employee_id}"
         content = f"Agent '{agent_name}' started onboarding processing for employee {employee_id}."
         ticket_id = self._repository.create_ticket(db, title, content, agent_name, employee_id)
-        self._repository.update_status(db, ticket_id, "PROCESSING")
+        self._repository.update_status(db, ticket_id, "Processing")
         self._repository.set_start_time(db, ticket_id)
         return ticket_id
 
@@ -26,7 +26,7 @@ class TicketService:
             self._repository.set_start_time(db, ticket_id)
             
         self._repository.add_followup(db, ticket_id, f"Agent encountered a problem:\n{error_details}")
-        self._repository.update_status(db, ticket_id, "PROBLEM")
+        self._repository.update_status(db, ticket_id, "Failed")
         self._repository.set_end_time(db, ticket_id)
         return ticket_id
 
@@ -37,7 +37,7 @@ class TicketService:
 
         ticket = self._repository.get_ticket_by_id(db, ticket_id)
 
-        if ticket["status"] == "PROBLEM":
+        if ticket["status"].upper() == "FAILED":
             self._repository.add_followup(
                 db, ticket_id,
                 f"Agent '{agent_name}' reported completion, but this ticket had a prior problem. "

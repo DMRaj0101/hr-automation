@@ -9,7 +9,7 @@ class TicketRepository:
     """All DB access for tickets/followups. Session is always passed in externally."""
 
     def create_ticket(self, db: Session, title: str, content: str, agent_name: str, employee_id: str) -> int:
-        ticket = AgentTicket(title=title, content=content, status="NEW", agent_name=agent_name, employee_id=employee_id)
+        ticket = AgentTicket(title=title, content=content, status="New", agent_name=agent_name, employee_id=employee_id)
         db.add(ticket)
         db.commit()
         db.refresh(ticket)
@@ -27,7 +27,7 @@ class TicketRepository:
             db.commit()
 
     def close_ticket(self, db: Session, ticket_id: int):
-        self.update_status(db, ticket_id, "CLOSED")
+        self.update_status(db, ticket_id, "Closed")
 
     def get_all_tickets(self, db: Session) -> list[dict]:
         tickets = db.query(AgentTicket).order_by(AgentTicket.created_at.desc()).all()
@@ -55,7 +55,7 @@ class TicketRepository:
 
     def get_status_counts(self, db: Session) -> dict:
         results = db.query(AgentTicket.status, func.count(AgentTicket.ticket_id)).group_by(AgentTicket.status).all()
-        counts = {"PROCESSING": 0, "PROBLEM": 0, "CLOSED": 0, "NEW": 0}
+        counts = {"Processing": 0, "Failed": 0, "Closed": 0, "New": 0}
         for status, count in results:
             counts[status] = count
         return counts
@@ -110,7 +110,7 @@ class TicketRepository:
         }
         if include_latest_followup:
             problem_details = None
-            if ticket.status == "PROBLEM" and ticket.followups:
+            if ticket.status.upper() == "FAILED" and ticket.followups:
                 latest = max(ticket.followups, key=lambda f: f.created_at)
                 problem_details = latest.content
             result["problem_details"] = problem_details

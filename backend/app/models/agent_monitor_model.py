@@ -9,7 +9,7 @@ class AgentTicket(Base):
     ticket_id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
-    status = Column(String(20), nullable=False, default="NEW")  # NEW / PROCESSING / CLOSED
+    status = Column(String(20), nullable=False, default="New")  # NEW / PROCESSING / CLOSED
     agent_name = Column(String(100), nullable=False)
     employee_id = Column(String(50), nullable=False)
     start_time = Column("start_time", DateTime, nullable=True)

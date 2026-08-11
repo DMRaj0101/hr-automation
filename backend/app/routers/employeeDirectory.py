@@ -96,14 +96,14 @@ def _days_remaining(joining_date):
 def _agent_progress(db: Session, employee_business_id: str) -> str:
     """Completed vs in-progress agent count for this employee, read from
     AgentTicket.status -- only two buckets: "CLOSED" is completed,
-    anything else (NEW / PROCESSING / PROBLEM) counts as in progress.
+    anything else (NEW / PROCESSING / FAILED) counts as in progress.
     Replaces the previous "8/15" placeholder in the est field.
     AgentTicket.employee_id stores the business employee_id (e.g.
     "EMP1001"), not the internal Employee.id UUID -- same lookup key
     routers/onboardingDetails.py uses."""
     tickets = db.query(AgentTicket).filter(AgentTicket.employee_id == employee_business_id).all()
-    completed = sum(1 for t in tickets if t.status == "CLOSED")
-    in_progress = sum(1 for t in tickets if t.status != "CLOSED")
+    completed = sum(1 for t in tickets if t.status.upper() == "CLOSED")
+    in_progress = sum(1 for t in tickets if t.status.upper() != "CLOSED")
     return f"{completed}/{in_progress}"
 
 
