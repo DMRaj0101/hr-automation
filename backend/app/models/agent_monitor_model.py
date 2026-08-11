@@ -7,6 +7,7 @@ class AgentTicket(Base):
     __tablename__ = "agent_tickets"
 
     ticket_id = Column(Integer, primary_key=True, autoincrement=True)
+    ticket_reference = Column("ticket_reference", String(20), nullable=True)
     title = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
     status = Column(String(20), nullable=False, default="New")  # NEW / PROCESSING / CLOSED

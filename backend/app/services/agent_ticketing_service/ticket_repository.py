@@ -82,6 +82,12 @@ class TicketRepository:
         db.commit()
         return True
 
+    def update_content(self, db: Session, ticket_id: int, content: str):
+        ticket = db.query(AgentTicket).filter_by(ticket_id=ticket_id).first()
+        if ticket:
+            ticket.content = content
+            db.commit()
+
     def set_start_time(self, db: Session, ticket_id: int, start_time: datetime = None):
         ticket = db.query(AgentTicket).filter_by(ticket_id=ticket_id).first()
         if ticket:
@@ -94,10 +100,19 @@ class TicketRepository:
             ticket.end_time = end_time or datetime.utcnow()
             db.commit()
 
+    def generate_ticket_reference(self, db: Session, ticket_id: int) -> str:
+        reference = f"TKT-{ticket_id:04d}" if ticket_id <= 9999 else f"TKT-{ticket_id}"
+        ticket = db.query(AgentTicket).filter_by(ticket_id=ticket_id).first()
+        if ticket:
+            ticket.ticket_reference = reference
+            db.commit()
+        return reference
+
     @staticmethod
     def _to_dict(ticket: AgentTicket, include_latest_followup: bool = False) -> dict:
         result = {
             "ticket_id": ticket.ticket_id,
+            "ticket_reference": ticket.ticket_reference,
             "title": ticket.title,
             "content": ticket.content,
             "status": ticket.status,

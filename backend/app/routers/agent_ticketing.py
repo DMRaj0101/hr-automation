@@ -70,4 +70,5 @@ def add_followup(ticket_id: int, content: str, db: Session = Depends(get_db)):
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
     repository.add_followup(db, ticket_id, content)
+    repository.update_content(db,ticket_id,content)
     return {"ticket_id": ticket_id, "followup_added": True}

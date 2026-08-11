@@ -12,8 +12,10 @@ class TicketService:
         title = f"Agent Onboarding Run - {agent_name} - Employee {employee_id}"
         content = f"Agent '{agent_name}' started onboarding processing for employee {employee_id}."
         ticket_id = self._repository.create_ticket(db, title, content, agent_name, employee_id)
+        self._repository.generate_ticket_reference(db, ticket_id)
         self._repository.update_status(db, ticket_id, "Processing")
         self._repository.set_start_time(db, ticket_id)
+        self._repository.add_followup(db, ticket_id, content)
         return ticket_id
 
     def handle_agent_problem(self, db: Session, agent_name: str, employee_id: str, error_details: str):
@@ -23,9 +25,12 @@ class TicketService:
             title = f"Agent Onboarding Run - {agent_name} - Employee {employee_id}"
             content = f"Agent '{agent_name}' reported a problem for employee {employee_id}."
             ticket_id = self._repository.create_ticket(db, title, content, agent_name, employee_id)
+            self._repository.generate_ticket_reference(db, ticket_id)
             self._repository.set_start_time(db, ticket_id)
             
-        self._repository.add_followup(db, ticket_id, f"Agent encountered a problem:\n{error_details}")
+        failed_message = f"Agent encountered a problem:\n{error_details}"
+        self._repository.add_followup(db, ticket_id, failed_message)
+        self._repository.update_content(db, ticket_id, failed_message)
         self._repository.update_status(db, ticket_id, "Failed")
         self._repository.set_end_time(db, ticket_id)
         return ticket_id
@@ -38,14 +43,17 @@ class TicketService:
         ticket = self._repository.get_ticket_by_id(db, ticket_id)
 
         if ticket["status"].upper() == "FAILED":
-            self._repository.add_followup(
-                db, ticket_id,
+            blocked_message = (
                 f"Agent '{agent_name}' reported completion, but this ticket had a prior problem. "
                 f"Manual review required before closing."
             )
+            self._repository.add_followup(db, ticket_id, blocked_message)
+            self._repository.update_content(db, ticket_id, blocked_message)
             return ticket_id
 
-        self._repository.add_followup(db, ticket_id, f"Agent '{agent_name}' completed processing successfully.")
+        closed_message = f"Agent '{agent_name}' completed processing successfully. Ticket closed."
+        self._repository.add_followup(db, ticket_id, closed_message)
+        self._repository.update_content(db, ticket_id, closed_message)
         self._repository.close_ticket(db, ticket_id)
         self._repository.set_end_time(db, ticket_id)
         return ticket_id
