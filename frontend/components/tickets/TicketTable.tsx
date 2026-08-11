@@ -177,7 +177,7 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
     {
       id: "time",
       header: () => (
-        <div className="flex w-full items-center justify-center text-gray-700">Created</div>
+        <div className="flex w-full items-center justify-center text-gray-700">Created On</div>
       ),
       accessorKey: "time",
       cell: ({ row }) => (
@@ -194,11 +194,19 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
     ? "minmax(80px,0.7fr) minmax(90px,0.7fr) minmax(120px,1fr) minmax(80px,0.7fr) minmax(140px,1.1fr) minmax(90px,0.8fr) minmax(90px,0.8fr) minmax(80px,0.7fr)"
     : "minmax(80px,0.7fr) minmax(90px,0.7fr) minmax(130px,1.1fr) minmax(90px,0.7fr) minmax(140px,1.2fr) minmax(110px,0.9fr) minmax(90px,0.8fr) minmax(90px,0.8fr) minmax(80px,0.7fr)";
 
+  // Sum of the minmax floor widths — forces the grid to its true width so
+  // it overflows the viewport and DataTable's internal wrapper scrolls
+  // horizontally instead of squeezing every column down.
+  const minTableWidth = isTablet ? "780px" : "900px";
+
   return (
-    <DataTable
-      columns={columns}
-      data={tickets}
-      gridTemplateColumns={gridTemplateColumns}
-    />
+    <div className="h-full w-full">
+      <DataTable
+        columns={columns}
+        data={tickets}
+        gridTemplateColumns={gridTemplateColumns}
+        minWidth={minTableWidth}
+      />
+    </div>
   );
 }

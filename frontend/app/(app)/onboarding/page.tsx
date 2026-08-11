@@ -35,7 +35,7 @@ export default function OnboardingTrackerPage() {
       const matchesSearch =
         !search ||
         e.name.toLowerCase().includes(search.toLowerCase()) ||
-        e.id.toLowerCase().includes(search.toLowerCase());
+        e.employee_id?.toLowerCase().includes(search.toLowerCase());
       const matchesDept = dept === "All" || e.dept === dept;
       return matchesSearch && matchesDept;
     });

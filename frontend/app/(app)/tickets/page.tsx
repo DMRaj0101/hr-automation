@@ -9,26 +9,35 @@ import { TicketStatRow } from "@/components/tickets/TicketStatRow";
 import { Input } from "@/components/ui/input";
 import { SimpleSelect } from "@/components/ui/select";
 
-const ROLES = ["All", "Tax", "Audit", "Law"];
-const STATUSES = ["All", "Open", "In Progress", "Failed", "Closed"];
-
 export default function TicketQueuePage() {
   const { data: tickets, isLoading } = useTickets();
   const { data: dashboard } = useDashboard();
   const { search, role, status, setSearch, setRole, setStatus } = useTicketStore();
 
+  const roles = useMemo(() => {
+    if (!tickets) return ["All"];
+    const unique = Array.from(new Set(tickets.map((t) => t.dept))).sort();
+    return ["All", ...unique];
+  }, [tickets]);
+
+  const statuses = useMemo(() => {
+    if (!tickets) return ["All"];
+    const unique = Array.from(new Set(tickets.map((t) => t.status))).sort();
+    return ["All", ...unique];
+  }, [tickets]);
+
   const filtered = useMemo(() => {
-    if (!tickets) return [];
-    return tickets.filter((t) => {
-      const matchesSearch =
-        !search ||
-        t.id.toLowerCase().includes(search.toLowerCase()) ||
-        t.employee.toLowerCase().includes(search.toLowerCase());
-      const matchesRole = role === "All" || t.dept === role;
-      const matchesStatus = status === "All" || t.status === status;
-      return matchesSearch && matchesRole && matchesStatus;
-    });
-  }, [tickets, search, role, status]);
+  if (!tickets) return [];
+  return tickets.filter((t) => {
+    const matchesSearch =
+      !search ||
+      String(t.id).toLowerCase().includes(search.toLowerCase()) ||
+      t.employee_id?.toLowerCase().includes(search.toLowerCase());
+    const matchesRole = role === "All" || t.dept === role;
+    const matchesStatus = status === "All" || t.status === status;
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+}, [tickets, search, role, status]);
 
   return (
     <div className="directory-bg">
@@ -49,14 +58,14 @@ export default function TicketQueuePage() {
             <SimpleSelect
               className="directory-select"
               style={{ height: 38 }}
-              options={ROLES}
+              options={roles}
               value={role}
               onChange={(e) => setRole(e.target.value)}
             />
             <SimpleSelect
               className="directory-select"
               style={{ height: 38 }}
-              options={STATUSES}
+              options={statuses}
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             />

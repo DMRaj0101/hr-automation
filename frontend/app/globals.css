@@ -429,7 +429,7 @@ body {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  overflow-x: hidden;
+  overflow-x: auto; /* CHANGED from "hidden" to "auto" — enables horizontal scroll */
   scrollbar-gutter: stable;
   margin-top: 8px;
   width: 100%;
