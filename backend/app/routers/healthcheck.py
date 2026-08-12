@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import AgentHealth, Employee, Ticket, AuditLog
+from app.models import AgentHealth, Employee, Ticket, AuditLog,AgentTicket
 from app.agents.monitoring_agent import SLA_PENDING_HOURS
 from app.orchestrators import health_check_orchestrator
 
@@ -25,6 +25,11 @@ router = APIRouter(prefix="/system-health", tags=["system-health"])
 
 # Window for the latencyHistory24h / uptimePercentage fields below.
 _UPTIME_WINDOW_HOURS = 24
+
+EXCLUDED_AGENTS = [
+    "Monitoring Agent",
+    "Health Check Agent",
+]
 
 
 def _latency_history_and_uptime(db: Session) -> tuple[dict[str, list], dict[str, float]]:
@@ -72,9 +77,21 @@ def _recent_logs(db: Session) -> dict:
     AuditLog.employee_id is nullable -- some log rows aren't tied to a
     specific employee, and those should still show up with
     employee_name=None rather than being silently dropped."""
+    from sqlalchemy import and_
     recent_activity = (
-        db.query(AuditLog, Employee)
-        .outerjoin(Employee, AuditLog.employee_id == Employee.id)
+        db.query(AuditLog, Employee,AgentTicket)
+        .outerjoin(
+            Employee,
+            AuditLog.employee_id == Employee.id
+        )
+        .outerjoin(
+            AgentTicket,
+            and_(
+                Employee.employee_id == AgentTicket.employee_id,
+                AuditLog.agent == AgentTicket.agent_name
+            )
+        )
+        .filter(~AuditLog.agent.in_(EXCLUDED_AGENTS))
         .order_by(AuditLog.timestamp.desc())
         .limit(10)
         .all()
@@ -86,10 +103,12 @@ def _recent_logs(db: Session) -> dict:
                 "agent": a.agent,
                 "action": a.action,
                 "detail": a.detail,
+                "agent_ticket_id": agent_ticket.ticket_reference if agent_ticket else None,
+                "status": agent_ticket.status if agent_ticket else None,
                 "employee_name": employee.name if employee else None,
                 "employee_id": employee.employee_id if employee else None,
             }
-            for a, employee in recent_activity
+            for a, employee,agent_ticket in recent_activity
         ]
     }
 
