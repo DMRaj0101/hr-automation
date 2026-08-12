@@ -25,7 +25,7 @@
     {
       "item": "Asset Allocation",
       "software": "Snipe-IT",
-      "status": "functional",
+      "status": "mock",
       "agent_key": "asset",
       "remarks": "Standard professional hardware kit: laptop, dual monitor, docking station, headset, mobile device."
     },

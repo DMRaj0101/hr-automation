@@ -31,7 +31,7 @@ def _next_ticket_id(db: Session) -> str:
     return f"TKT-{next_n}"
 
 
-def create_ticket(db: Session, employee_id: str, role: str, mock_item: dict) -> Ticket:
+def create_ticket(db: Session, employee_id: str, role: str, mock_item: dict, agent_name:str) -> Ticket:
     """mock_item is one entry from decision_agent.decide()'s "mock_items"
     list: {item, software_name, assigned_team, remarks}."""
     ticket_id = _next_ticket_id(db)
@@ -53,9 +53,13 @@ def create_ticket(db: Session, employee_id: str, role: str, mock_item: dict) -> 
     db.commit()
     db.refresh(ticket)
 
+    agent_name = f"{mock_item['item']} Agent"
+
     db.add(AuditLog(
-        employee_id=employee_id, agent="Ticket Generation Agent",
-        action=f"Created {ticket_id}", detail=f"{mock_item['item']} -> {mock_item['assigned_team']} team",
+        employee_id=employee_id,
+        agent=agent_name,
+        action=f"Created {ticket_id}",
+        detail=f"{mock_item['item']} -> {mock_item['assigned_team']} team",
     ))
     db.commit()
 
@@ -85,10 +89,13 @@ def update_status(db: Session, ticket: Ticket, new_status: str, note: str = None
         ticket.closed_by = closed_by
     db.commit()
     db.refresh(ticket)
+    agent_name = f"{ticket.provisioning_item} Agent"
 
     db.add(AuditLog(
-        employee_id=ticket.employee_id, agent="Ticket Generation Agent",
-        action=f"{ticket.ticket_id} -> {new_status}", detail=note or "",
+        employee_id=ticket.employee_id,
+        agent=agent_name,
+        action=f"{ticket.ticket_id} -> {new_status}",
+        detail=note or "",
     ))
     db.commit()
 

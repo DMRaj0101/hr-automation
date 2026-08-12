@@ -22,6 +22,7 @@ for an approval step first. This file assumes "automatic" for now
 (no pause) -- see MIGRATION_NOTES.md. If that decision changes, the
 pause point is between STEP_DECISION and STEP_PROVISIONING below.
 """
+from app import database
 import datetime
 from sqlalchemy.orm import Session
 from app.models import Employee, OnboardingTracker, AuditLog, ProvisioningRecord, RoleClassification
@@ -367,12 +368,14 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
     # --- Ticket Generation Agent for Mock items ---
     _mark(db, employee_id, STEP_TICKETING, "running")
     for mock_item in plan["mock_items"]:
+        agent_name = f"{mock_item['item']} Agent"
+
         agent_ticket = AgentTicketClient(
-            agent_name=f"{mock_item['item']} Agent",
+            agent_name=agent_name,
             employee_id=employee.employee_id
         )
         try:
-            ticket_agent.create_ticket(db, employee_id, department, mock_item)
+            ticket_agent.create_ticket(db, employee_id, department, mock_item, agent_name)
             agent_ticket.report_started()
         except Exception as e:
             agent_ticket.report_problem(str(e))
