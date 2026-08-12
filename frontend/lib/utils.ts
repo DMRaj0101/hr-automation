@@ -29,6 +29,8 @@ export function initials(name: string) {
 export const statusColorMap: Record<string, { bg: string; text: string }> = {
   Onboarding: { bg: "#FEF3C7", text: "#B45309" },
   "In Progress": { bg: "#FEF3C7", text: "#B45309" },
+  Processing: { bg: "#FEF3C7", text: "#B45309" },
+  New: { bg: "#FEF3C7", text: "#B45309" },
   Degraded: { bg: "#FEF3C7", text: "#B45309" },
   Pending: { bg: "#F3F4F6", text: "#6B7280" },
   "Documents Pending": { bg: "#FEE2E2", text: "#DC2626" },

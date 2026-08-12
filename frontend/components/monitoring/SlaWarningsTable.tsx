@@ -39,7 +39,7 @@ const columns: ColumnDef<SlaWarning>[] = [
 export function SlaWarningsTable({ warnings }: { warnings: SlaWarning[] }) {
   if (warnings.length === 0) {
     return (
-      <div className="flex h-16 items-center justify-center text-sm text-vantara-text-muted">
+      <div className="flex h-16 animate-fade-in items-center justify-center text-sm text-vantara-text-muted">
         No SLA breaches right now.
       </div>
     );

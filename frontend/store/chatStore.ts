@@ -1,13 +1,11 @@
 import { create } from "zustand";
 import { ChatMessage } from "@/types/monitoring";
-import { getChatMessages, getSuggestionChips, askOpsQuestion } from "@/services/knowledge.service";
+import { askOpsQuestion } from "@/services/knowledge.service";
 
 interface ChatState {
   messages: ChatMessage[];
   input: string;
-  loaded: boolean;
   setInput: (input: string) => void;
-  loadInitial: () => Promise<void>;
   sendMessage: (text: string) => Promise<void>;
   sendChip: (text: string) => Promise<void>;
 }
@@ -19,13 +17,7 @@ const FALLBACK_SOURCE = "Knowledge Agent";
 export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   input: "",
-  loaded: false,
   setInput: (input) => set({ input }),
-  loadInitial: async () => {
-    if (get().loaded) return;
-    const messages = await getChatMessages();
-    set({ messages, loaded: true });
-  },
   sendMessage: async (text) => {
     const trimmed = text.trim();
     if (!trimmed) return;

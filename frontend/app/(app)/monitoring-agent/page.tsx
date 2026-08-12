@@ -11,12 +11,6 @@ export default function MonitoringAgentPage() {
 
   return (
     <div className="page-content">
-      <h1 className="page-title">Monitoring Agent Console</h1>
-
-      <p className="page-subtitle">
-        Real-time visibility into system health and active provisioning requests.
-      </p>
-
       <div className="space-y-5">
         {/* --------------------------------------------------------------- */}
         {/* Live Status                                                      */}
@@ -33,12 +27,12 @@ export default function MonitoringAgentPage() {
         {/* --------------------------------------------------------------- */}
 
         <div className="card">
-          <div className="flex items-baseline gap-2">
+          <div className="flex items-center gap-2">
             <h3 className="font-semibold text-vantara-navy">
               System Health
             </h3>
 
-            <span className="text-sm text-vantara-text-muted">
+            <span className="rounded-full bg-[#EEF2F6] px-2.5 py-0.5 text-xs font-semibold text-vantara-navy">
               {(systemHealth.data ?? []).length} integrations
             </span>
           </div>
@@ -53,12 +47,12 @@ export default function MonitoringAgentPage() {
         {/* --------------------------------------------------------------- */}
 
         <div className="card">
-          <div className="flex items-baseline gap-2">
+          <div className="flex items-center gap-2">
             <h3 className="font-semibold text-vantara-navy">
               Agent Activity
             </h3>
 
-            <span className="text-sm text-vantara-text-muted">
+            <span className="rounded-full bg-[#EEF2F6] px-2.5 py-0.5 text-xs font-semibold text-vantara-navy">
               {recentLogs.data?.length ?? 0} recent
             </span>
           </div>
@@ -83,13 +77,19 @@ export default function MonitoringAgentPage() {
         {/* --------------------------------------------------------------- */}
 
         <div className="card">
-          <div className="flex items-baseline justify-between gap-2">
-            <div className="flex items-baseline gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
               <h3 className="font-semibold text-vantara-navy">
                 SLA Warning
               </h3>
 
-              <span className="text-sm text-vantara-text-muted">
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                  (slaWarnings.data?.length ?? 0) > 0
+                    ? "bg-[#FEE2E2] text-[#DC2626]"
+                    : "bg-[#EEF2F6] text-vantara-navy"
+                }`}
+              >
                 {slaWarnings.data?.length ?? 0} active
               </span>
             </div>
