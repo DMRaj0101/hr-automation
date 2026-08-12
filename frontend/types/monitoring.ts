@@ -9,14 +9,17 @@ export interface SystemHealthDetail {
   uptimePercentage: number | null;
 }
 
-// Placeholder shape -- the backend team hasn't shipped the agent activity
-// endpoint yet (see monitoring-agent page.tsx). Update once it exists.
-export interface AgentActivity {
-  name: string;
-  dept: string;
-  status: string;
-  retries: string;
-  tickets: number;
+// Mirrors GET /system-health/recent-logs's per-row shape
+// (routers/healthcheck.py's _recent_logs()). System-wide audit log feed,
+// not scoped to one employee -- employee_name/employee_id are null for
+// log rows not tied to a specific employee.
+export interface RecentLog {
+  timestamp: string | null;
+  agent: string;
+  action: string;
+  detail: string | null;
+  employee_name: string | null;
+  employee_id: string | null;
 }
 
 // Mirrors GET /system-health/sla-warnings's per-row shape

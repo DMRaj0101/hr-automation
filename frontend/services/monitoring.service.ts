@@ -1,5 +1,5 @@
 import { backendApiClient } from "./backend-api-client";
-import { SlaWarning, SystemHealthDetail } from "@/types/monitoring";
+import { RecentLog, SlaWarning, SystemHealthDetail } from "@/types/monitoring";
 
 interface SystemHealthResponse {
   systemHealthDetail: { name: string; status: string; latency: string }[];
@@ -27,4 +27,15 @@ export async function getSlaWarnings(): Promise<SlaWarning[]> {
     "/system-health/sla-warnings"
   );
   return data.slaWarnings;
+}
+
+// GET /system-health/recent-logs (routers/healthcheck.py) -- system-wide
+// audit log feed, most recent 10 rows. Backs both the Live Banner (latest
+// row) and the Agent Activity panel (all rows, as a raw recent-activity
+// feed -- not a per-employee rollup).
+export async function getRecentLogs(): Promise<RecentLog[]> {
+  const { data } = await backendApiClient.get<{ recent_activity: RecentLog[] }>(
+    "/system-health/recent-logs"
+  );
+  return data.recent_activity;
 }

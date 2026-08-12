@@ -7,7 +7,7 @@ import { AgentActivityTable } from "@/components/monitoring/AgentActivityTable";
 import { SlaWarningsTable } from "@/components/monitoring/SlaWarningsTable";
 
 export default function MonitoringAgentPage() {
-  const { systemHealth, slaWarnings } = useMonitoring();
+  const { systemHealth, slaWarnings, recentLogs } = useMonitoring();
 
   return (
     <div className="page-content">
@@ -22,7 +22,11 @@ export default function MonitoringAgentPage() {
         {/* Live Status                                                      */}
         {/* --------------------------------------------------------------- */}
 
-        <LiveBanner />
+        <LiveBanner
+          latest={recentLogs.data?.[0] ?? null}
+          isLoading={recentLogs.isLoading}
+          isError={recentLogs.isError}
+        />
 
         {/* --------------------------------------------------------------- */}
         {/* System Health                                                    */}
@@ -49,12 +53,28 @@ export default function MonitoringAgentPage() {
         {/* --------------------------------------------------------------- */}
 
         <div className="card">
-          <h3 className="font-semibold text-vantara-navy">
-            Agent Activity
-          </h3>
+          <div className="flex items-baseline gap-2">
+            <h3 className="font-semibold text-vantara-navy">
+              Agent Activity
+            </h3>
+
+            <span className="text-sm text-vantara-text-muted">
+              {recentLogs.data?.length ?? 0} recent
+            </span>
+          </div>
 
           <div className="mt-4">
-            <AgentActivityTable activity={[]} />
+            {recentLogs.isLoading ? (
+              <div className="flex h-32 items-center justify-center text-sm text-vantara-text-muted">
+                Loading agent activity...
+              </div>
+            ) : recentLogs.isError ? (
+              <div className="flex h-32 items-center justify-center text-sm text-red-600">
+                Failed to load agent activity.
+              </div>
+            ) : (
+              <AgentActivityTable activity={recentLogs.data ?? []} />
+            )}
           </div>
         </div>
 

@@ -9,7 +9,15 @@ import { SystemHealthCard } from "@/components/dashboard/SystemHealthCard";
 import { TicketStatusCard } from "@/components/dashboard/TicketStatusCard";
 
 export default function DashboardPage() {
-  const { data, isLoading } = useDashboard();
+  const { data, isLoading, isError, error } = useDashboard();
+
+  if (isError) {
+    return (
+      <div className="page-content text-red-600">
+        Failed to load dashboard: {error instanceof Error ? error.message : "Unknown error"}
+      </div>
+    );
+  }
 
   if (isLoading || !data) {
     return <div className="page-content text-vantara-text-muted">Loading dashboard...</div>;

@@ -1,28 +1,32 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { AgentActivity } from "@/types/monitoring";
+import { RecentLog } from "@/types/monitoring";
 import { DataTable } from "@/components/common/DataTable";
-import { StatusBadge } from "@/components/common/StatusBadge";
 
-const columns: ColumnDef<AgentActivity>[] = [
-  { header: "Employee", accessorKey: "name" },
-  { header: "Department", accessorKey: "dept" },
+const columns: ColumnDef<RecentLog>[] = [
+  { header: "Agent", accessorKey: "agent" },
+  { header: "Action", accessorKey: "action" },
   {
-    header: "Status",
-    accessorKey: "status",
-    cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    header: "Employee",
+    accessorKey: "employee_name",
+    cell: ({ row }) => row.original.employee_name ?? "—",
   },
-  { header: "Retries", accessorKey: "retries" },
-  { header: "Open Tickets", accessorKey: "tickets" },
+  {
+    header: "When",
+    accessorKey: "timestamp",
+    cell: ({ row }) => row.original.timestamp ?? "—",
+  },
 ];
 
-// Backend agent activity endpoint doesn't exist yet -- renders an empty
-// state instead of table rows until it does. Swap the placeholder below
-// for a real query (see useMonitoring) once the endpoint ships.
-export function AgentActivityTable({ activity }: { activity: AgentActivity[] }) {
+// Overall recent agent activity across all employees, most-recent-first --
+// backed directly by GET /system-health/recent-logs (routers/healthcheck.py)
+// via useMonitoring()'s recentLogs query. Same feed the Live Banner shows
+// the newest row of; this table shows all of it (currently capped at 10
+// rows server-side), not a per-employee rollup.
+export function AgentActivityTable({ activity }: { activity: RecentLog[] }) {
   if (activity.length === 0) {
     return (
       <div className="flex h-32 items-center justify-center text-sm text-vantara-text-muted">
-        Agent activity data isn&apos;t available yet.
+        No recent agent activity.
       </div>
     );
   }
@@ -31,7 +35,8 @@ export function AgentActivityTable({ activity }: { activity: AgentActivity[] }) 
     <DataTable
       columns={columns}
       data={activity}
-      gridTemplateColumns="1.3fr 1fr 1fr 1fr 1fr"
+      gridTemplateColumns="1fr 1.6fr 1.3fr 1fr"
+      getRowId={(row) => `${row.timestamp}-${row.agent}-${row.action}`}
     />
   );
 }
