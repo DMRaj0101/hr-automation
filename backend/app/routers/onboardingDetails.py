@@ -216,8 +216,6 @@ def _build_alerts(db: Session, employee_id: str) -> list[dict]:
     return alerts
  
  
-FUNCTIONAL_AGENT_KEYS = ["Identity Agent", "Email Agent", "Time & Billing Agent", "Document Management Agent"]
-
 # AgentTicket.agent_name (display name, e.g. "Time & Billing Agent") ->
 # ProvisioningRecord.agent_key (e.g. "time_billing"). Reuses
 # onboarding_orchestrator.AGENT_DISPLAY_NAMES (the source of truth for
@@ -301,7 +299,6 @@ def provisional_status(employee_id: str, db: Session = Depends(get_db)):
         agent_details = (
             db.query(AgentTicket)
             .filter(AgentTicket.employee_id == employee.employee_id)
-            .filter(AgentTicket.agent_name.in_(FUNCTIONAL_AGENT_KEYS))
             .all()
         )
 
@@ -313,22 +310,28 @@ def provisional_status(employee_id: str, db: Session = Depends(get_db)):
                 .filter(ProvisioningRecord.employee_id == employee.id)
                 .filter(ProvisioningRecord.agent_key == agent_key)
                 .all()
+                if agent_key
+                else []
             )
+
+            # Mock-item agents have no agent_key/ProvisioningRecord -- still
+            # emit one row for them, using the existing "Mock" fallbacks below.
+            records = provisioning_records or [None]
 
             result[employee.employee_id].extend(
                 {
-                    "platform": record.software_name,  # real
-                    "ticketID": agent.ticket_id,
+                    "platform": record.software_name if record else agent.agent_name,  # real
+                    "ticketID": agent.ticket_reference if agent else None,  # real
                     "ticketStatus": agent.status,
                     "startTime": _format_dt(agent.start_time),
                     "endtime": _format_dt(agent.end_time),
                     "credentials": {
-                        "username": record.username,  # real
-                        "password": record.external_ref,  # mock
+                        "username": record.username  if record else "Mock",  # real
+                        "password": record.external_ref if record else "Mock",  # mock
                     },
                     "note": agent.content,
                 }
-                for record in provisioning_records
+                for record in records
             )
 
     return {"ProvisionalStatus": result}
