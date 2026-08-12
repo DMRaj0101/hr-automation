@@ -57,6 +57,8 @@ def list_tickets_page(db: Session = Depends(get_db)):
 
     for ticket, employee in rows:
         agent_key = _AGENT_DISPLAY_TO_KEY.get(ticket.agent_name)
+        if agent_key is None and ticket.agent_name and ticket.agent_name.endswith(" Agent"):
+            agent_key = ticket.agent_name[: -len(" Agent")]
 
         provisioning_record = (
             db.query(ProvisioningRecord)
@@ -67,6 +69,9 @@ def list_tickets_page(db: Session = Depends(get_db)):
             .first()
         )
 
+        if provisioning_record is None:
+            continue
+        
         result.append(_ticket_out(ticket, employee, provisioning_record))
 
     return {"tickets": result}

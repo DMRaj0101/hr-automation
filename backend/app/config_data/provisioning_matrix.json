@@ -19,7 +19,7 @@
       "item": "Access Recommendation",
       "software": "Microsoft 365, CCH Axcess Tax, NetDocuments",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "access_recommendation",
       "remarks": "License bundle recommendation -- Mock for the POC, no real provisioning call."
     },
     {
@@ -33,7 +33,7 @@
       "item": "Tax Preparation",
       "software": "CCH Axcess Tax",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "tax_preparation",
       "remarks": "Commercial cloud tax prep platform -- not feasible free, Mock only."
     },
     {
@@ -54,21 +54,21 @@
       "item": "Productivity Suite",
       "software": "Microsoft 365",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "productivity_suite",
       "remarks": "M365 + Teams -- not feasible free, Mock only."
     },
     {
       "item": "Network Access",
       "software": "Cisco AnyConnect VPN",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "network_access",
       "remarks": "Requires commercial licensing -- Mock only."
     },
     {
       "item": "Ticketing/ITSM",
       "software": "ServiceNow (label only)",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "ticketing_itsm",
       "remarks": "Register requester access for IT support tickets -- Mock only."
     }
   ],
@@ -91,7 +91,7 @@
       "item": "Access Recommendation",
       "software": "Microsoft 365, CaseWare IDEA, NetDocuments",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "access_recommendation",
       "remarks": "License bundle recommendation -- Mock only."
     },
     {
@@ -105,7 +105,7 @@
       "item": "Audit Software",
       "software": "CaseWare IDEA",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "audit_software",
       "remarks": "Commercial audit/data-analysis software -- Mock only."
     },
     {
@@ -126,21 +126,21 @@
       "item": "Productivity Suite",
       "software": "Microsoft 365",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "productivity_suite",
       "remarks": "M365 + Teams -- Mock only."
     },
     {
       "item": "Network Access",
       "software": "Cisco AnyConnect VPN",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "network_access",
       "remarks": "Requires commercial licensing -- Mock only."
     },
     {
       "item": "Ticketing/ITSM",
       "software": "ServiceNow (label only)",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "ticketing_itsm",
       "remarks": "Register requester access -- Mock only."
     }
   ],
@@ -163,7 +163,7 @@
       "item": "Access Recommendation",
       "software": "Microsoft 365, iManage Work, NetDocuments",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "access_recommendation",
       "remarks": "License bundle recommendation -- Mock only."
     },
     {
@@ -184,7 +184,7 @@
       "item": "Legal Research",
       "software": "Westlaw",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "legal_research",
       "remarks": "Commercial legal research platform -- Mock only."
     },
     {
@@ -198,21 +198,21 @@
       "item": "Productivity Suite",
       "software": "Microsoft 365 + Teams",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "productivity_suite",
       "remarks": "M365 E3 license, Teams access -- Mock only."
     },
     {
       "item": "Network Access",
       "software": "Cisco AnyConnect VPN",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "network_access",
       "remarks": "Requires commercial licensing -- Mock only."
     },
     {
       "item": "Ticketing/ITSM",
       "software": "ServiceNow (label only)",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "ticketing_itsm",
       "remarks": "Register requester access -- Mock only."
     }
   ],
@@ -235,7 +235,7 @@
       "item": "Access Recommendation",
       "software": "Microsoft 365, ServiceNow Fulfiller/Agent license",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "access_recommendation",
       "remarks": "Paid seat tier -- Mock only."
     },
     {
@@ -249,7 +249,7 @@
       "item": "Ticketing (Fulfiller role)",
       "software": "ServiceNow (label only)",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "ticketing_fulfiller_role",
       "remarks": "Resolves tickets submitted by end users -- Mock only, requires commercial licensing."
     },
     {
@@ -271,21 +271,21 @@
       "item": "Productivity Suite",
       "software": "Microsoft 365",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "productivity_suite",
       "remarks": "Mock only."
     },
     {
       "item": "Network Access",
       "software": "Cisco AnyConnect VPN",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "network_access",
       "remarks": "Requires commercial licensing -- Mock only."
     },
     {
       "item": "Remote Support Tool",
       "software": "Mock tool (no OSS pick yet)",
       "status": "mock",
-      "agent_key": null,
+      "agent_key": "remote_support_tool",
       "remarks": "TODO -- no open-source remote support tool evaluated/selected yet (PDD Open Item #7)."
     }
   ]

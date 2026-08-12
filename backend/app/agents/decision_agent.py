@@ -60,6 +60,7 @@ def decide(department: str) -> dict:
                 "software_name": entry["software"],
                 "assigned_team": team_routing.get(entry["item"], "IT"),
                 "remarks": entry.get("remarks", ""),
+                "agent_key": entry.get("agent_key", "")
             })
 
     return {"role": department, "functional_items": functional_items, "mock_items": mock_items}

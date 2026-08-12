@@ -86,6 +86,16 @@ AGENT_DISPLAY_NAMES = {
     "time_billing": "Time & Billing Agent",
     "asset": "Asset Allocation Agent",
     "document_management": "Document Management Agent",
+    # -- mock items with a real agent_key (added):
+    "access_recommendation": "Access Recommendation Agent",
+    "tax_preparation": "Tax Preparation Agent",
+    "productivity_suite": "Productivity Suite Agent",
+    "network_access": "Network Access Agent",
+    "ticketing_itsm": "Ticketing/ITSM Agent",
+    "audit_software": "Audit Software Agent",
+    "legal_research": "Legal Research Agent",
+    "ticketing_fulfiller_role": "Ticketing (Fulfiller role) Agent",
+    "remote_support_tool": "Remote Support Tool Agent",
 }
 
 
@@ -368,9 +378,10 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
     # --- Ticket Generation Agent for Mock items ---
     _mark(db, employee_id, STEP_TICKETING, "running")
     for mock_item in plan["mock_items"]:
+        provisioning_agent_key = mock_item["agent_key"] or mock_item["item"]
         record = ProvisioningRecord(
             employee_id=employee_id, provisioning_item=mock_item["item"],
-            agent_key="mock", software_name=mock_item.get("software_name"),
+            agent_key=provisioning_agent_key, software_name=mock_item.get("software_name"),
             status="in_progress", last_attempted_at=datetime.datetime.utcnow(),
         )
         db.add(record)
