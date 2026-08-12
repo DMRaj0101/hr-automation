@@ -10,18 +10,13 @@ import { ChatInput } from "@/components/knowledge-agent/ChatInput";
 import { Bot } from "lucide-react";
 
 export default function KnowledgeAgentChatPage() {
-  const { messages, input, setInput, loadInitial, sendMessage, sendChip } =
-    useChatStore();
+  const { messages, input, setInput, sendMessage, sendChip } = useChatStore();
   const { data: chips } = useQuery({
     queryKey: ["suggestionChips"],
     queryFn: getSuggestionChips,
   });
   const bottomRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    loadInitial();
-  }, [loadInitial]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

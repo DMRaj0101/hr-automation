@@ -28,15 +28,20 @@ function sparklinePoints(history: number[]): string {
 export function SystemHealthGrid({ items }: { items: SystemHealthDetail[] }) {
   return (
     <div className="grid grid-cols-4 gap-3">
-      {items.map((item) => {
+      {items.map((item, idx) => {
         const { text } = statusStyle(item.status);
         const uptime = item.uptimePercentage;
 
         return (
           <div
             key={item.name}
-            className="rounded-xl"
-            style={{ border: "1px solid #E5E7EB", padding: "12px 14px" }}
+            className="animate-fade-in rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm"
+            style={{
+              border: "1px solid #E5E7EB",
+              padding: "12px 14px",
+              animationDelay: `${idx * 40}ms`,
+              animationFillMode: "backwards",
+            }}
           >
             <div className="flex items-center gap-2">
               <span
@@ -65,6 +70,7 @@ export function SystemHealthGrid({ items }: { items: SystemHealthDetail[] }) {
                 fill="none"
                 stroke={text}
                 strokeWidth="1.5"
+                className="transition-all duration-300"
               />
             </svg>
 
@@ -79,7 +85,7 @@ export function SystemHealthGrid({ items }: { items: SystemHealthDetail[] }) {
               style={{ backgroundColor: "#F3F4F6" }}
             >
               <div
-                className="h-full rounded-full"
+                className="h-full rounded-full transition-all duration-500 ease-out"
                 style={{
                   width: `${uptime ?? 0}%`,
                   backgroundColor: text,

@@ -12,6 +12,7 @@ import datetime
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import case
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -32,6 +33,12 @@ EXCLUDED_AGENTS = [
 ]
 
 _AGENT_DISPLAY_TO_KEY = {display: key for key, display in AGENT_DISPLAY_NAMES.items()}
+
+# SQL CASE translating AuditLog.agent (a display name, e.g. "Email Agent")
+# into the agent_key ProvisioningRecord.agent_key actually stores (e.g.
+# "email") -- _AGENT_DISPLAY_TO_KEY itself is a plain Python dict and can't
+# be evaluated against a column expression inside a join condition.
+_AGENT_DISPLAY_TO_KEY_CASE = case(_AGENT_DISPLAY_TO_KEY, value=AuditLog.agent)
 
 
 def _latency_history_and_uptime(db: Session) -> tuple[dict[str, list], dict[str, float]]:
@@ -78,9 +85,24 @@ def _recent_logs(db: Session) -> dict:
     Left-outer-joined to Employee (not an inner join) since
     AuditLog.employee_id is nullable -- some log rows aren't tied to a
     specific employee, and those should still show up with
-    employee_name=None rather than being silently dropped."""
+    employee_name=None rather than being silently dropped. Same reasoning
+    for AgentTicket and ProvisioningRecord below -- an inner join would
+    silently drop any AuditLog row whose agent never opened a ticket or
+    provisioning record (e.g. Ticket Generation Agent's own log rows),
+    which is exactly the "rather than being silently dropped" case this
+    docstring already calls out.
+
+    ProvisioningRecord has no direct FK to AuditLog and no agent-name
+    column (only agent_key, e.g. "email" vs AuditLog.agent's "Email
+    Agent") -- joined via employee_id + _AGENT_DISPLAY_TO_KEY_CASE
+    translating AuditLog.agent into the matching agent_key. A given
+    employee can in principle have more than one ProvisioningRecord row
+    for the same agent_key (functional_items in onboarding_orchestrator.py
+    is a list, not a 1:1 map), so this can still fan out one AuditLog row
+    into multiple result rows -- deduped below by keeping the
+    most-recently-attempted match per AuditLog row."""
     from sqlalchemy import and_
-    recent_activity = (
+    rows = (
         db.query(
             AuditLog,
             Employee,
@@ -98,15 +120,37 @@ def _recent_logs(db: Session) -> dict:
                 AuditLog.agent == AgentTicket.agent_name,
             )
         )
+        .outerjoin(
+            ProvisioningRecord,
+            and_(
+                Employee.id == ProvisioningRecord.employee_id,
+                 .agent_key == _AGENT_DISPLAY_TO_KEY_CASE,
+            )
+        )
         .filter(
             ~AuditLog.agent.in_(EXCLUDED_AGENTS)
         )
         .order_by(
-            AuditLog.timestamp.desc()
+            AuditLog.timestamp.desc(),
+            ProvisioningRecord.last_attempted_at.desc(),
         )
-        .limit(10)
+        .limit(50)
         .all()
     )
+
+    # Dedup: an AuditLog row can still match more than one ProvisioningRecord
+    # (see docstring above) -- keep only the first (most-recently-attempted,
+    # per the order_by above) match per distinct AuditLog row, then cap at 10.
+    seen_audit_ids: set[str] = set()
+    deduped: list[tuple] = []
+    for a, employee, agent_ticket, provisioning_record in rows:
+        if a.id in seen_audit_ids:
+            continue
+        seen_audit_ids.add(a.id)
+        deduped.append((a, employee, agent_ticket, provisioning_record))
+        if len(deduped) == 10:
+            break
+
     return {
         "recent_activity": [
             {
@@ -120,7 +164,7 @@ def _recent_logs(db: Session) -> dict:
                 "employee_id": employee.employee_id if employee else None,
                 "retry_count": provisioning_record.retry_count if provisioning_record else None,
             }
-            for a, employee,agent_ticket,provisioning_record in recent_activity
+            for a, employee, agent_ticket, provisioning_record in deduped
         ]
     }
 
