@@ -124,7 +124,7 @@ def _recent_logs(db: Session) -> dict:
             ProvisioningRecord,
             and_(
                 Employee.id == ProvisioningRecord.employee_id,
-                 .agent_key == _AGENT_DISPLAY_TO_KEY_CASE,
+                AuditLog.agent == ProvisioningRecord.agent_key,
             )
         )
         .filter(
