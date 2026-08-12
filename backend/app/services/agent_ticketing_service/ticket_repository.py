@@ -1,3 +1,4 @@
+from app import database
 from datetime import datetime
 
 from sqlalchemy import func
@@ -100,8 +101,8 @@ class TicketRepository:
             ticket.end_time = end_time or datetime.utcnow()
             db.commit()
 
-    def generate_ticket_reference(self, db: Session, ticket_id: int) -> str:
-        reference = f"TKT-{ticket_id:04d}" if ticket_id <= 9999 else f"TKT-{ticket_id}"
+    def generate_ticket_reference(self, db: Session, ticket_id: int, override: str = None) -> str:
+        reference = override or (f"TKT-{ticket_id:04d}" if ticket_id <= 9999 else f"TKT-{ticket_id}")
         ticket = db.query(AgentTicket).filter_by(ticket_id=ticket_id).first()
         if ticket:
             ticket.ticket_reference = reference

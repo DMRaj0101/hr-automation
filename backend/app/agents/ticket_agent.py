@@ -53,8 +53,6 @@ def create_ticket(db: Session, employee_id: str, role: str, mock_item: dict, age
     db.commit()
     db.refresh(ticket)
 
-    agent_name = f"{mock_item['item']} Agent"
-
     db.add(AuditLog(
         employee_id=employee_id,
         agent=agent_name,

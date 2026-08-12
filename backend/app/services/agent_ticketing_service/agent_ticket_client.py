@@ -12,11 +12,11 @@ class AgentTicketClient:
         self._agent_name = agent_name
         self._employee_id = employee_id
 
-    def report_started(self) -> int:
+    def report_started(self, ticket_reference: str = None) -> int:
         db_gen = get_db()
         db = next(db_gen)
         try:
-            return self._service.handle_agent_started(db, self._agent_name, self._employee_id)
+            return self._service.handle_agent_started(db, self._agent_name, self._employee_id, ticket_reference=ticket_reference)
         finally:
             db_gen.close()
 

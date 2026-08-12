@@ -375,8 +375,8 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
             employee_id=employee.employee_id
         )
         try:
-            ticket_agent.create_ticket(db, employee_id, department, mock_item, agent_name)
-            agent_ticket.report_started()
+            ticket = ticket_agent.create_ticket(db, employee_id, department, mock_item, agent_name)
+            agent_ticket.report_started(ticket_reference=ticket.ticket_id)
         except Exception as e:
             agent_ticket.report_problem(str(e))
             raise
