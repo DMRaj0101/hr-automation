@@ -94,7 +94,7 @@ def _recent_logs(db: Session) -> dict:
         .outerjoin(
             AgentTicket,
             and_(
-                Employee.id == AgentTicket.employee_id,
+                Employee.employee_id == AgentTicket.employee_id,
                 AuditLog.agent == AgentTicket.agent_name,
             )
         )
