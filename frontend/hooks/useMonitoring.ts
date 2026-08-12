@@ -1,5 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { getSlaWarnings, getSystemHealthDetail } from "@/services/monitoring.service";
+import {
+  getRecentLogs,
+  getSlaWarnings,
+  getSystemHealthDetail,
+} from "@/services/monitoring.service";
 
 export function useMonitoring() {
   const systemHealth = useQuery({
@@ -12,5 +16,10 @@ export function useMonitoring() {
     queryFn: getSlaWarnings,
     refetchInterval: 5000,
   });
-  return { systemHealth, slaWarnings };
+  const recentLogs = useQuery({
+    queryKey: ["recentLogs"],
+    queryFn: getRecentLogs,
+    refetchInterval: 5000,
+  });
+  return { systemHealth, slaWarnings, recentLogs };
 }
