@@ -368,6 +368,15 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
     # --- Ticket Generation Agent for Mock items ---
     _mark(db, employee_id, STEP_TICKETING, "running")
     for mock_item in plan["mock_items"]:
+        record = ProvisioningRecord(
+            employee_id=employee_id, provisioning_item=mock_item["item"],
+            agent_key="mock", software_name=mock_item.get("software_name"),
+            status="in_progress", last_attempted_at=datetime.datetime.utcnow(),
+        )
+        db.add(record)
+        db.commit()
+        db.refresh(record)
+    
         agent_name = f"{mock_item['item']} Agent"
 
         agent_ticket = AgentTicketClient(
