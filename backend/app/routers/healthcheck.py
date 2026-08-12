@@ -15,10 +15,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import AgentHealth, Employee, Ticket, AuditLog,AgentTicket
+from app.models import AgentHealth, Employee, Ticket, AuditLog,AgentTicket,ProvisioningRecord
 from app.agents.monitoring_agent import SLA_PENDING_HOURS
 from app.orchestrators import health_check_orchestrator
-
+from app.orchestrators.onboarding_orchestrator import AGENT_DISPLAY_NAMES
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/system-health", tags=["system-health"])
@@ -30,6 +30,8 @@ EXCLUDED_AGENTS = [
     "Monitoring Agent",
     "Health Check Agent",
 ]
+
+_AGENT_DISPLAY_TO_KEY = {display: key for key, display in AGENT_DISPLAY_NAMES.items()}
 
 
 def _latency_history_and_uptime(db: Session) -> tuple[dict[str, list], dict[str, float]]:
@@ -79,7 +81,12 @@ def _recent_logs(db: Session) -> dict:
     employee_name=None rather than being silently dropped."""
     from sqlalchemy import and_
     recent_activity = (
-        db.query(AuditLog, Employee,AgentTicket)
+        db.query(
+            AuditLog,
+            Employee,
+            AgentTicket,
+            ProvisioningRecord,
+        )
         .outerjoin(
             Employee,
             AuditLog.employee_id == Employee.id
@@ -88,11 +95,15 @@ def _recent_logs(db: Session) -> dict:
             AgentTicket,
             and_(
                 Employee.employee_id == AgentTicket.employee_id,
-                AuditLog.agent == AgentTicket.agent_name
+                AuditLog.agent == AgentTicket.agent_name,
             )
         )
-        .filter(~AuditLog.agent.in_(EXCLUDED_AGENTS))
-        .order_by(AuditLog.timestamp.desc())
+        .filter(
+            ~AuditLog.agent.in_(EXCLUDED_AGENTS)
+        )
+        .order_by(
+            AuditLog.timestamp.desc()
+        )
         .limit(10)
         .all()
     )
@@ -107,8 +118,9 @@ def _recent_logs(db: Session) -> dict:
                 "status": agent_ticket.status if agent_ticket else None,
                 "employee_name": employee.name if employee else None,
                 "employee_id": employee.employee_id if employee else None,
+                "retry_count": provisioning_record.retry_count if provisioning_record else None,
             }
-            for a, employee,agent_ticket in recent_activity
+            for a, employee,agent_ticket,provisioning_record in recent_activity
         ]
     }
 
