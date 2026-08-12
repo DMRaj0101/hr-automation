@@ -14,6 +14,7 @@ export function DataTable<T>({
   columns,
   data,
   gridTemplateColumns,
+  minWidth = "900px",
   getRowId,
   selectedRowId,
   onRowClick,
@@ -21,6 +22,7 @@ export function DataTable<T>({
   columns: ColumnDef<T, unknown>[];
   data: T[];
   gridTemplateColumns: string;
+  minWidth?: string;
   getRowId?: (row: T) => string;
   selectedRowId?: string | null;
   onRowClick?: (row: T) => void;
@@ -60,8 +62,8 @@ export function DataTable<T>({
 
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="directory-table-wrap flex-1 overflow-y-auto overflow-x-hidden">
-  <div className="w-full">
+      <div className="directory-table-wrap flex-1 overflow-y-auto overflow-x-auto">
+        <div className="w-full" style={{ minWidth }}>
           {/* ================= HEADER ================= */}
 
           {table.getHeaderGroups().map((headerGroup) => (

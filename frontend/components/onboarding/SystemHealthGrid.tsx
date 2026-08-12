@@ -1,11 +1,36 @@
 import { statusStyle } from "@/lib/utils";
 import { SystemHealthDetail } from "@/types/monitoring";
 
+const SPARKLINE_WIDTH = 100;
+const SPARKLINE_HEIGHT = 22;
+
+function sparklinePoints(history: number[]): string {
+  if (history.length === 0) return "";
+  if (history.length === 1) {
+    const y = SPARKLINE_HEIGHT / 2;
+    return `0,${y} ${SPARKLINE_WIDTH},${y}`;
+  }
+
+  const min = Math.min(...history);
+  const max = Math.max(...history);
+  const range = max - min || 1;
+
+  return history
+    .map((value, i) => {
+      const x = (i / (history.length - 1)) * SPARKLINE_WIDTH;
+      // Higher latency draws lower on the sparkline (y grows downward).
+      const y = SPARKLINE_HEIGHT - ((value - min) / range) * SPARKLINE_HEIGHT;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
 export function SystemHealthGrid({ items }: { items: SystemHealthDetail[] }) {
   return (
     <div className="grid grid-cols-4 gap-3">
       {items.map((item) => {
         const { text } = statusStyle(item.status);
+        const uptime = item.uptimePercentage;
 
         return (
           <div
@@ -28,14 +53,39 @@ export function SystemHealthGrid({ items }: { items: SystemHealthDetail[] }) {
               </span>
             </div>
 
-            <svg width="100%" height="22" viewBox="0 0 100 22" className="mt-2">
+            <svg
+              width="100%"
+              height={SPARKLINE_HEIGHT}
+              viewBox={`0 0 ${SPARKLINE_WIDTH} ${SPARKLINE_HEIGHT}`}
+              className="mt-2"
+              preserveAspectRatio="none"
+            >
               <polyline
-                points="0,16 15,10 30,14 45,6 60,12 75,4 90,10 100,8"
+                points={sparklinePoints(item.latencyHistory24h)}
                 fill="none"
                 stroke={text}
                 strokeWidth="1.5"
               />
             </svg>
+
+            <div className="mt-2 flex items-center justify-between text-xs">
+              <span className="text-vantara-text-muted">24h uptime</span>
+              <span className="font-semibold" style={{ color: text }}>
+                {uptime != null ? `${uptime}%` : "—"}
+              </span>
+            </div>
+            <div
+              className="mt-1 h-1 w-full overflow-hidden rounded-full"
+              style={{ backgroundColor: "#F3F4F6" }}
+            >
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${uptime ?? 0}%`,
+                  backgroundColor: text,
+                }}
+              />
+            </div>
           </div>
         );
       })}

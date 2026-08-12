@@ -3,56 +3,110 @@
 import { useMonitoring } from "@/hooks/useMonitoring";
 import { LiveBanner } from "@/components/monitoring/LiveBanner";
 import { SystemHealthGrid } from "@/components/onboarding/SystemHealthGrid";
-import { ActiveRequestsTable } from "@/components/monitoring/ActiveRequestsTable";
+import { AgentActivityTable } from "@/components/monitoring/AgentActivityTable";
+import { SlaWarningsTable } from "@/components/monitoring/SlaWarningsTable";
 
 export default function MonitoringAgentPage() {
-  const { monitoring, systemHealth } = useMonitoring();
-
-  if (monitoring.isLoading || !monitoring.data) {
-    return <div className="page-content text-vantara-text-muted">Loading monitoring console...</div>;
-  }
-
-  const data = monitoring.data;
+  const { systemHealth, slaWarnings, recentLogs } = useMonitoring();
 
   return (
     <div className="page-content">
       <h1 className="page-title">Monitoring Agent Console</h1>
+
       <p className="page-subtitle">
         Real-time visibility into system health and active provisioning requests.
       </p>
 
       <div className="space-y-5">
-        <LiveBanner lastEvent={data.lastEvent} />
+        {/* --------------------------------------------------------------- */}
+        {/* Live Status                                                      */}
+        {/* --------------------------------------------------------------- */}
+
+        <LiveBanner
+          latest={recentLogs.data?.[0] ?? null}
+          isLoading={recentLogs.isLoading}
+          isError={recentLogs.isError}
+        />
+
+        {/* --------------------------------------------------------------- */}
+        {/* System Health                                                    */}
+        {/* --------------------------------------------------------------- */}
 
         <div className="card">
-          <h3 className="font-semibold text-vantara-navy">System Health</h3>
+          <div className="flex items-baseline gap-2">
+            <h3 className="font-semibold text-vantara-navy">
+              System Health
+            </h3>
+
+            <span className="text-sm text-vantara-text-muted">
+              {(systemHealth.data ?? []).length} integrations
+            </span>
+          </div>
+
           <div className="mt-4">
             <SystemHealthGrid items={systemHealth.data ?? []} />
           </div>
         </div>
 
+        {/* --------------------------------------------------------------- */}
+        {/* Agent Activity                                                   */}
+        {/* --------------------------------------------------------------- */}
+
         <div className="card">
-          <h3 className="font-semibold text-vantara-navy">Active Requests</h3>
+          <div className="flex items-baseline gap-2">
+            <h3 className="font-semibold text-vantara-navy">
+              Agent Activity
+            </h3>
+
+            <span className="text-sm text-vantara-text-muted">
+              {recentLogs.data?.length ?? 0} recent
+            </span>
+          </div>
+
           <div className="mt-4">
-            <ActiveRequestsTable requests={data.activeRequests} />
+            {recentLogs.isLoading ? (
+              <div className="flex h-32 items-center justify-center text-sm text-vantara-text-muted">
+                Loading agent activity...
+              </div>
+            ) : recentLogs.isError ? (
+              <div className="flex h-32 items-center justify-center text-sm text-red-600">
+                Failed to load agent activity.
+              </div>
+            ) : (
+              <AgentActivityTable activity={recentLogs.data ?? []} />
+            )}
           </div>
         </div>
 
-        <div className="rounded-2xl p-6" style={{ backgroundColor: "#FEE2E2", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-          <h3 className="mb-3 font-semibold" style={{ color: "#991B1B" }}>SLA Warning</h3>
-          <div
-            className="grid items-center text-sm"
-            style={{
-              gridTemplateColumns: "1fr 1.2fr 1.4fr 0.8fr 1fr 1fr",
-              color: "#991B1B",
-            }}
-          >
-            <span className="font-semibold">{data.slaWarning.ticketId}</span>
-            <span>{data.slaWarning.employee}</span>
-            <span>{data.slaWarning.item}</span>
-            <span>{data.slaWarning.team}</span>
-            <span>Since {data.slaWarning.since}</span>
-            <span className="font-semibold">{data.slaWarning.duration}</span>
+        {/* --------------------------------------------------------------- */}
+        {/* SLA Warnings                                                     */}
+        {/* --------------------------------------------------------------- */}
+
+        <div className="card">
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="flex items-baseline gap-2">
+              <h3 className="font-semibold text-vantara-navy">
+                SLA Warning
+              </h3>
+
+              <span className="text-sm text-vantara-text-muted">
+                {slaWarnings.data?.length ?? 0} active
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            {slaWarnings.isLoading ? (
+              <div className="flex h-16 items-center justify-center text-sm text-vantara-text-muted">
+                Loading SLA warnings...
+              </div>
+            ) : slaWarnings.isError ? (
+              <div className="flex h-16 items-center justify-center text-sm text-red-600">
+                Failed to load SLA warnings.
+              </div>
+            ) : (
+              <SlaWarningsTable warnings={slaWarnings.data ?? []} />
+            )}
           </div>
         </div>
       </div>

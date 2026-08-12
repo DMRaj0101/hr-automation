@@ -1,6 +1,6 @@
 export interface DashboardStats {
   total: number;
-  closed: number;
+  completed: number;
   inProgress: number;
   failed: number;
 }
@@ -14,12 +14,14 @@ export interface IntegrationCoverage {
   mockSystems: string[];
 }
 
+// All fields null when no ticket currently breaches SLA -- see
+// dashboard.py's _build_sla_warning() docstring.
 export interface SlaWarning {
-  ticketId: string;
-  employee: string;
-  department: string;
-  item: string;
-  duration: string;
+  ticketId: string | null;
+  employee: string | null;
+  department: string | null;
+  item: string | null;
+  duration: string | null;
 }
 
 export interface DepartmentSummary {
@@ -37,7 +39,7 @@ export interface SystemHealthBrief {
 export interface TicketStatusSummary {
   open: number;
   inProgress: number;
-  failed: number;
+  pending: number;
   closed: number;
 }
 
