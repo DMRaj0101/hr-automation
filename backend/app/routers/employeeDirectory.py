@@ -131,17 +131,17 @@ def _build_checklist(db: Session, employee_id: str) -> list[dict]:
         }
         for r in provisioning
     ]
-    checklist += [
-        {
-            "system": t.provisioning_item,
-            "platform": t.software_name,
-            "status": _map_ticket_status(t.status),
-            "kind": "Mock",
-            "detail": t.notes,
-            "outcome": None,
-        }
-        for t in tickets
-    ]
+    # checklist += [
+    #     {
+    #         "system": t.provisioning_item,
+    #         "platform": t.software_name,
+    #         "status": _map_ticket_status(t.status),
+    #         "kind": "Mock",
+    #         "detail": t.notes,
+    #         "outcome": None,
+    #     }
+    #     for t in tickets
+    # ]
     return checklist
 def experience_type(years_of_experience: float) -> str:
     if years_of_experience is None:
