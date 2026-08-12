@@ -1,17 +1,48 @@
 import { ProgressBar } from "@/components/common/ProgressBar";
 import { DepartmentSummary } from "@/types/onboarding";
 
-export function DepartmentCard({ dept }: { dept: DepartmentSummary }) {
+export function DepartmentCard({
+  dept,
+}: {
+  dept: DepartmentSummary;
+}) {
   return (
-    <div className="card-sm">
-      <h4 className="font-semibold text-vantara-navy">{dept.name}</h4>
-      <p className="mt-1 text-sm text-vantara-text-muted">
-        {dept.employees} employees · {dept.openTickets} open tickets
-      </p>
-      <ProgressBar value={dept.avgCompletion} className="mt-3" height={8} fillBackground="#D9A653" />
-      <p className="mt-1.5 text-xs text-vantara-text-muted">
-        {dept.avgCompletion}% avg completion
-      </p>
+    <div className="dashboard-card dashboard-department-card">
+
+      <div className="dashboard-department-icon">
+        {dept.name === "Law" && "⚖"}
+        {dept.name === "Audit" && "▣"}
+        {dept.name === "Tax" && "▤"}
+      </div>
+
+      <div className="dashboard-department-content">
+        <div className="dashboard-department-header">
+          <h4 className="dashboard-department-title">
+            {dept.name}
+          </h4>
+
+          <span className="dashboard-department-arrow">
+            ›
+          </span>
+        </div>
+
+        <p className="dashboard-department-meta">
+          {dept.employees} employees
+          <span> · </span>
+          {dept.openTickets} open tickets
+        </p>
+
+        <ProgressBar
+          value={dept.avgCompletion}
+          className="dashboard-department-progress"
+          height={5}
+          fillBackground="#D9A653"
+        />
+
+        <p className="dashboard-department-completion">
+          {dept.avgCompletion}% avg completion
+        </p>
+      </div>
     </div>
   );
 }

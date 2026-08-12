@@ -34,6 +34,7 @@ def _build_stats(db: Session) -> dict:
         "completed": by_status.get("completed", 0),
         "inProgress": by_status.get("in_progress", 0),
         "failed": by_status.get("failed", 0),
+        "notStarted": by_status.get("not_started", 0),
     }
 
 

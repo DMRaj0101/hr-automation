@@ -2,16 +2,13 @@
 
 import { useMemo } from "react";
 import { useTickets } from "@/hooks/useTickets";
-import { useDashboard } from "@/hooks/useDashboard";
 import { useTicketStore } from "@/store/ticketStore";
 import { TicketTable } from "@/components/tickets/TicketTable";
-import { TicketStatRow } from "@/components/tickets/TicketStatRow";
 import { Input } from "@/components/ui/input";
 import { SimpleSelect } from "@/components/ui/select";
 
 export default function TicketQueuePage() {
   const { data: tickets, isLoading } = useTickets();
-  const { data: dashboard } = useDashboard();
   const { search, role, status, setSearch, setRole, setStatus } = useTicketStore();
 
   const roles = useMemo(() => {
@@ -43,10 +40,6 @@ export default function TicketQueuePage() {
     <div className="directory-bg">
       <div className="directory-panel">
         <div className="page-content flex h-full flex-col">
-          <div className="mb-1 shrink-0">
-            {dashboard && <TicketStatRow data={dashboard.ticketStatus} />}
-          </div>
-
           <div className="directory-toolbar shrink-0" style={{ padding: "8px 14px" }}>
             <Input
               className="directory-search"

@@ -64,10 +64,22 @@ export const employeeTypeColorMap: Record<string, { bg: string; text: string }> 
 };
 
 export function employeeTypeStyle(type: string) {
-  const key = type.toLowerCase();
-  return employeeTypeColorMap[key] ?? { bg: "#F3F4F6", text: "#6B7280" };
+  const styles: Record<string, { bg: string; text: string }> = {
+    senior: { bg: "#EDE9FE", text: "#6D28D9" },  // light purple
+    mid:    { bg: "#DBEAFE", text: "#1D4ED8" },  // light blue
+    lead:   { bg: "#FCE7F3", text: "#BE185D" },  // light pink
+    junior: { bg: "#D1FAE5", text: "#047857" },  // light green
+  };
+   const key = type?.toLowerCase();
+  return styles[key] ?? { bg: "#F1F5F9", text: "#475569" }; // fallback gray
 }
 
 export function employeeTypeLabel(type: string) {
-  return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+  const labels: Record<string, string> = {
+    senior: "Senior",
+    mid: "Mid",
+    lead: "Lead",
+    junior: "Junior",
+  };
+  return labels[type?.toLowerCase()] ?? type;
 }

@@ -3,6 +3,7 @@ export interface DashboardStats {
   completed: number;
   inProgress: number;
   failed: number;
+  notStarted: number;
 }
 
 export interface IntegrationCoverage {
