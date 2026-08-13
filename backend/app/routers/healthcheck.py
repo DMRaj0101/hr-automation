@@ -163,6 +163,7 @@ def _recent_logs(db: Session) -> dict:
                 "employee_name": employee.name if employee else None,
                 "employee_id": employee.employee_id if employee else None,
                 "retry_count": provisioning_record.retry_count if provisioning_record else None,
+                "context": provisioning_record.context if provisioning_record else None,
             }
             for a, employee, agent_ticket, provisioning_record in deduped
         ]
