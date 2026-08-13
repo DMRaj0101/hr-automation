@@ -67,7 +67,7 @@ STEPS = [
 # agents/decision_agent.py, both updated to carry it through).
 _PROVISIONING_CALLS = {
     "identity": lambda emp, item: keycloak_connector.create_user(
-        emp.name, emp.email, emp.role, scoped_role=item.get("scoped_role", False)
+        emp.name, emp.email, emp.department, scoped_role=item.get("scoped_role", False)
     ),
     "email": lambda emp, item: mailu_connector.create_mailbox(emp.name, emp.email.split("@")[0]),
     "time_billing": lambda emp, item: kimai_connector.create_user_and_timesheet(emp.name, emp.email, emp.role),

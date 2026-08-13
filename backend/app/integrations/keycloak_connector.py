@@ -336,7 +336,7 @@ def _create_keycloak_user(username: str, employee_name: str, employee_email: str
 # ----------------------------------------------------------------------
 
 
-def create_user(employee_name: str, employee_email: str, role: str, scoped_role: bool = False) -> dict:
+def create_user(employee_name: str, employee_email: str, deparment: str, scoped_role: bool = False) -> dict:
     """
     Create the Keycloak identity account for a new employee and assign
     the appropriate role.
@@ -358,7 +358,7 @@ def create_user(employee_name: str, employee_email: str, role: str, scoped_role:
         username = _generate_username(employee_email)
         user_id = _create_keycloak_user(username, employee_name, employee_email)
 
-        role_to_assign = _SCOPED_HELPDESK_ROLE if scoped_role else role
+        role_to_assign = _SCOPED_HELPDESK_ROLE if scoped_role else deparment
         _assign_role(user_id, role_to_assign)
 
         return {

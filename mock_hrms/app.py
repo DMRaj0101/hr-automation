@@ -108,6 +108,27 @@ def reset_fixtures():
     return {"reset": True}
 
 
+@app.post("/hrms/_set_true")
+def set_synced_true():
+    """Dev convenience: mark everyone as synced."""
+    records = _load(NEW_HIRES_FILE)
+    for r in records:
+        r["synced"] = True
+    _save(NEW_HIRES_FILE, records)
+    return {"set_true": True}
+        
+@app.post("/hrms/_reset/{hrms_employee_id}/{Synced}")
+def reset_employee_sync(hrms_employee_id: str, Synced: bool):
+    """Dev convenience: unmark a specific employee as synced."""
+    records = _load(NEW_HIRES_FILE)
+    for r in records:
+        if r["hrms_employee_id"] == hrms_employee_id:
+            r["synced"] = Synced
+            _save(NEW_HIRES_FILE, records)
+            return {"reset": hrms_employee_id}
+    raise HTTPException(status_code=404, detail="Employee not found in mock HRMS")
+
+
 @app.get("/")
 def health():
     return {"status": "mock HRMS running"}
