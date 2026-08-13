@@ -75,15 +75,15 @@ export default function OnboardingDetailPage() {
             </div>
 
             <div className="ob-hero-pills">
-              <span className="ob-hero-pill">
-                <IdCard size={14} strokeWidth={2} />
-                {emp.employee_id}
-              </span>
+              <span className="ob-hero-pill ob-hero-pill--id">
+  <IdCard size={14} strokeWidth={2} />
+  {emp.employee_id}
+</span>
 
-              <span className="ob-hero-pill">
-                <Briefcase size={14} strokeWidth={2} />
-                {emp.title}
-              </span>
+<span className="ob-hero-pill ob-hero-pill--role">
+  <Briefcase size={14} strokeWidth={2} />
+  {emp.title}
+</span>
             </div>
           </div>
         </div>

@@ -23,6 +23,10 @@ import {
   Monitor,
   ArrowRight,
   ClipboardCheck,
+  Network,
+  ClipboardList,
+  BookOpen,
+  LayoutGrid,
 } from "lucide-react";
 
 import type {
@@ -38,14 +42,11 @@ import type { ProvisionalStatusItem } from "@/types/onboarding";
    CHECKLIST ICONS
    ========================================================= */
 
-const iconMap: Record<
-  string,
-  {
-    icon: ElementType;
-    bg: string;
-    color: string;
-  }
-> = {
+const iconMap: Record<string, {
+  icon: ElementType;
+  bg: string;
+  color: string;
+}> = {
   "Identity Account Creation": {
     icon: KeyRound,
     bg: "#DBEAFE",
@@ -58,16 +59,58 @@ const iconMap: Record<
     color: "#7C3AED",
   },
 
+  "Document Management": {
+    icon: FileText,
+    bg: "#DCFCE7",
+    color: "#16A34A",
+  },
+
+  "Time & Billing": {
+    icon: Clock,
+    bg: "#FEF3C7",
+    color: "#B45309",
+  },
+
+  "Access Recommendation": {
+    icon: ClipboardList,
+    bg: "#FFEDD5",
+    color: "#C2410C",
+  },
+
+  "Legal Research": {
+    icon: BookOpen,
+    bg: "#E0E7FF",
+    color: "#4338CA",
+  },
+
+  "Productivity Suite": {
+    icon: LayoutGrid,
+    bg: "#CCFBF1",
+    color: "#0F766E",
+  },
+
+  "Network Access": {
+    icon: Network,
+    bg: "#DBEAFE",
+    color: "#1D4ED8",
+  },
+
+  "Ticketing/ITSM": {
+    icon: TicketIcon,
+    bg: "#FFE4E6",
+    color: "#BE123C",
+  },
+
   "Asset Allocation": {
     icon: Monitor,
     bg: "#F1F5F9",
     color: "#64748B",
   },
 
-  "Document Management": {
-    icon: FileText,
-    bg: "#DCFCE7",
-    color: "#16A34A",
+  "Audit Software": {
+    icon: ShieldCheck,
+    bg: "#FCE7F3",
+    color: "#BE185D",
   },
 };
 
@@ -78,7 +121,17 @@ const fallbackIcon = {
 };
 
 function getChecklistIcon(item: ChecklistItem) {
-  return iconMap[item.system] ?? fallbackIcon;
+  const base = iconMap[item.system] ?? fallbackIcon;
+
+  if (item.status === "pending") {
+    return {
+      icon: base.icon,
+      bg: "#F1F5F9",
+      color: "#94A3B8",
+    };
+  }
+
+  return base;
 }
 
 /* =========================================================
@@ -165,6 +218,49 @@ const statusThemeMap: Record<
     noteTextColor: "#4B5563",
   },
 };
+
+/* =========================================================
+   TICKET STATUS THEME
+   (drives the small "Ticket Status" pill inside the modal)
+
+   RED    -> failed / blocked / error / cancelled
+   GOLD   -> in progress / pending / open / anything unrecognized
+   GREEN  -> success / closed / done / resolved / completed
+   ========================================================= */
+
+function getTicketStatusTheme(status?: string) {
+  const s = status?.toLowerCase().trim() ?? "";
+
+  // GREEN — closed / success
+  if (
+    ["success", "closed", "done", "resolved", "completed"].includes(s)
+  ) {
+    return {
+      bg: "#DCFCE7",
+      color: "#15803D",
+      icon: CheckCircle2,
+      category: "green" as const,
+    };
+  }
+
+  // RED — failed
+  if (["failed", "blocked", "error", "cancelled"].includes(s)) {
+    return {
+      bg: "#FEE2E2",
+      color: "#B91C1C",
+      icon: XOctagon,
+      category: "red" as const,
+    };
+  }
+
+  // GOLD — in progress / pending / open / anything else
+  return {
+    bg: "#FEF3C7",
+    color: "#B45309",
+    icon: Clock,
+    category: "gold" as const,
+  };
+}
 
 /* =========================================================
    STYLES
@@ -622,6 +718,12 @@ const pcModalStyles = `
   color: #1F2937;
 }
 
+.pc-row-value--placeholder {
+  font-weight: 600;
+  font-style: italic;
+  color: #9CA3AF;
+}
+
 /* =========================================================
    STATUS PILL
    ========================================================= */
@@ -827,6 +929,44 @@ const pcModalStyles = `
 }
 
 /* =========================================================
+   HUMAN IN THE LOOP
+   ========================================================= */
+
+.pc-hitl-box {
+  margin-bottom: 14px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  border-radius: 12px;
+  padding: 10px 13px;
+
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+}
+
+.pc-hitl-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  background: #DC2626;
+  color: #fff;
+}
+
+.pc-hitl-text {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #991B1B;
+}
+
+/* =========================================================
    RESULT GRID
    ========================================================= */
 
@@ -947,9 +1087,7 @@ export function OnboardingChecklist({
 }) {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
-  const [provisionalStatus, setProvisionalStatus] = useState<
-    ProvisionalStatusItem[]
-  >([]);
+  const [provisionalStatus, setProvisionalStatus] = useState<ProvisionalStatusItem[]>([]);
 
   const [loadingProvisional, setLoadingProvisional] = useState(false);
 
@@ -1016,11 +1154,36 @@ export function OnboardingChecklist({
     : undefined;
 
   /* =======================================================
-     TICKET STATUS
+     TICKET STATUS THEME (red / gold / green)
      ======================================================= */
 
-  const isTicketSuccess =
-    selectedProvisional?.ticketStatus?.toLowerCase() === "success";
+  const ticketStatusTheme = getTicketStatusTheme(
+    selectedProvisional?.ticketStatus,
+  );
+
+  /* =======================================================
+     HUMAN IN THE LOOP
+     Show only when checklist item status is "In Progress"
+     AND ticket status is Failed-type.
+     ======================================================= */
+
+  const needsHumanInLoop =
+    !!selectedProvisional &&
+    selectedItem?.status === "inProgress" &&
+    ticketStatusTheme.category === "red";
+
+  /* =======================================================
+     END TIME PLACEHOLDER
+     Show "Not Yet Generated" only when the checklist item is
+     "In Progress" AND the ticket status is Processing-type
+     (gold), and there is no real endtime value yet.
+     ======================================================= */
+
+  const showEndTimePlaceholder =
+    !!selectedProvisional &&
+    !selectedProvisional.endtime &&
+    selectedItem?.status === "inProgress" &&
+    ticketStatusTheme.category === "gold";
 
   /* =======================================================
      MODAL THEME
@@ -1211,6 +1374,20 @@ export function OnboardingChecklist({
                 />
               </div>
 
+              {/* HUMAN IN THE LOOP */}
+
+              {needsHumanInLoop && (
+                <div className="pc-hitl-box">
+                  <div className="pc-hitl-icon">
+                    <AlertCircle size={13} />
+                  </div>
+
+                  <div className="pc-hitl-text">
+                    Human in the loop needed
+                  </div>
+                </div>
+              )}
+
               {/* DETAILS */}
 
               <div className="pc-details-card">
@@ -1284,20 +1461,11 @@ export function OnboardingChecklist({
                           <span
                             className="pc-status-pill"
                             style={{
-                              background: isTicketSuccess
-                                ? "#DCFCE7"
-                                : "#FEE2E2",
-
-                              color: isTicketSuccess
-                                ? "#15803D"
-                                : "#B91C1C",
+                              background: ticketStatusTheme.bg,
+                              color: ticketStatusTheme.color,
                             }}
                           >
-                            {isTicketSuccess ? (
-                              <CheckCircle2 size={12} />
-                            ) : (
-                              <Clock size={12} />
-                            )}
+                            <ticketStatusTheme.icon size={12} />
 
                             {
                               selectedProvisional.ticketStatus
@@ -1328,8 +1496,16 @@ export function OnboardingChecklist({
                             End Time
                           </span>
 
-                          <span className="pc-row-value">
-                            {selectedProvisional.endtime}
+                          <span
+                            className={
+                              showEndTimePlaceholder
+                                ? "pc-row-value pc-row-value--placeholder"
+                                : "pc-row-value"
+                            }
+                          >
+                            {showEndTimePlaceholder
+                              ? "Not Yet Generated"
+                              : selectedProvisional.endtime}
                           </span>
                         </div>
                       </div>

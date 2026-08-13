@@ -14,40 +14,59 @@ export default function DashboardPage() {
   if (isError) {
     return (
       <div className="page-content text-red-600">
-        Failed to load dashboard: {error instanceof Error ? error.message : "Unknown error"}
+        Failed to load dashboard:{" "}
+        {error instanceof Error ? error.message : "Unknown error"}
       </div>
     );
   }
 
   if (isLoading || !data) {
-    return <div className="page-content text-vantara-text-muted">Loading dashboard...</div>;
+    return (
+      <div className="page-content text-vantara-text-muted">
+        Loading dashboard...
+      </div>
+    );
   }
 
   return (
-    <div className="page-content">
-      <h1 className="page-title">Dashboard</h1>
-      <p className="page-subtitle">
-        Welcome back — here&apos;s what&apos;s happening across onboarding today.
-      </p>
+    <div className="page-content dashboard-page">
+      <div className="dashboard-container">
 
-      <div className="space-y-5">
+        {/* Top statistics */}
         <StatRow stats={data.stats} />
 
-        <div className="grid gap-5" style={{ gridTemplateColumns: "1.3fr 1fr" }}>
-          <IntegrationCoverageCard data={data.integrationCoverage} />
-          <SlaWarningCard data={data.slaWarning} />
+        {/* Integration Coverage + SLA Warning */}
+        <div className="dashboard-grid dashboard-grid-coverage">
+          <IntegrationCoverageCard
+            data={data.integrationCoverage}
+          />
+
+          <SlaWarningCard
+            data={data.slaWarning}
+          />
         </div>
 
-        <div className="grid grid-cols-3 gap-5">
+        {/* Departments */}
+        <div className="dashboard-departments">
           {data.departments.map((dept) => (
-            <DepartmentCard key={dept.name} dept={dept} />
+            <DepartmentCard
+              key={dept.name}
+              dept={dept}
+            />
           ))}
         </div>
 
-        <div className="grid gap-5" style={{ gridTemplateColumns: "1.4fr 1fr" }}>
-          <SystemHealthCard items={data.systemHealth} />
-          <TicketStatusCard data={data.ticketStatus} />
+        {/* System Health + Ticket Status */}
+        <div className="dashboard-grid dashboard-grid-bottom">
+          <SystemHealthCard
+            items={data.systemHealth}
+          />
+
+          <TicketStatusCard
+            data={data.ticketStatus}
+          />
         </div>
+
       </div>
     </div>
   );

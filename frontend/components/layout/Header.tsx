@@ -84,7 +84,7 @@ export function Header({
           onClick={() => setMenuOpen((prev) => !prev)}
           className="flex items-center gap-2 rounded-xl p-1 transition-all duration-200 hover:bg-[#F5F7FA]"
         >
-          <Avatar name={user?.name ?? "HR Admin"} size={34} />
+          <Avatar name="H R" size={34} />
         </button>
 
         {menuOpen && (

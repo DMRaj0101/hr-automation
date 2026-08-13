@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   ColumnDef,
   flexRender,
@@ -9,6 +9,109 @@ import {
 } from "@tanstack/react-table";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20];
+
+function PageSizeSelect({
+  value,
+  options,
+  onChange,
+}: {
+  value: number;
+  options: number[];
+  onChange: (v: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          padding: "2px 8px",
+          fontSize: "12px",
+          borderRadius: "6px",
+          border: "1px solid var(--vantara-border)",
+          background: "#fff",
+          color: "var(--vantara-navy)",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          cursor: "pointer",
+        }}
+      >
+        {value}
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+          <path
+            d="M2 4l4 4 4-4"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
+      {open && (
+        <ul
+          style={{
+            position: "absolute",
+            bottom: "calc(100% + 4px)",
+            right: 0,
+            zIndex: 50,
+            width: "56px",
+            background: "#fff",
+            border: "1px solid var(--vantara-border)",
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            overflow: "hidden",
+            listStyle: "none",
+            margin: 0,
+            padding: 0,
+          }}
+        >
+          {options.map((size) => (
+            <li
+              key={size}
+              onClick={() => {
+                onChange(size);
+                setOpen(false);
+              }}
+              style={{
+                padding: "6px 10px",
+                fontSize: "12px",
+                cursor: "pointer",
+                textAlign: "center",
+                background: size === value ? "var(--vantara-navy)" : "transparent",
+                color: size === value ? "#fff" : "var(--vantara-navy)",
+              }}
+              onMouseEnter={(e) => {
+                if (size !== value)
+                  e.currentTarget.style.background = "rgba(20,33,61,0.08)";
+              }}
+              onMouseLeave={(e) => {
+                if (size !== value)
+                  e.currentTarget.style.background = "transparent";
+              }}
+            >
+              {size}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export function DataTable<T>({
   columns,
@@ -211,20 +314,14 @@ export function DataTable<T>({
             style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px" }}
           >
             <span>Rows per page</span>
-            <select
+            <PageSizeSelect
               value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
+              options={PAGE_SIZE_OPTIONS}
+              onChange={(size) => {
+                setPageSize(size);
                 setPageIndex(0);
               }}
-              style={{ padding: "2px 6px", fontSize: "12px" }}
-            >
-              {PAGE_SIZE_OPTIONS.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
+            />
           </div>
         </div>
       )}
