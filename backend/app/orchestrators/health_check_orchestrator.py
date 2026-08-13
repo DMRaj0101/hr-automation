@@ -41,7 +41,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
 import httpx
-
+from app.ai_client import call_ollama_text
 from app.database import SessionLocal
 from app.integrations import (
     keycloak_connector,
@@ -154,11 +154,16 @@ def _run_single_check(name: str, check_fn: Callable[[], dict]) -> dict:
         logger.error("Health check failed for %s: %s", name, exc)
         result = {"status": "DOWN", "status_code": None, "latency_ms": 0.0, "error": str(exc)}
 
-    # latency_ms carries the raw numeric reading through to _persist_health()
-    # below -- the frontend-facing "latency" key from _to_frontend_status()
-    # is a formatted string ("123ms" / "Timeout"), not usable for the
-    # AgentHealth.latency_ms column.
-    return {"name": name, "latency_ms": result.get("latency_ms"), **_to_frontend_status(result)}
+    # latency_ms and error carry the raw check_fn() readings through to
+    # _persist_health() below -- the frontend-facing "latency" key from
+    # _to_frontend_status() is a formatted string ("123ms" / "Timeout"),
+    # not usable for the AgentHealth.latency_ms/context columns.
+    return {
+        "name": name,
+        "latency_ms": result.get("latency_ms"),
+        "error": result.get("error"),
+        **_to_frontend_status(result),
+    }
 
 
 def run_health_checks() -> dict:
@@ -189,16 +194,48 @@ _cached_result: dict | None = None
 
 def get_cached_health() -> dict:
     """
-    Returns the latest cached sweep without running a new one. Returns an
-    empty-but-valid payload if the background loop hasn't completed its
-    first run yet, rather than blocking the caller on a live check.
+    Returns the latest cached sweep without running a new one.
     """
     with _cache_lock:
-        if _cached_result is    None:
+        if _cached_result is None:
             return {"systemHealthDetail": []}
-        return _cached_result
 
+        result = _cached_result.copy()
 
+    for item in result.get("systemHealthDetail", []):
+        error = item.get("error")
+
+        # No error means the system is healthy
+        if not error or not str(error).strip():
+            item["error"] = "The system is healthy and operating normally."
+            continue
+
+        prompt = f"""
+Convert this system health error into ONE short, professional,
+business-friendly error message that a non-technical person can understand.
+
+System: {item.get("name")}
+Status: {item.get("status")}
+Error: {error}
+
+Rules:
+- Use both the Status and Error to understand the problem.
+- Return exactly ONE sentence.
+- Keep it under 20 words.
+- Use simple business language.
+- Do not mention APIs, code, environment variables, ports,
+  stack traces, localhost, or technical implementation details.
+- Do not give troubleshooting instructions.
+- Do not use a generic message such as "An unexpected error occurred".
+- Do not invent information.
+- Return ONLY the business error message.
+
+Business Error:
+"""
+        context = call_ollama_text(prompt)
+        item["error"] = context
+
+    return result
 def _persist_health(details: list[dict]) -> None:
     """
     Inserts one new AgentHealth row per integration per sweep -- an
@@ -218,6 +255,7 @@ def _persist_health(details: list[dict]) -> None:
                 status=detail.get("status"),
                 latency_ms=detail.get("latency_ms"),
                 last_heartbeat=now,
+                context=detail.get("error"),
             ))
         db.commit()
     except Exception as exc:

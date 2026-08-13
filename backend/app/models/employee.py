@@ -167,4 +167,5 @@ class AgentHealth(Base):
     status = Column(String, default="Operational")  # Operational | down
     latency_ms = Column(Float, nullable=True)  # round-trip latency from the last health_check_orchestrator sweep
     last_heartbeat = Column(DateTime, default=datetime.datetime.utcnow)
+    context = Column(Text, nullable=True)  # Additional context for the agent's health status
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
