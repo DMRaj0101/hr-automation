@@ -18,4 +18,15 @@ export async function getChecklist(id: string): Promise<ChecklistItem[]> {
   return data;
 }
 
+export interface HrmsSyncResult {
+  synced_count: number;
+  results: { employee_id: string; name: string; outcome: unknown }[];
+}
+
+export async function syncNewHires(): Promise<HrmsSyncResult> {
+  const { data } = await backendApiClient.post<HrmsSyncResult>(
+    "/hrms/sync/new-hires"
+  );
+  return data;
+}
 
