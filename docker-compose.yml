@@ -22,7 +22,7 @@ services:
     
     environment:
       KIMAI_API_URL: http://kimai:8001/api
-      KIMAI_ADMIN_TOKEN: dc2ae9ff11fa8d9714bdc9d34
+      KIMAI_ADMIN_TOKEN: 07280ab86590a88f4e30bf247
       DATABASE_URL: postgresql://poc:poc@postgres:5432/onboarding_poc
       MOCK_HRMS_URL: http://mock_hrms:9000
       OLLAMA_URL: http://host.docker.internal:11434

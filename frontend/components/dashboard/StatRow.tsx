@@ -2,23 +2,33 @@ import { DashboardStats } from "@/types/onboarding";
 
 type StatRowProps = {
   stats: DashboardStats;
+  mode?: "all" | "onboarding";
 };
 
-function StatIcon({
-  type,
-}: {
-  type: "total" | "completed" | "progress" | "failed" | "not-started";
-}) {
+type StatType = "total" | "completed" | "progress" | "failed" | "not-started" | "employees";
+
+const CAPTIONS: Record<StatType, string> = {
+  total: "Received from HRMS",
+  completed: "All downstream actions finished",
+  progress: "Orchestrator actively coordinating",
+  failed: "Waiting on a human decision",
+  "not-started": "Decision Agent hasn't run yet",
+  employees: "Across all departments",
+};
+
+function StatIcon({ type }: { type: StatType }) {
   if (type === "total") {
     return (
       <div className="dashboard-stat-icon dashboard-stat-icon-blue">
         <svg
-          width="26"
-          height="26"
+          width="19"
+          height="19"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.8"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />
@@ -33,12 +43,14 @@ function StatIcon({
     return (
       <div className="dashboard-stat-icon dashboard-stat-icon-green">
         <svg
-          width="26"
-          height="26"
+          width="19"
+          height="19"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
           <circle cx="12" cy="12" r="9" />
           <path d="m8 12 2.5 2.5L16 9" />
@@ -51,17 +63,17 @@ function StatIcon({
     return (
       <div className="dashboard-stat-icon dashboard-stat-icon-gold">
         <svg
-          width="26"
-          height="26"
+          width="19"
+          height="19"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.8"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path d="M6 2h12" />
-          <path d="M6 22h12" />
-          <path d="M8 2c0 5 4 5 4 10s-4 5-4 10" />
-          <path d="M16 2c0 5-4 5-4 10s4 5 4 10" />
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 7v5l3 2" />
         </svg>
       </div>
     );
@@ -71,12 +83,14 @@ function StatIcon({
     return (
       <div className="dashboard-stat-icon dashboard-stat-icon-red">
         <svg
-          width="27"
-          height="27"
+          width="19"
+          height="19"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.8"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
           <path d="M10.3 3.5 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.5a2 2 0 0 0-3.4 0Z" />
           <path d="M12 9v4" />
@@ -89,12 +103,14 @@ function StatIcon({
   return (
     <div className="dashboard-stat-icon dashboard-stat-icon-gray">
       <svg
-        width="26"
-        height="26"
+        width="19"
+        height="19"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       >
         <circle cx="12" cy="12" r="9" />
         <path d="M8 12h8" />
@@ -110,64 +126,45 @@ function StatItem({
 }: {
   label: string;
   value: number;
-  type: "total" | "completed" | "progress" | "failed" | "not-started";
+  type: StatType;
 }) {
   return (
     <div className="dashboard-stat-card">
+      <div className="dashboard-stat-top">
+        <span className="dashboard-stat-label">{label}</span>
+
+        <button
+          type="button"
+          className="dashboard-stat-menu"
+          aria-label={`${label} options`}
+        >
+          ⋮
+        </button>
+      </div>
+
       <StatIcon type={type} />
 
       <div className="dashboard-stat-content">
-        <div className="dashboard-stat-top">
-          <span className="dashboard-stat-label">
-            {label}
-          </span>
-
-          <button
-            type="button"
-            className="dashboard-stat-menu"
-            aria-label={`${label} options`}
-          >
-            ⋮
-          </button>
-        </div>
-
-        <div
-          className={`dashboard-stat-value dashboard-stat-value-${type}`}
-        >
+        <div className={`dashboard-stat-value dashboard-stat-value-${type}`}>
           {value}
         </div>
+
+        <div className="dashboard-stat-caption">{CAPTIONS[type]}</div>
       </div>
     </div>
   );
 }
 
-export function StatRow({ stats }: StatRowProps) {
+export function StatRow({ stats, mode = "all" }: StatRowProps) {
+  const totalLabel =
+    mode === "onboarding" ? "Total Onboarding Requests" : "Total Lifecycle Requests";
+
   return (
     <div className="dashboard-stat-row">
-      <StatItem
-        label="Total Onboarding Requests"
-        value={stats.total}
-        type="total"
-      />
-
-      <StatItem
-        label="Completed"
-        value={stats.completed}
-        type="completed"
-      />
-
-      <StatItem
-        label="In Progress"
-        value={stats.inProgress}
-        type="progress"
-      />
-
-      <StatItem
-        label="Failed / Needs Attention"
-        value={stats.failed}
-        type="failed"
-      />
-
+      <StatItem label={totalLabel} value={stats.total} type="total" />
+      <StatItem label="Completed" value={stats.completed} type="completed" />
+      <StatItem label="In Progress" value={stats.inProgress} type="progress" />
+      <StatItem label="Failed / Needs Attention" value={stats.failed} type="failed" />
       <StatItem
         label="Not Started"
         value={(stats as any).notStarted}

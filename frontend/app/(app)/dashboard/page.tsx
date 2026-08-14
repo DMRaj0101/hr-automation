@@ -1,15 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { useDashboard } from "@/hooks/useDashboard";
 import { StatRow } from "@/components/dashboard/StatRow";
-import { IntegrationCoverageCard } from "@/components/dashboard/IntegrationCoverageCard";
+import { LifecycleToggle, LifecycleKey } from "@/components/dashboard/Lifecycletoggle";
 import { SlaWarningCard } from "@/components/dashboard/SlaWarningCard";
-import { DepartmentCard } from "@/components/dashboard/DepartmentCard";
-import { SystemHealthCard } from "@/components/dashboard/SystemHealthCard";
-import { TicketStatusCard } from "@/components/dashboard/TicketStatusCard";
+import { OrchestrationOverviewCard } from "@/components/dashboard/Orchestrationoverviewcard";
+import { SystemStatusCards } from "@/components/dashboard/Systemstatuscards";
 
 export default function DashboardPage() {
   const { data, isLoading, isError, error } = useDashboard();
+  const [lifecycleFilter, setLifecycleFilter] = useState<LifecycleKey>("all");
 
   if (isError) {
     return (
@@ -28,44 +29,34 @@ export default function DashboardPage() {
     );
   }
 
+  // Offboarding isn't tracked yet — "All" and "Onboarding" both read the same
+  // stats for now. Once an offboarding dataset exists, branch here, e.g.:
+  //   const statsToShow =
+  //     lifecycleFilter === "offboarding" ? data.offboardingStats : data.stats;
+  const statsToShow = data.stats;
+
   return (
     <div className="page-content dashboard-page">
       <div className="dashboard-container">
 
+        <div className="dashboard-top-bar dashboard-top-bar-toggle-only">
+          <LifecycleToggle value={lifecycleFilter} onChange={setLifecycleFilter} />
+        </div>
+
         {/* Top statistics */}
-        <StatRow stats={data.stats} />
+        <StatRow
+          stats={statsToShow}
+          mode={lifecycleFilter === "onboarding" ? "onboarding" : "all"}
+        />
 
-        {/* Integration Coverage + SLA Warning */}
+        {/* Orchestration Overview + SLA Warning */}
         <div className="dashboard-grid dashboard-grid-coverage">
-          <IntegrationCoverageCard
-            data={data.integrationCoverage}
-          />
-
-          <SlaWarningCard
-            data={data.slaWarning}
-          />
+          <OrchestrationOverviewCard />
+          <SlaWarningCard data={data.slaWarning} />
         </div>
 
-        {/* Departments */}
-        <div className="dashboard-departments">
-          {data.departments.map((dept) => (
-            <DepartmentCard
-              key={dept.name}
-              dept={dept}
-            />
-          ))}
-        </div>
-
-        {/* System Health + Ticket Status */}
-        <div className="dashboard-grid dashboard-grid-bottom">
-          <SystemHealthCard
-            items={data.systemHealth}
-          />
-
-          <TicketStatusCard
-            data={data.ticketStatus}
-          />
-        </div>
+        {/* Downstream system status */}
+        <SystemStatusCards />
 
       </div>
     </div>
