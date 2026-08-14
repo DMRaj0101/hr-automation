@@ -25,6 +25,16 @@ export interface SlaWarning {
   duration: string | null;
 }
 
+// One provisioning failure row from GET /dashboard/sla-warning's
+// "errorReport" list (dashboard.py's _build_sla_warning()).
+export interface ErrorLogEntry {
+  employeeId: string;
+  employee: string;
+  agentname: string;
+  errorDetail: string;
+  duration: string;
+}
+
 export interface DepartmentSummary {
   name: string;
   employees: number;
@@ -71,6 +81,7 @@ export interface DashboardData {
   // future endpoint can populate it without another type change.
   integrationCoverage?: IntegrationCoverage;
   slaWarning: SlaWarning;
+  errorReport: ErrorLogEntry[];
   departments: DepartmentSummary[];
   systemHealth: SystemHealthBrief[];
   actionCounts: Record<string, SystemActionCount>;

@@ -3,6 +3,7 @@ import {
   DashboardData,
   DashboardStats,
   DepartmentSummary,
+  ErrorLogEntry,
   SlaWarning,
   SystemActionCount,
   SystemHealthBrief,
@@ -11,7 +12,7 @@ import {
 } from "@/types/onboarding";
 
 interface SlaWarningResponse {
-  errorReport: unknown[];
+  errorReport: ErrorLogEntry[];
   slaWarning: {
     ticketId: string;
     employee: string | null;
@@ -53,6 +54,7 @@ export async function getDashboard(): Promise<DashboardData> {
     stats: stats.data,
     // SlaWarningCard shows one ticket -- the most recent breach, if any.
     slaWarning: slaWarningRes.data.slaWarning[0] ?? EMPTY_SLA_WARNING,
+    errorReport: slaWarningRes.data.errorReport,
     departments: departments.data,
     systemHealth: systemHealthRes.data.agenthealth,
     actionCounts: systemHealthRes.data.actioncount,
