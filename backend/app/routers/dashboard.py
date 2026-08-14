@@ -13,15 +13,59 @@ ticket currently breaching SLA) come back null with a comment saying
 so -- not an invented value.
 """
 import datetime
+from pathlib import Path
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
 from app.models import Employee, Ticket, ProvisioningRecord, AgentTicket
 from app.config import get_provisioning_matrix
+from app.ai_client import call_ollama_text, OllamaError
 from app.orchestrators.health_check_orchestrator import get_cached_health
 from app.orchestrators.onboarding_orchestrator import AGENT_DISPLAY_NAMES
 from app.services.action_counter import get_static_action_counts
+from app.services.rephrase_cache import get_cached_rephrase, set_cached_rephrase
+
+# Prompts for _rephrase() below, kept in a markdown file (same pattern as
+# health_check_orchestrator.py's _load_error_translation_prompt()) so the
+# wording can be tuned without a code change. Two "<!-- MARKER -->"
+# sections in one file since both prompts do the same class of job
+# (rephrase a raw technical string into one clean business sentence).
+_REPHRASE_PROMPTS_PATH = Path(__file__).resolve().parent.parent / "prompts" / "dashboard_rephrase.md"
+
+
+def _load_rephrase_prompt(marker: str) -> str:
+    content = _REPHRASE_PROMPTS_PATH.read_text(encoding="utf-8")
+    for section in content.split("<!-- ")[1:]:
+        name, _, body = section.partition(" -->")
+        if name.strip() == marker:
+            return body.strip()
+    raise ValueError(f"Prompt marker '{marker}' not found in {_REPHRASE_PROMPTS_PATH}")
+
+
+def _rephrase(marker: str, employee: str, context: str, raw_text: str) -> str:
+    """Fills the named prompt template and calls Ollama, caching the
+    result by (marker, raw_text) so the same underlying error/note is
+    only ever sent to the LLM once -- repeat dashboard loads for the
+    same still-unresolved record hit the cache instead of paying an
+    Ollama round-trip every time. Falls back to the raw text unchanged
+    on any Ollama failure -- a dashboard read must never fail just
+    because the LLM is down (same fallback contract as
+    health_check_orchestrator._translate_errors_to_business_language()) --
+    and a failed call is never cached, so a transient outage self-heals
+    on the next request."""
+    cached = get_cached_rephrase(marker, raw_text)
+    if cached is not None:
+        return cached
+
+    prompt = _load_rephrase_prompt(marker).format(employee=employee, context=context, raw_text=raw_text)
+    try:
+        rephrased = call_ollama_text(prompt)
+    except OllamaError:
+        return raw_text
+
+    set_cached_rephrase(marker, raw_text, rephrased)
+    return rephrased
 
 # Our 4 real connector systems -> the provisioning agent_key AgentTicket
 # rows are logged under (AGENT_DISPLAY_NAMES maps that agent_key to the
@@ -99,26 +143,67 @@ def _format_duration(since: datetime.datetime) -> str:
 
 
 def _build_sla_warning(db: Session) -> dict:
-    """Longest-outstanding SLA breach still open. sla_flagged_at is set
-    once by the Monitoring Agent when a ticket's been Pending > 4h (see
-    models/employee.py's Ticket docstring) -- oldest flag first."""
-    ticket: Ticket | None = (
+    """Two top-level lists, each capped at the 3 most recent records:
+
+    - errorReport: provisioning_records rows with a non-empty
+      error_detail, joined to employees for id/name, ordered by
+      last_attempted_at (the column the Monitoring Agent updates
+      whenever it retries/attempts a record -- see monitoring_agent.py),
+      most recent first. The inner join with Employee means a record
+      whose employee can't be found is simply excluded, not a crash.
+
+    - slaWarning: same filter/fields as before (sla_flagged_at set,
+      ticket still open), just ordered by sla_flagged_at descending
+      (most recent flag first, per this endpoint's new "top 3" contract)
+      and capped at 3 instead of returning only the single oldest one."""
+    error_rows = (
+        db.query(ProvisioningRecord, Employee)
+        .join(Employee, ProvisioningRecord.employee_id == Employee.id)
+        .filter(ProvisioningRecord.error_detail.isnot(None), ProvisioningRecord.error_detail != "")
+        .order_by(ProvisioningRecord.last_attempted_at.desc())
+        .limit(3)
+        .all()
+    )
+    error_report = []
+    for record, employee in error_rows:
+        agent_name = AGENT_DISPLAY_NAMES.get(record.agent_key, record.agent_key)
+        error_report.append({
+            "employeeId": employee.employee_id,
+            "employee": employee.name,
+            "agentname": agent_name,
+            "errorDetail": _rephrase("PROVISIONING_ERROR", employee.name, agent_name, record.error_detail),
+            "duration": _format_duration(record.last_attempted_at),
+        })
+
+    tickets = (
         db.query(Ticket)
         .filter(Ticket.sla_flagged_at.isnot(None), Ticket.status != "Closed")
-        .order_by(Ticket.sla_flagged_at.asc())
-        .first()
+        .order_by(Ticket.sla_flagged_at.desc())
+        .limit(3)
+        .all()
     )
-    if not ticket:
-        # Real query, genuinely no rows -- not a stand-in for missing data.
-        return {"ticketId": None, "employee": None, "department": None, "item": None, "duration": None}
+    sla_warning = []
+    for ticket in tickets:
+        employee = db.query(Employee).filter(Employee.id == ticket.employee_id).first()
+        # Only pay for an Ollama call when there's actually a note to
+        # rephrase -- ticket.notes is nullable and often empty.
+        error_detail = (
+            _rephrase("TICKET_NOTES", employee.name if employee else "Unknown", ticket.provisioning_item, ticket.notes)
+            if ticket.notes
+            else ticket.notes
+        )
+        sla_warning.append({
+            "ticketId": ticket.ticket_id,
+            "employee": employee.name if employee else None,
+            "department": employee.department if employee else None,
+            "item": ticket.provisioning_item,
+            "errorDetail": error_detail,
+            "duration": _format_duration(ticket.sla_flagged_at),
+        })
 
-    employee = db.query(Employee).filter(Employee.id == ticket.employee_id).first()
     return {
-        "ticketId": ticket.ticket_id,
-        "employee": employee.name if employee else None,
-        "department": employee.department if employee else None,
-        "item": ticket.provisioning_item,
-        "duration": _format_duration(ticket.sla_flagged_at),
+        "errorReport": error_report,
+        "slaWarning": sla_warning,
     }
 
 
@@ -161,8 +246,41 @@ def _build_departments(db: Session) -> list[dict]:
     ]
 
 def get_action_count(db: Session) -> dict:
+    """For each of the 4 real connector agents (keycloak/mailu/kimai/
+    openkm): totalActions is the static per-call count x employee
+    headcount (how many actions this agent is expected to perform
+    across every employee); successRate is the % of this agent's
+    AgentTicket rows recorded so far that are Closed."""
     employee_count = db.query(Employee).count()
-    return {agent: count * employee_count for agent, count in get_static_action_counts().items()}
+    static_counts = get_static_action_counts()
+
+    rows = (
+        db.query(AgentTicket.agent_name, AgentTicket.status, func.count(AgentTicket.ticket_id))
+        .filter(AgentTicket.agent_name.in_(_AGENT_NAME_TO_SYSTEM_KEY.keys()))
+        .group_by(AgentTicket.agent_name, AgentTicket.status)
+        .all()
+    )
+
+    tickets_total_by_agent: dict[str, int] = {}
+    tickets_closed_by_agent: dict[str, int] = {}
+    for agent_name, status, count in rows:
+        system_key = _AGENT_NAME_TO_SYSTEM_KEY.get(agent_name)
+        if system_key not in static_counts:
+            continue  # not one of the 4 real connector agents (e.g. a mock-item agent)
+        tickets_total_by_agent[system_key] = tickets_total_by_agent.get(system_key, 0) + count
+        if status == "Closed":
+            tickets_closed_by_agent[system_key] = tickets_closed_by_agent.get(system_key, 0) + count
+
+    result = {}
+    for agent, static_count in static_counts.items():
+        tickets_total = tickets_total_by_agent.get(agent, 0)
+        tickets_closed = tickets_closed_by_agent.get(agent, 0)
+        success_rate = round(tickets_closed / tickets_total * 100, 2) if tickets_total else 0.0
+        result[agent] = {
+            "totalActions": static_count * employee_count,
+            "successRate": success_rate,
+        }
+    return result
 
 
 
