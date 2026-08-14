@@ -37,6 +37,7 @@ import string
 import time
 
 import requests
+from app.services.action_counter import record_action
 
 import os
 from app.services import KimaiApiClient
@@ -399,10 +400,12 @@ def create_user_and_timesheet(employee_name: str, employee_email: str, role: str
             if not kimai_user_id:
                 raise KimaiConnectorError(f"Kimai returned no user id after creating '{username}': {created}")
             account_note = f"Kimai account '{username}' created."
+        record_action("kimai")  # user account resolved
 
         customer = _get_or_create_customer(role)
         project = _get_or_create_project(role, customer["id"])
         _get_or_create_activity(project["id"])
+        record_action("kimai")  # timesheet profile (customer/project/activity) resolved
 
         return {
             "external_ref": kimai_user_id,

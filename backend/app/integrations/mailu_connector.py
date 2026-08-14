@@ -34,6 +34,7 @@ import string
 from typing import Any
 
 import httpx
+from app.services.action_counter import record_action
 load_dotenv()
 logger = logging.getLogger(__name__)
 
@@ -279,6 +280,7 @@ def create_mailbox(employee_name: str, desired_local_part: str) -> dict:
         password = _generate_temp_password()
 
         _create_mailu_user(email, password, employee_name)
+        record_action("mailu")  # mailbox created
 
         return {
             "email_address": email,

@@ -17,57 +17,79 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
-from app.models import Employee, Ticket, ProvisioningRecord
+from app.models import Employee, Ticket, ProvisioningRecord, AgentTicket
 from app.config import get_provisioning_matrix
 from app.orchestrators.health_check_orchestrator import get_cached_health
+from app.orchestrators.onboarding_orchestrator import AGENT_DISPLAY_NAMES
+from app.services.action_counter import get_static_action_counts
 
+# Our 4 real connector systems -> the provisioning agent_key AgentTicket
+# rows are logged under (AGENT_DISPLAY_NAMES maps that agent_key to the
+# agent_name string actually stored on AgentTicket.agent_name).
+_SYSTEM_AGENT_KEYS = {
+    "keycloak": "identity",
+    "mailu": "email",
+    "kimai": "time_billing",
+    "openkm": "document_management",
+}
+MOCK_AGENTS = {
+    "access_recommendation": "Access Recommendation Agent",
+    "legal_research": "Legal Research Agent",
+    "productivity_suite": "Productivity Suite Agent",
+    "network_access": "Network Access Agent",
+    "ticketing_itsm": "Ticketing/ITSM Agent",
+    "audit_software": "Audit Software Agent",
+}
+# Inverse lookup: AgentTicket.agent_name (display string, e.g. "Identity
+# Agent") -> the system key ("keycloak") get_static_action_counts() uses,
+# so a ticket row can be matched back to its connector's static action count.
+_AGENT_NAME_TO_SYSTEM_KEY = {
+    AGENT_DISPLAY_NAMES[provisioning_key]: system_key
+    for system_key, provisioning_key in _SYSTEM_AGENT_KEYS.items()
+}
+
+_AGENT_NAME_TO_SYSTEM_KEY.update({
+    agent_name: system_key
+    for system_key, agent_name in MOCK_AGENTS.items()
+})
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
 def _build_stats(db: Session) -> dict:
-    rows = db.query(ProvisioningRecord.status, func.count(ProvisioningRecord.id)).group_by(
-        ProvisioningRecord.status
-    ).all()
-    by_status = {status: count for status, count in rows}
+    """total is the employee headcount; the other four counts classify
+    each employee (not each ProvisioningRecord row) by rolling up all of
+    that employee's provisioning item statuses: all completed ->
+    completed, no records or all not_started -> notStarted, all failed
+    -> failed, anything else (any in_progress, or a completed/failed mix
+    with no in_progress row) -> inProgress since the employee's
+    provisioning is neither finished nor fully stalled."""
+    total = db.query(Employee).count()
+
+    rows = db.query(ProvisioningRecord.employee_id, ProvisioningRecord.status).all()
+    statuses_by_employee: dict[str, list[str]] = {}
+    for employee_id, status in rows:
+        statuses_by_employee.setdefault(employee_id, []).append(status)
+
+    completed = in_progress = failed = not_started = 0
+    for (employee_id,) in db.query(Employee.id).all():
+        statuses = statuses_by_employee.get(employee_id, [])
+        if not statuses or all(s == "not_started" for s in statuses):
+            not_started += 1
+        elif all(s == "completed" for s in statuses):
+            completed += 1
+        elif all(s == "failed" for s in statuses):
+            failed += 1
+        else:
+            in_progress += 1
+
     return {
-        "total": db.query(ProvisioningRecord).count(),
-        "completed": by_status.get("completed", 0),
-        "inProgress": by_status.get("in_progress", 0),
-        "failed": by_status.get("failed", 0),
-        "notStarted": by_status.get("not_started", 0),
+        "total": total,
+        "completed": completed,
+        "inProgress": in_progress,
+        "failed": failed,
+        "notStarted": not_started,
     }
 
-
-def _build_integration_coverage() -> dict:
-    """Real vs Mock straight off provisioning_matrix.json's own `status`
-    field (functional == real API call to a real system, mock == ticket
-    only, per that file's _comment) -- the project's actual source of
-    truth for which downstream systems are wired for real."""
-    matrix = get_provisioning_matrix()
-    real_systems: set[str] = set()
-    mock_systems: set[str] = set()
-    for items in matrix.values():
-        if not isinstance(items, list):
-            continue
-        for item in items:
-            names = {n.strip() for n in (item.get("software") or "").split(",") if n.strip()}
-            if item.get("status") == "functional":
-                real_systems |= names
-            else:
-                mock_systems |= names
-    mock_systems -= real_systems  # a system counts as real if it's functional for any role
-
-    real_count, mock_count = len(real_systems), len(mock_systems)
-    total = real_count + mock_count
-    real_pct = round(real_count / total * 100) if total else 0
-    return {
-        "realCount": real_count,
-        "mockCount": mock_count,
-        "realPct": real_pct,
-        "mockPct": (100 - real_pct) if total else 0,
-        "realSystems": sorted(real_systems),
-        "mockSystems": sorted(mock_systems),
-    }
 
 
 def _format_duration(since: datetime.datetime) -> str:
@@ -138,6 +160,79 @@ def _build_departments(db: Session) -> list[dict]:
         for dept, count in dept_rows
     ]
 
+def get_action_count(db: Session) -> dict:
+    employee_count = db.query(Employee).count()
+    return {agent: count * employee_count for agent, count in get_static_action_counts().items()}
+
+
+
+def get_total_action(db: Session) -> dict:
+    agent_names = list(_AGENT_NAME_TO_SYSTEM_KEY.keys())
+
+    rows = (
+        db.query(
+            AgentTicket.agent_name,
+            AgentTicket.status,
+            func.count(AgentTicket.ticket_id),
+        )
+        .filter(AgentTicket.agent_name.in_(agent_names))
+        .group_by(AgentTicket.agent_name, AgentTicket.status)
+        .all()
+    )
+
+    # Each connector's static per-employee action count, keyed by system
+    # key ("keycloak"/"mailu"/"kimai"/"openkm").
+    static_counts = get_static_action_counts()
+
+    total = 0
+    completed = 0
+    in_progress = 0
+    not_started = 0
+    failed = 0
+
+    for agent_name, status, count in rows:
+
+        # Map this ticket's agent_name (e.g. "Identity Agent") back to
+        # its system key ("keycloak") to look up its static action count.
+# Map agent name to its system key.
+        system_key = _AGENT_NAME_TO_SYSTEM_KEY.get(agent_name)
+
+        # Functional agents use their configured static action count.
+        if system_key in _SYSTEM_AGENT_KEYS:
+            action_count = static_counts.get(system_key, 0)
+
+        # Mock agents always represent 1 action per ticket.
+        elif system_key in MOCK_AGENTS:
+            action_count = 1
+
+        else:
+            action_count = 0        # Number of actions represented by these tickets
+        actions = action_count * count
+
+        # Add to overall total
+        total += actions
+
+        # Add to the appropriate status total -- AgentTicket.status is
+        # one of New/Processing/Failed/Closed (see ticket_repository.py).
+        if status == "Closed":
+            completed += actions
+
+        elif status == "Processing":
+            in_progress += actions
+
+        elif status == "New":
+            not_started += actions
+
+        elif status == "Failed":
+            failed += actions
+
+    return {
+        "total": total,
+        "completed": completed,
+        "inProgress": in_progress,
+        "notStarted": not_started,
+        "failed": failed,
+    }
 
 def _build_system_health() -> list[dict]:
     """Cached Health Check Orchestrator sweep (orchestrators/
@@ -159,13 +254,51 @@ def _build_ticket_status(db: Session) -> dict:
     }
 
 
-@router.get("/summary")
-def get_dashboard_summary(db: Session = Depends(get_db)):
+# @router.get("/summary")
+# def get_dashboard_summary(db: Session = Depends(get_db)):
+#     return {
+#         "stats": _build_stats(db),
+#         "integrationcoverage": _build_integration_coverage(),
+#         "slawarning": _build_sla_warning(db),
+#         "departments": _build_departments(db),
+#         "systemhealth": _build_system_health(),
+#         "actioncounts": get_action_count(db),
+#         "totalactions": get_total_action(db),
+#         "ticketstatus": _build_ticket_status(db),
+#     }
+
+
+# Same fields as /summary, each split into its own endpoint -- every one
+# below reuses the exact same builder function /summary calls, so the two
+# can never drift out of sync with each other.
+@router.get("/stats")
+def get_stats(db: Session = Depends(get_db)):
+    return _build_stats(db)
+
+
+
+@router.get("/sla-warning")
+def get_sla_warning(db: Session = Depends(get_db)):
+    return _build_sla_warning(db)
+
+
+@router.get("/departments")
+def get_departments(db: Session = Depends(get_db)):
+    return _build_departments(db)
+
+
+@router.get("/system-health")
+def get_system_health(db: Session = Depends(get_db)):
     return {
-        "stats": _build_stats(db),
-        "integrationCoverage": _build_integration_coverage(),
-        "slaWarning": _build_sla_warning(db),
-        "departments": _build_departments(db),
-        "systemHealth": _build_system_health(),
-        "ticketStatus": _build_ticket_status(db),
+        "agenthealth": _build_system_health(),
+        "actioncount": get_action_count(db)
     }
+
+@router.get("/total-actions")
+def get_total_actions_endpoint(db: Session = Depends(get_db)):
+    return get_total_action(db)
+
+
+@router.get("/ticket-status")
+def get_ticket_status(db: Session = Depends(get_db)):
+    return _build_ticket_status(db)
