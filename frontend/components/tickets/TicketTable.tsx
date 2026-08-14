@@ -26,7 +26,7 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
                 <div className="truncate text-[13px] font-semibold text-vantara-navy">
                   {t.id}
                 </div>
-                <div className="text-xs text-vantara-text-muted">
+                <div className="text-xs text-vantara-text-muted truncate">
                   {t.employee} · {t.employee_id}
                 </div>
               </div>
@@ -38,12 +38,14 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
               <span className="text-vantara-text-muted">{t.dept}</span>
             </div>
 
-            <div className="mt-2 truncate text-[13px] font-semibold text-vantara-navy">
-              {t.issue}
+            <div className="mt-2 flex" title={t.issue}>
+              <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-vantara-navy">
+                {t.issue}
+              </span>
             </div>
 
             <div className="mt-3 flex items-center justify-between">
-              <span className="text-xs text-vantara-text-muted">{t.time}</span>
+              <span className="text-xs text-gray-700">{t.time}</span>
             </div>
           </div>
         ))}
@@ -67,7 +69,9 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
       accessorKey: "id",
       cell: ({ row }) => (
         <div className="flex w-full items-center justify-center">
-          <span className="text-[13px] font-semibold text-vantara-navy">{row.original.id}</span>
+          <span className="text-[13px] font-semibold text-vantara-navy">
+            {row.original.id}
+          </span>
         </div>
       ),
     },
@@ -80,7 +84,12 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
       accessorKey: "employee_id",
       cell: ({ row }) => (
         <div className="flex w-full items-center justify-center">
-          <span className="text-[13px] text-vantara-text-muted">{row.original.employee_id}</span>
+          <span
+            className="text-[13px] text-gray-800"
+            title={row.original.employee_id}
+          >
+            {row.original.employee_id}
+          </span>
         </div>
       ),
     },
@@ -108,7 +117,9 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
       accessorKey: "dept",
       cell: ({ row }) => (
         <div className="flex w-full items-center justify-center">
-          <span className="text-[13px] text-vantara-navy">{row.original.dept}</span>
+          <span className="truncate text-[13px] text-vantara-navy">
+            {row.original.dept}
+          </span>
         </div>
       ),
     },
@@ -120,8 +131,11 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
       ),
       accessorKey: "issue",
       cell: ({ row }) => (
-        <div className="flex w-full items-center justify-center">
-          <span className="truncate text-[13px] font-semibold text-vantara-navy">
+        <div
+          className="flex w-full items-center justify-center"
+          title={row.original.issue}
+        >
+          <span className="flex-1 min-w-0 truncate text-[13px] font-semibold text-vantara-navy">
             {row.original.issue}
           </span>
         </div>
@@ -138,8 +152,11 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
             ),
             accessorKey: "system",
             cell: ({ row }: { row: { original: Ticket } }) => (
-              <div className="flex w-full items-center justify-center">
-                <span className="truncate text-xs text-vantara-text-muted">
+              <div
+                className="flex w-full items-center justify-center"
+                title={row.original.system}
+              >
+                <span className="flex-1 min-w-0 truncate text-xs text-gray-800">
                   {row.original.system}
                 </span>
               </div>
@@ -182,7 +199,9 @@ export function TicketTable({ tickets }: { tickets: Ticket[] }) {
       accessorKey: "time",
       cell: ({ row }) => (
         <div className="flex w-full items-center justify-center">
-          <span className="text-xs text-vantara-text-muted">{row.original.time}</span>
+          <span className="text-xs text-gray-800" title={row.original.time}>
+            {row.original.time}
+          </span>
         </div>
       ),
     },

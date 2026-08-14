@@ -175,6 +175,13 @@ export function DataTable<T>({
               className="directory-table-header grid"
               style={{
                 gridTemplateColumns,
+                // Drawn directly on the row (rather than relying on an
+                // external CSS class) so the underline always spans exactly
+                // as wide as the grid actually renders — fixes the border
+                // stopping short of the last column(s).
+                width: "100%",
+                boxSizing: "border-box",
+                borderBottom: "2px solid #d99818",
               }}
             >
               {headerGroup.headers.map((header) => (
