@@ -76,14 +76,21 @@ _SYSTEM_AGENT_KEYS = {
     "kimai": "time_billing",
     "openkm": "document_management",
 }
-MOCK_AGENTS = {
-    "access_recommendation": "Access Recommendation Agent",
-    "legal_research": "Legal Research Agent",
-    "productivity_suite": "Productivity Suite Agent",
-    "network_access": "Network Access Agent",
-    "ticketing_itsm": "Ticketing/ITSM Agent",
-    "audit_software": "Audit Software Agent",
-}
+def _build_mock_agent_maps() -> tuple[set[str], dict[str, str]]:
+    matrix = get_provisioning_matrix()
+    mock_agent_keys: set[str] = set()
+    name_to_key: dict[str, str] = {}
+    for items in matrix.values():
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if item.get("status") == "mock":
+                mock_agent_keys.add(item["agent_key"])
+                name_to_key[f"{item['item']} Agent"] = item["agent_key"]
+    return mock_agent_keys, name_to_key
+
+
+MOCK_AGENTS, _MOCK_AGENT_NAME_TO_KEY = _build_mock_agent_maps()
 # Inverse lookup: AgentTicket.agent_name (display string, e.g. "Identity
 # Agent") -> the system key ("keycloak") get_static_action_counts() uses,
 # so a ticket row can be matched back to its connector's static action count.
@@ -92,10 +99,7 @@ _AGENT_NAME_TO_SYSTEM_KEY = {
     for system_key, provisioning_key in _SYSTEM_AGENT_KEYS.items()
 }
 
-_AGENT_NAME_TO_SYSTEM_KEY.update({
-    agent_name: system_key
-    for system_key, agent_name in MOCK_AGENTS.items()
-})
+_AGENT_NAME_TO_SYSTEM_KEY.update(_MOCK_AGENT_NAME_TO_KEY)
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
