@@ -33,7 +33,7 @@ def _ticket_out(ticket: Ticket, employee: Employee, provisioning_record: Provisi
         "employeeID": employee.employee_id if employee else None,  # real -- Employee.employee_id
         "employeeName": employee.name if employee else None,  # real -- Employee.name
         "department": employee.department if employee else None,  # real -- Employee.department
-        "request": ticket.title,  # real -- closest existing request description, Ticket.provisioning_item
+        "request": provisioning_record.provisioning_item if provisioning_record else ticket.title,  # real -- ProvisioningRecord.provisioning_item, e.g. "Identity Account Creation"
         "system": provisioning_record.software_name if provisioning_record else "Mock",  # real -- Ticket.software_name
         "priority": "High",  # mock -- no priority column anywhere in the schema
         "status": ticket.status,  # real -- Ticket.status
