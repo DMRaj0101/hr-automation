@@ -38,11 +38,7 @@ export function IntegrationCoverageCard({
       <div className="dashboard-coverage-legend">
         <div className="dashboard-legend-item">
           <span className="dashboard-legend-dot dashboard-real-dot" />
-
-          <span className="dashboard-legend-label">
-            Real
-          </span>
-
+          <span className="dashboard-legend-label">Real</span>
           <span className="dashboard-legend-count">
             {data.realCount} ({data.realPct}%)
           </span>
@@ -50,11 +46,7 @@ export function IntegrationCoverageCard({
 
         <div className="dashboard-legend-item">
           <span className="dashboard-legend-dot dashboard-mock-dot" />
-
-          <span className="dashboard-legend-label">
-            Mock
-          </span>
-
+          <span className="dashboard-legend-label">Mock</span>
           <span className="dashboard-legend-count">
             {data.mockCount} ({data.mockPct}%)
           </span>
@@ -62,11 +54,9 @@ export function IntegrationCoverageCard({
       </div>
 
       <div className="dashboard-coverage-description">
-        <strong>Real:</strong>{" "}
-        {data.realSystems.join(", ")}.
+        <strong>Real:</strong> {data.realSystems.join(", ")}.
         <br />
-        <strong>Mock:</strong>{" "}
-        {data.mockSystems.join(", ")}.
+        <strong>Mock:</strong> {data.mockSystems.join(", ")}.
       </div>
     </div>
   );
