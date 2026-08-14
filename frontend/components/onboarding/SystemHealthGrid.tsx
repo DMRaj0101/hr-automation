@@ -36,7 +36,7 @@ export function SystemHealthGrid({ items }: { items: SystemHealthDetail[] }) {
     <div className="grid grid-cols-4 gap-3">
       {items.map((item, idx) => {
         const { text } = statusStyle(item.status);
-        const uptime = item.uptimePercentage;
+        const successRate = item.successRate;
 
         return (
           <div
@@ -90,9 +90,15 @@ export function SystemHealthGrid({ items }: { items: SystemHealthDetail[] }) {
             </svg>
 
             <div className="mt-2 flex items-center justify-between text-xs">
-              <span className="text-vantara-text-muted">24h uptime</span>
+              <span className="text-vantara-text-muted">Actions</span>
+              <span className="font-semibold text-vantara-navy">
+                {item.totalActions ?? "—"}
+              </span>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-xs">
+              <span className="text-vantara-text-muted">Success</span>
               <span className="font-semibold" style={{ color: text }}>
-                {uptime != null ? `${uptime}%` : "—"}
+                {successRate != null ? `${successRate}%` : "—"}
               </span>
             </div>
             <div
@@ -102,7 +108,7 @@ export function SystemHealthGrid({ items }: { items: SystemHealthDetail[] }) {
               <div
                 className="h-full rounded-full transition-all duration-500 ease-out"
                 style={{
-                  width: `${uptime ?? 0}%`,
+                  width: `${successRate ?? 0}%`,
                   backgroundColor: text,
                 }}
               />
@@ -120,9 +126,10 @@ export function SystemHealthGrid({ items }: { items: SystemHealthDetail[] }) {
 
           <ModalRow label="Status" value={selected.status} />
           <ModalRow label="Latency" value={selected.latency ?? "—"} />
+          <ModalRow label="Actions" value={selected.totalActions ?? "—"} />
           <ModalRow
-            label="24h uptime"
-            value={selected.uptimePercentage != null ? `${selected.uptimePercentage}%` : "—"}
+            label="Success rate"
+            value={selected.successRate != null ? `${selected.successRate}%` : "—"}
           />
 
           <div className="mt-3 rounded-lg bg-[#F3F4F6] p-3 text-[13.5px] leading-snug text-vantara-navy">

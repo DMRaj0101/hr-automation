@@ -8,11 +8,13 @@ ProvisioningRecord rows until a real health-check model/connector exists.
 """
 from sqlalchemy.orm import Session
 from app.models import Employee, Ticket, ProvisioningRecord
+from app.models.agent_monitor_model import AgentTicket
 
 
 def get_ops_context(db: Session) -> dict:
     employees = db.query(Employee).all()
     tickets = db.query(Ticket).all()
+    agent_tickets = db.query(AgentTicket).all()
     provisioning = db.query(ProvisioningRecord).all()
 
     employees_data = [
@@ -37,6 +39,17 @@ def get_ops_context(db: Session) -> dict:
         for t in tickets
     ]
 
+    agent_tickets_data = [
+        {
+            "ticket_reference": t.ticket_reference,
+            "title": t.title,
+            "employee_id": t.employee_id,
+            "agent_name": t.agent_name,
+            "status": t.status,
+        }
+        for t in agent_tickets
+    ]
+
     systems: dict[str, dict] = {}
     for p in provisioning:
         if not p.software_name:
@@ -59,5 +72,6 @@ def get_ops_context(db: Session) -> dict:
     return {
         "employees": employees_data,
         "tickets": tickets_data,
+        "agent_tickets": agent_tickets_data,
         "system_health": system_health_data,
     }

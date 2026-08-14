@@ -41,6 +41,17 @@ _SYSTEM_AGENT_KEYS = {
     "kimai": "time_billing",
     "openkm": "document_management",
 }
+
+# get_action_count()'s system keys -> the exact display name used in
+# _HEALTH_CHECKS/systemHealthDetail (health_check_orchestrator.py), so the
+# frontend can key off SystemHealthDetail.name for both latency/uptime and
+# action counts the same way.
+_SYSTEM_KEY_TO_HEALTH_NAME = {
+    "keycloak": "Keycloak",
+    "mailu": "MailU",
+    "kimai": "Kimai",
+    "openkm": "OpenKM",
+}
 MOCK_AGENTS = {
     "access_recommendation": "Access Recommendation Agent",
     "legal_research": "Legal Research Agent",
@@ -229,7 +240,8 @@ def get_action_count(db: Session) -> dict:
         tickets_total = tickets_total_by_agent.get(agent, 0)
         tickets_closed = tickets_closed_by_agent.get(agent, 0)
         success_rate = round(tickets_closed / tickets_total * 100, 2) if tickets_total else 0.0
-        result[agent] = {
+        health_name = _SYSTEM_KEY_TO_HEALTH_NAME.get(agent, agent)
+        result[health_name] = {
             "totalActions": static_count * employee_count,
             "successRate": success_rate,
         }
@@ -253,7 +265,8 @@ def get_system_health(db: Session = Depends(get_db)):
         result = dict(health_check_orchestrator.get_cached_health())
         latency_history, uptime_percentage = _latency_history_and_uptime(db)
         result["latencyHistory24h"] = latency_history
-        result["uptimePercentage"] = get_action_count(db)
+        result["uptimePercentage"] = uptime_percentage
+        result["actionCounts"] = get_action_count(db)
         return result
     except Exception as exc:
         logger.error("Failed to read cached system health: %s", exc)

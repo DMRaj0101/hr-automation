@@ -44,12 +44,37 @@ export interface TicketStatusSummary {
   closed: number;
 }
 
+// Per-system action tally, from GET /dashboard/system-health's
+// "actioncount" map (routers/dashboard.py's get_action_count()) -- keyed
+// by system key (keycloak/mailu/kimai/openkm), only populated for the 4
+// real connector agents.
+export interface SystemActionCount {
+  totalActions: number;
+  successRate: number;
+}
+
+// GET /dashboard/total-actions (routers/dashboard.py's get_total_action())
+// -- downstream actions represented by every AgentTicket row, broken down
+// by the ticket's status.
+export interface TotalActionsSummary {
+  total: number;
+  completed: number;
+  inProgress: number;
+  notStarted: number;
+  failed: number;
+}
+
 export interface DashboardData {
   stats: DashboardStats;
-  integrationCoverage: IntegrationCoverage;
+  // No backend source yet (no GET /dashboard/integration-coverage) --
+  // omitted from getDashboard()'s live fetch; kept optional here so a
+  // future endpoint can populate it without another type change.
+  integrationCoverage?: IntegrationCoverage;
   slaWarning: SlaWarning;
   departments: DepartmentSummary[];
   systemHealth: SystemHealthBrief[];
+  actionCounts: Record<string, SystemActionCount>;
+  totalActions: TotalActionsSummary;
   ticketStatus: TicketStatusSummary;
 }
 
