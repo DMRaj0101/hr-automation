@@ -41,7 +41,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
 import httpx
-from app.ai_client import call_ollama_text
+from app.ai_client import call_ollama_text, OllamaError
 from app.database import SessionLocal
 from app.integrations import (
     keycloak_connector,
@@ -194,15 +194,30 @@ _cached_result: dict | None = None
 
 def get_cached_health() -> dict:
     """
-    Returns the latest cached sweep without running a new one.
+    Returns the latest cached sweep without running a new one. The
+    business-friendly "error" text is already computed by
+    _translate_errors_to_business_language() at sweep time (see
+    refresh_health_cache()) -- this is a pure cache read, no Ollama call
+    here, so it stays fast regardless of how many integrations are down.
     """
     with _cache_lock:
         if _cached_result is None:
             return {"systemHealthDetail": []}
 
-        result = _cached_result.copy()
+        return _cached_result.copy()
 
-    for item in result.get("systemHealthDetail", []):
+
+def _translate_errors_to_business_language(details: list[dict]) -> None:
+    """
+    Rewrites each detail's "error" in place into a short, non-technical
+    sentence via Ollama -- called once per sweep (from
+    refresh_health_cache(), before persisting/caching), not per read, so
+    GET /system-health (get_cached_health()) never pays for an LLM call.
+    A down/slow Ollama must not block the sweep: call_ollama_text() raises
+    OllamaError on any failure, in which case the raw error is kept as-is
+    rather than losing the detail entirely.
+    """
+    for item in details:
         error = item.get("error")
 
         # No error means the system is healthy
@@ -232,10 +247,10 @@ Rules:
 
 Business Error:
 """
-        context = call_ollama_text(prompt)
-        item["error"] = context
-
-    return result
+        try:
+            item["error"] = call_ollama_text(prompt)
+        except OllamaError as exc:
+            logger.error("Ollama translation failed for %s: %s", item.get("name"), exc)
 def _persist_health(details: list[dict]) -> None:
     """
     Inserts one new AgentHealth row per integration per sweep -- an
@@ -270,12 +285,20 @@ def refresh_health_cache() -> dict:
     persists each integration's latest status/latency to the AgentHealth
     table. Called by health_check_loop() every CHECK_INTERVAL_SECONDS;
     also safe to call directly (e.g. a manual-refresh admin action) if
-    ever needed."""
+    ever needed.
+
+    Persists the raw technical error to AgentHealth.context BEFORE
+    translating it to business language -- _translate_errors_to_business_language()
+    mutates each detail's "error" in place, and the DB's context column is
+    meant to keep the real (technical) error for debugging, not the
+    business-friendly rewrite that ends up cached/returned to the frontend.
+    """
     global _cached_result
     result = run_health_checks()
+    _persist_health(result["systemHealthDetail"])
+    _translate_errors_to_business_language(result["systemHealthDetail"])
     with _cache_lock:
         _cached_result = result
-    _persist_health(result["systemHealthDetail"])
     return result
 
 

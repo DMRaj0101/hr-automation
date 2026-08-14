@@ -2,7 +2,7 @@ import { backendApiClient } from "./backend-api-client";
 import { RecentLog, SlaWarning, SystemHealthDetail } from "@/types/monitoring";
 
 interface SystemHealthResponse {
-  systemHealthDetail: { name: string; status: string; latency: string }[];
+  systemHealthDetail: { name: string; status: string; latency: string; error: string }[];
   latencyHistory24h: Record<string, number[]>;
   uptimePercentage: Record<string, number>;
 }

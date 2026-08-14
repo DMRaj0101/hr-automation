@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { AgentTicketStatus, RecentLog } from "@/types/monitoring";
-import { StatusBadge } from "@/components/common/StatusBadge";
 import { statusStyle } from "@/lib/utils";
+import { formatRelativeTime, getActivityMeta } from "./activity-utils";
 
 type Filter = "All" | AgentTicketStatus;
 
@@ -21,13 +21,12 @@ const FILTER_SELECTED_STYLE: Record<Filter, { bg: string; text: string }> = {
 // backed directly by GET /system-health/recent-logs (routers/healthcheck.py)
 // via useMonitoring()'s recentLogs query. Same feed the Live Banner shows
 // the newest row of; this list shows all of it (currently capped at 10 rows
-// server-side), not a per-employee rollup. `status` comes from an outer
-// join to AgentTicket -- real values are New/Processing/Failed/Closed (see
-// AgentTicketStatus), null for log rows whose agent never opened a ticket
-// (rendered as a neutral dot, no pill). `retry_count` comes from a similar
-// outer join to ProvisioningRecord and is shown next to the status pill
-// only when it's a real number > 0 -- null (agent has no provisioning
-// record at all) renders no retry pill, same as null status.
+// server-side), not a per-employee rollup. Each row's icon/headline/status
+// phrase is derived from agent/action/status via getActivityMeta()
+// (activity-utils.ts) -- real `status` values are New/Processing/Failed/
+// Closed (see AgentTicketStatus), null for log rows whose agent never
+// opened a ticket. `retry_count` comes from an outer join to
+// ProvisioningRecord and is shown only when it's a real number > 0.
 export function AgentActivityTable({ activity }: { activity: RecentLog[] }) {
   const [filter, setFilter] = useState<Filter>("All");
 
@@ -77,34 +76,34 @@ export function AgentActivityTable({ activity }: { activity: RecentLog[] }) {
         ) : (
           <div key={filter} className="flex w-full min-w-0 animate-fade-in flex-col divide-y divide-[#F3F4F6]">
             {filtered.map((row, idx) => {
-              const dotColor = row.status ? statusStyle(row.status).text : "#9CA3AF";
+              const meta = getActivityMeta(row);
               return (
                 <div
                   key={`${idx}-${row.timestamp}-${row.agent}-${row.action}`}
                   className="group flex w-full min-w-0 items-start gap-3 rounded-lg px-2 py-3 transition-colors duration-150 hover:bg-[#FAFAFA]"
                 >
                   <span
-                    className="mt-1.5 h-2 w-2 shrink-0 rounded-full transition-transform duration-150 group-hover:scale-125"
-                    style={{ backgroundColor: dotColor }}
-                  />
+                    className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-transform duration-150 group-hover:scale-110"
+                    style={{ backgroundColor: meta.iconBg }}
+                  >
+                    <meta.Icon size={15} strokeWidth={2.25} color={meta.iconColor} />
+                  </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm text-vantara-navy">
-                        <span className="font-semibold">{row.agent}</span> — {row.action}
-                      </span>
-                      {row.status && <StatusBadge status={row.status} />}
+                    <p className="text-sm leading-snug text-vantara-navy">
+                      <span className="font-semibold">{meta.title}</span>
+                      <span className="text-vantara-text-muted"> — {meta.sentence}</span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-vantara-text-muted">
+                      {meta.statusPhrase}
                       {!!row.retry_count && row.retry_count > 0 && (
-                        <span className="rounded-full bg-[#FEF3C7] px-2 py-0.5 text-[11px] font-semibold text-[#B45309]">
-                          Retried {row.retry_count}×
+                        <span className="ml-1 font-medium text-[#B45309]">
+                          · Retried {row.retry_count}×
                         </span>
                       )}
-                    </div>
-                    <p className="mt-0.5 text-xs text-vantara-text-muted">
-                      {row.employee_id ?? "—"} · {row.employee_name ?? "—"}
                     </p>
                   </div>
                   <span className="shrink-0 whitespace-nowrap text-xs text-vantara-text-muted">
-                    {row.timestamp ?? "—"}
+                    {formatRelativeTime(row.timestamp)}
                   </span>
                 </div>
               );
