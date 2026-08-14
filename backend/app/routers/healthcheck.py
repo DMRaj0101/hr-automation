@@ -286,6 +286,7 @@ def refresh_system_health():
         raise HTTPException(status_code=500, detail="Failed to refresh system health") from exc
 
 
+
 def _get_sla_warnings(db: Session) -> list[dict]:
     """
     Currently-breaching SLA tickets, for the Monitoring Agent Console's
@@ -310,8 +311,9 @@ def _get_sla_warnings(db: Session) -> list[dict]:
     rows = (
         db.query(Ticket, Employee)
         .join(Employee, Ticket.employee_id == Employee.id)
-        .filter(Ticket.status == "Pending", Ticket.sla_flagged_at.isnot(None))
-        .order_by(Ticket.sla_flagged_at.asc())
+        .filter(Ticket.status != "Closed", Ticket.sla_flagged_at.isnot(None))
+        .order_by(Ticket.sla_flagged_at.desc())
+        .limit(1)   
         .all()
     )
     return [

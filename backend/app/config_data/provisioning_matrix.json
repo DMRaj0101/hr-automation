@@ -1,5 +1,5 @@
 {
-  "_comment": "Transcribed from PDD Section 3 (3.1 Tax, 3.2 Audit, 3.3 Law, 3.4 IT Support). status: 'functional' items get a real API call from the matching downstream agent; 'mock' items get a ticket opened instead (no real API call exists/feasible for this POC). agent_key tells the Decision Agent which downstream agent module owns this item -- see agents/decision_agent.py and the integrations/*_connector.py files. NOTE: three items were upgraded from Mock to Functional beyond the original PDD Section 3 tables -- Tax's 'Client Document Repository', Audit's 'Client Engagement Repository', and Law's 'Document Management' -- now provisioned for real via OpenKM (open-source) instead of the originally-specified commercial NetDocuments/iManage Work. See MIGRATION_NOTES.md.",
+  "_comment": "Transcribed from PDD Section 3 (3.1 Tax, 3.2 Audit, 3.3 Law, 3.4 IT Support). status: 'functional' items get a real API call from the matching downstream agent; 'mock' items get a ticket opened instead (no real API call exists/feasible for this POC). agent_key tells the Decision Agent which downstream agent module owns this item -- see agents/decision_agent.py and the integrations/*_connector.py files. NOTE: three items were upgraded from Mock to Functional beyond the original PDD Section 3 tables -- Tax's 'Client Document Repository Creation', Audit's 'Client Engagement Repository', and Law's 'Document Management' -- now provisioned for real via OpenKM (open-source) instead of the originally-specified commercial NetDocuments/iManage Work. See MIGRATION_NOTES.md.",
   "Tax": [
     {
       "item": "Identity Account Creation",
@@ -37,7 +37,7 @@
       "remarks": "Commercial cloud tax prep platform -- not feasible free, Mock only."
     },
     {
-      "item": "Client Document Repository",
+      "item": "Client Document Repository Creation ",
       "software": "OpenKM",
       "status": "functional",
       "agent_key": "document_management",
@@ -51,7 +51,7 @@
       "remarks": "Create user account, configure timesheet profile."
     },
     {
-      "item": "Productivity Suite",
+      "item": "Productivity Suite creation",
       "software": "Microsoft 365",
       "status": "mock",
       "agent_key": "productivity_suite",
@@ -65,7 +65,7 @@
       "remarks": "Requires commercial licensing -- Mock only."
     },
     {
-      "item": "Ticketing/ITSM",
+      "item": "Ticketing/ITSM creation",
       "software": "ServiceNow (label only)",
       "status": "mock",
       "agent_key": "ticketing_itsm",
@@ -102,28 +102,28 @@
       "remarks": "Standard professional hardware kit."
     },
     {
-      "item": "Audit Software",
+      "item": "Audit Software Installation",
       "software": "CaseWare IDEA",
       "status": "mock",
       "agent_key": "audit_software",
       "remarks": "Commercial audit/data-analysis software -- Mock only."
     },
     {
-      "item": "Client Engagement Repository",
+      "item": "Client Engagement Repository creation",
       "software": "OpenKM",
       "status": "functional",
       "agent_key": "document_management",
       "remarks": "Real document workspace created via OpenKM (open-source) -- upgraded from Mock; originally spec'd as NetDocuments (commercial, would have stayed Mock)."
     },
     {
-      "item": "Time & Billing",
+      "item": "Time & Billing creation",
       "software": "Kimai",
       "status": "functional",
       "agent_key": "time_billing",
       "remarks": "Create user account, configure timesheet profile."
     },
     {
-      "item": "Productivity Suite",
+      "item": "Productivity Suite creation",
       "software": "Microsoft 365",
       "status": "mock",
       "agent_key": "productivity_suite",
@@ -137,7 +137,7 @@
       "remarks": "Requires commercial licensing -- Mock only."
     },
     {
-      "item": "Ticketing/ITSM",
+      "item": "Ticketing/ITSM creation",
       "software": "ServiceNow (label only)",
       "status": "mock",
       "agent_key": "ticketing_itsm",
@@ -174,14 +174,14 @@
       "remarks": "Standard professional hardware kit."
     },
     {
-      "item": "Document Management",
+      "item": "Document Management creation",
       "software": "OpenKM",
       "status": "functional",
       "agent_key": "document_management",
       "remarks": "Real document workspace created via OpenKM (open-source) -- upgraded from Mock; originally spec'd as iManage Work (commercial, would have stayed Mock)."
     },
     {
-      "item": "Legal Research",
+      "item": "Legal Research account creation",
       "software": "Westlaw",
       "status": "mock",
       "agent_key": "legal_research",
@@ -195,7 +195,7 @@
       "remarks": "Create user account, configure timesheet profile."
     },
     {
-      "item": "Productivity Suite",
+      "item": "Productivity Suite creation",
       "software": "Microsoft 365 + Teams",
       "status": "mock",
       "agent_key": "productivity_suite",
@@ -209,7 +209,7 @@
       "remarks": "Requires commercial licensing -- Mock only."
     },
     {
-      "item": "Ticketing/ITSM",
+      "item": "Ticketing/ITSM creation",
       "software": "ServiceNow (label only)",
       "status": "mock",
       "agent_key": "ticketing_itsm",
