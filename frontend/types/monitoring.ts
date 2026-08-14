@@ -6,11 +6,16 @@ export interface SystemHealthDetail {
   // "The system is healthy and operating normally." when there's no error --
   // see health_check_orchestrator.get_cached_health()).
   error: string;
-  // Last-24h latency readings (ms) and uptime %, from GET /system-health's
-  // latencyHistory24h / uptimePercentage maps -- merged in per-agent by
-  // getSystemHealthDetail() (services/monitoring.service.ts).
+  // Last-24h latency readings (ms), from GET /system-health's
+  // latencyHistory24h map -- merged in per-agent by getSystemHealthDetail()
+  // (services/monitoring.service.ts).
   latencyHistory24h: number[];
-  uptimePercentage: number | null;
+  // Total actions performed and success rate, from GET /system-health's
+  // actionCounts map (routers/healthcheck.py's get_action_count()) --
+  // only populated for the 4 real connector agents (Keycloak/MailU/Kimai/
+  // OpenKM); null for label-only integrations (Snipe-IT/Microsoft 365/GLPI).
+  totalActions: number | null;
+  successRate: number | null;
 }
 
 // AgentTicket.status values (agent_monitor_model.py) -- "New" and

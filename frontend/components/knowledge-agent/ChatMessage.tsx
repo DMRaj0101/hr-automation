@@ -1,6 +1,7 @@
 import { ChatMessage as ChatMessageType } from "@/types/monitoring";
 import { Copy, Check, Sparkles } from "lucide-react";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 const NAVY = "#14213D";
 const GOLD = "#D9A653";
@@ -59,7 +60,13 @@ export function ChatMessage({ message }: { message: ChatMessageType }) {
                   }
             }
           >
-            <p className="whitespace-pre-wrap break-words">{message.text}</p>
+            {isUser ? (
+              <p className="whitespace-pre-wrap break-words">{message.text}</p>
+            ) : (
+              <div className="vt-markdown break-words">
+                <ReactMarkdown>{message.text}</ReactMarkdown>
+              </div>
+            )}
 
             {!isUser && (
               <button
@@ -82,6 +89,15 @@ export function ChatMessage({ message }: { message: ChatMessageType }) {
       <style>{`
         @keyframes vt-msg-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         .vt-msg-in { animation: vt-msg-in 280ms ease-out; }
+
+        .vt-markdown > *:first-child { margin-top: 0; }
+        .vt-markdown > *:last-child { margin-bottom: 0; }
+        .vt-markdown p { margin: 0 0 8px; line-height: 1.6; }
+        .vt-markdown ul, .vt-markdown ol { margin: 0 0 8px; padding-left: 20px; }
+        .vt-markdown li { margin-bottom: 2px; }
+        .vt-markdown strong { font-weight: 700; }
+        .vt-markdown code { background: rgba(20,33,61,0.06); border-radius: 4px; padding: 1px 5px; font-size: 0.85em; }
+        .vt-markdown a { color: ${GOLD}; text-decoration: underline; }
       `}</style>
     </div>
   );

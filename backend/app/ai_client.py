@@ -12,7 +12,7 @@ import requests
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gpt-oss:120b-cloud")
-TIMEOUT_SECONDS = float(os.getenv("OLLAMA_TIMEOUT", "8"))
+TIMEOUT_SECONDS = float(os.getenv("OLLAMA_TIMEOUT", "60"))
 
 
 class OllamaError(Exception):
