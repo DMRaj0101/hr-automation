@@ -38,6 +38,7 @@ import os
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from typing import Callable
 
 import httpx
@@ -60,6 +61,15 @@ CHECK_INTERVAL_SECONDS = int(os.getenv("SYSTEM_HEALTH_CHECK_INTERVAL_SECONDS", s
 
 _TIMEOUT_SECONDS = 10.0
 _DEGRADED_THRESHOLD_MS = 1000  # UP but >= this many ms -> "Degraded", not "Operational"
+
+# Externalized so the wording can be tuned without a code change --
+# re-read from disk on every sweep (see _load_error_translation_prompt())
+# rather than cached at import time.
+_ERROR_TRANSLATION_PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "health_check_error_translation.md"
+
+
+def _load_error_translation_prompt() -> str:
+    return _ERROR_TRANSLATION_PROMPT_PATH.read_text(encoding="utf-8")
 
 # Microsoft 365 and GLPI have no connector module in this project (see
 # module docstring) -- their base URLs are read directly here, same
@@ -217,6 +227,8 @@ def _translate_errors_to_business_language(details: list[dict]) -> None:
     OllamaError on any failure, in which case the raw error is kept as-is
     rather than losing the detail entirely.
     """
+    prompt_template = _load_error_translation_prompt()
+
     for item in details:
         error = item.get("error")
 
@@ -225,28 +237,7 @@ def _translate_errors_to_business_language(details: list[dict]) -> None:
             item["error"] = "The system is healthy and operating normally."
             continue
 
-        prompt = f"""
-Convert this system health error into ONE short, professional,
-business-friendly error message that a non-technical person can understand.
-
-System: {item.get("name")}
-Status: {item.get("status")}
-Error: {error}
-
-Rules:
-- Use both the Status and Error to understand the problem.
-- Return exactly ONE sentence.
-- Keep it under 20 words.
-- Use simple business language.
-- Do not mention APIs, code, environment variables, ports,
-  stack traces, localhost, or technical implementation details.
-- Do not give troubleshooting instructions.
-- Do not use a generic message such as "An unexpected error occurred".
-- Do not invent information.
-- Return ONLY the business error message.
-
-Business Error:
-"""
+        prompt = prompt_template.format(name=item.get("name"), status=item.get("status"), error=error)
         try:
             item["error"] = call_ollama_text(prompt)
         except OllamaError as exc:

@@ -14,7 +14,8 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import case
 from sqlalchemy.orm import Session
-
+from app.services.action_counter import get_static_action_counts
+from sqlalchemy import func
 from app.database import get_db
 from app.models import AgentHealth, Employee, Ticket, AuditLog,AgentTicket,ProvisioningRecord
 from app.agents.monitoring_agent import SLA_PENDING_HOURS
@@ -33,6 +34,45 @@ EXCLUDED_AGENTS = [
 ]
 
 _AGENT_DISPLAY_TO_KEY = {display: key for key, display in AGENT_DISPLAY_NAMES.items()}
+
+_SYSTEM_AGENT_KEYS = {
+    "keycloak": "identity",
+    "mailu": "email",
+    "kimai": "time_billing",
+    "openkm": "document_management",
+}
+
+# get_action_count()'s system keys -> the exact display name used in
+# _HEALTH_CHECKS/systemHealthDetail (health_check_orchestrator.py), so the
+# frontend can key off SystemHealthDetail.name for both latency/uptime and
+# action counts the same way.
+_SYSTEM_KEY_TO_HEALTH_NAME = {
+    "keycloak": "Keycloak",
+    "mailu": "MailU",
+    "kimai": "Kimai",
+    "openkm": "OpenKM",
+}
+MOCK_AGENTS = {
+    "access_recommendation": "Access Recommendation Agent",
+    "legal_research": "Legal Research Agent",
+    "productivity_suite": "Productivity Suite Agent",
+    "network_access": "Network Access Agent",
+    "ticketing_itsm": "Ticketing/ITSM Agent",
+    "audit_software": "Audit Software Agent",
+}
+# Inverse lookup: AgentTicket.agent_name (display string, e.g. "Identity
+# Agent") -> the system key ("keycloak") get_static_action_counts() uses,
+# so a ticket row can be matched back to its connector's static action count.
+_AGENT_NAME_TO_SYSTEM_KEY = {
+    AGENT_DISPLAY_NAMES[provisioning_key]: system_key
+    for system_key, provisioning_key in _SYSTEM_AGENT_KEYS.items()
+}
+
+_AGENT_NAME_TO_SYSTEM_KEY.update({
+    agent_name: system_key
+    for system_key, agent_name in MOCK_AGENTS.items()
+})
+
 
 # SQL CASE translating AuditLog.agent (a display name, e.g. "Email Agent")
 # into the agent_key ProvisioningRecord.agent_key actually stores (e.g.
@@ -169,6 +209,46 @@ def _recent_logs(db: Session) -> dict:
         ]
     }
 
+def get_action_count(db: Session) -> dict:
+    """For each of the 4 real connector agents (keycloak/mailu/kimai/
+    openkm): totalActions is the static per-call count x employee
+    headcount (how many actions this agent is expected to perform
+    across every employee); successRate is the % of this agent's
+    AgentTicket rows recorded so far that are Closed."""
+    employee_count = db.query(Employee).count()
+    static_counts = get_static_action_counts()
+
+    rows = (
+        db.query(AgentTicket.agent_name, AgentTicket.status, func.count(AgentTicket.ticket_id))
+        .filter(AgentTicket.agent_name.in_(_AGENT_NAME_TO_SYSTEM_KEY.keys()))
+        .group_by(AgentTicket.agent_name, AgentTicket.status)
+        .all()
+    )
+
+    tickets_total_by_agent: dict[str, int] = {}
+    tickets_closed_by_agent: dict[str, int] = {}
+    for agent_name, status, count in rows:
+        system_key = _AGENT_NAME_TO_SYSTEM_KEY.get(agent_name)
+        if system_key not in static_counts:
+            continue  # not one of the 4 real connector agents (e.g. a mock-item agent)
+        tickets_total_by_agent[system_key] = tickets_total_by_agent.get(system_key, 0) + count
+        if status == "Closed":
+            tickets_closed_by_agent[system_key] = tickets_closed_by_agent.get(system_key, 0) + count
+
+    result = {}
+    for agent, static_count in static_counts.items():
+        tickets_total = tickets_total_by_agent.get(agent, 0)
+        tickets_closed = tickets_closed_by_agent.get(agent, 0)
+        success_rate = round(tickets_closed / tickets_total * 100, 2) if tickets_total else 0.0
+        health_name = _SYSTEM_KEY_TO_HEALTH_NAME.get(agent, agent)
+        result[health_name] = {
+            "totalActions": static_count * employee_count,
+            "successRate": success_rate,
+        }
+    return result
+
+
+
 @router.get("/recent-logs")
 def get_recent_logs(db: Session = Depends(get_db)):
     return _recent_logs(db)
@@ -186,6 +266,7 @@ def get_system_health(db: Session = Depends(get_db)):
         latency_history, uptime_percentage = _latency_history_and_uptime(db)
         result["latencyHistory24h"] = latency_history
         result["uptimePercentage"] = uptime_percentage
+        result["actionCounts"] = get_action_count(db)
         return result
     except Exception as exc:
         logger.error("Failed to read cached system health: %s", exc)

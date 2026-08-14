@@ -51,12 +51,12 @@ export default function DashboardPage() {
 
         {/* Orchestration Overview + SLA Warning */}
         <div className="dashboard-grid dashboard-grid-coverage">
-          <OrchestrationOverviewCard />
+          <OrchestrationOverviewCard totalActions={data.totalActions} totalRequests={data.stats.total} />
           <SlaWarningCard data={data.slaWarning} />
         </div>
 
         {/* Downstream system status */}
-        <SystemStatusCards />
+        <SystemStatusCards actionCounts={data.actionCounts} systemHealth={data.systemHealth} />
 
       </div>
     </div>

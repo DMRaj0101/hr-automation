@@ -1,12 +1,4 @@
-// Mock data — replace with real orchestrator telemetry when available.
-const MOCK_OVERVIEW = {
-  totalRequests: 35,
-  totalActions: 280,
-  completed: 260,
-  inProgress: 12,
-  pending: 5,
-  needsAttention: 3,
-};
+import { TotalActionsSummary } from "@/types/onboarding";
 
 const FLOW_STEPS = [
   "HRMS",
@@ -17,15 +9,20 @@ const FLOW_STEPS = [
   "Status / Monitoring",
 ];
 
-export function OrchestrationOverviewCard() {
+export function OrchestrationOverviewCard({
+  totalActions: actionsData,
+  totalRequests,
+}: {
+  totalActions: TotalActionsSummary;
+  totalRequests: number;
+}) {
   const {
-    totalRequests,
-    totalActions,
+    total: totalActions,
     completed,
     inProgress,
-    pending,
-    needsAttention,
-  } = MOCK_OVERVIEW;
+    notStarted: pending,
+    failed: needsAttention,
+  } = actionsData;
 
   const pct = (n: number) => (totalActions > 0 ? (n / totalActions) * 100 : 0);
 

@@ -1,27 +1,14 @@
-// Mock data — replace with real integration/system telemetry when available.
-const MOCK_SYSTEMS = [
-  {
-    name: "Keycloak",
-    subtitle: "Identity Account Creation",
-    status: "Operational" as const,
-    actions: 120,
-    successPct: 99,
-  },
-  {
-    name: "MailU",
-    subtitle: "Email Account Creation",
-    status: "Operational" as const,
-    actions: 118,
-    successPct: 97,
-  },
-  {
-    name: "OpenKM",
-    subtitle: "Document Management",
-    status: "Degraded" as const,
-    actions: 96,
-    successPct: 82,
-  },
-];
+import { SystemActionCount, SystemHealthBrief } from "@/types/onboarding";
+
+// Backend system key (actionCounts' keys) -> display name (systemHealth's
+// agenthealth[].name) + subtitle, since the two live endpoints key their
+// data differently for the same 4 real connector agents.
+const SYSTEM_META: Record<string, { name: string; subtitle: string }> = {
+  keycloak: { name: "Keycloak", subtitle: "Identity Account Creation" },
+  mailu: { name: "MailU", subtitle: "Email Account Creation" },
+  kimai: { name: "Kimai", subtitle: "Time & Billing" },
+  openkm: { name: "OpenKM", subtitle: "Document Management" },
+};
 
 function SystemIcon() {
   return (
@@ -43,10 +30,30 @@ function SystemIcon() {
   );
 }
 
-export function SystemStatusCards() {
+export function SystemStatusCards({
+  actionCounts,
+  systemHealth,
+}: {
+  actionCounts: Record<string, SystemActionCount>;
+  systemHealth: SystemHealthBrief[];
+}) {
+  const healthByName = new Map(systemHealth.map((h) => [h.name, h.status]));
+
+  const systems = Object.entries(SYSTEM_META).map(([key, meta]) => {
+    const counts = actionCounts[key];
+    const status = healthByName.get(meta.name) ?? "Down";
+    return {
+      name: meta.name,
+      subtitle: meta.subtitle,
+      status,
+      actions: counts?.totalActions ?? 0,
+      successPct: counts?.successRate ?? 0,
+    };
+  });
+
   return (
     <div className="dashboard-departments">
-      {MOCK_SYSTEMS.map((sys) => {
+      {systems.map((sys) => {
         const isOperational = sys.status === "Operational";
 
         return (
