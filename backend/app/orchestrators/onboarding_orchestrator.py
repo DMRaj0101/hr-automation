@@ -31,6 +31,7 @@ from app.agents.decision_agent import decide
 from app.agents import ticket_agent
 from app.integrations import keycloak_connector, mailu_connector, kimai_connector, snipeit_connector, openkm_connector, hrms_connector
 from app.services.agent_ticketing_service import AgentTicketClient
+from app.services.onboarding_status import mark_active_if_onboarding_complete
 from app import email_client
 from app.models import WelcomeEmail
 from dotenv import load_dotenv
@@ -71,7 +72,7 @@ _PROVISIONING_CALLS = {
     ),
     "email": lambda emp, item: mailu_connector.create_mailbox(emp.name, emp.email.split("@")[0]),
     "time_billing": lambda emp, item: kimai_connector.create_user_and_timesheet(emp.name, emp.email, emp.role),
-    "asset": lambda emp, item: snipeit_connector.allocate_standard_kit(emp.name, emp.email),
+    # "asset": lambda emp, item: snipeit_connector.allocate_standard_kit(emp.name, emp.email),
     "document_management": lambda emp, item: openkm_connector.create_workspace(emp.name, emp.email, emp.role),
 }
 
@@ -84,9 +85,9 @@ AGENT_DISPLAY_NAMES = {
     "identity": "Identity Agent",
     "email": "Email Agent",
     "time_billing": "Time & Billing Agent",
-    "asset": "Asset Allocation Agent",
     "document_management": "Document Management Agent",
     # -- mock items with a real agent_key (added):
+    "asset": "Asset Allocation Agent",
     "access_recommendation": "Access Recommendation Agent",
     "tax_preparation": "Tax Preparation Agent",
     "productivity_suite": "Productivity Suite Agent",
@@ -398,11 +399,28 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
             ticket = ticket_agent.create_ticket(db, employee_id, department, mock_item, agent_name)
             agent_ticket.report_started(ticket_reference=ticket.ticket_id)
             agent_ticket.report_completed()
+            ticket_agent.update_status(
+                db, ticket, "Closed",
+                note="Auto-closed: mock item, no real fulfillment required.",
+                closed_by="System (mock)",
+            ) 
+            record.status = "completed"
+            record.completed_at = datetime.datetime.utcnow()
+            db.commit()
         except Exception as e:
             agent_ticket.report_problem(str(e))
             raise
     _mark(db, employee_id, STEP_TICKETING, "completed",
           detail=f"{len(plan['mock_items'])} ticket(s) created")
+
+    # Every ticket/record now exists and the mock ones are auto-closed.
+    # If all functional connectors also succeeded, onboarding is already
+    # fully complete -- flip the employee to "active". No-op (stays
+    # "provisioning") if any functional item is still pending/failed;
+    # the Monitoring Agent's later close of its failure/retry tickets
+    # will re-trigger this same check via update_status.
+    mark_active_if_onboarding_complete(db, employee_id, "Onboarding Orchestrator")
+    db.refresh(employee)
 
     # --- Hand off to Monitoring Agent (background loop, not called directly here) ---
     _mark(db, employee_id, STEP_MONITORING, "running")
@@ -410,7 +428,7 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
            "Handed off for ongoing polling", "See agents/monitoring_agent.py")
 
     return {
-        "status": "provisioning",
+        "status": employee.status,  # "active" if everything completed, else still "provisioning"
         "role": department,
         "functional_items": len(plan["functional_items"]),
         "mock_items": len(plan["mock_items"]),

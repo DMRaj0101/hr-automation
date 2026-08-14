@@ -12,6 +12,7 @@ import datetime
 import itertools
 from sqlalchemy.orm import Session
 from app.models import Ticket, AuditLog
+from app.services.onboarding_status import mark_active_if_onboarding_complete
 
 _ticket_counter = itertools.count(1001)  # TODO: replace with a real sequence/lookup once this isn't single-process -- fine for POC/demo scope
 
@@ -97,13 +98,19 @@ def update_status(db: Session, ticket: Ticket, new_status: str, note: str = None
     ))
     db.commit()
 
+    # On a close, re-evaluate whether this employee's whole onboarding
+    # is now done (all provisioning records completed + all tickets
+    # closed) and, if so, flip them to "active". Idempotent and safe to
+    # call from every close site (batch auto-close and organic human
+    # close) -- see services/onboarding_status.py.
+    if new_status == "Closed":
+        mark_active_if_onboarding_complete(db, ticket.employee_id, agent_name)
+
     # TODO (Email Agent owner): fire the matching PDD Section 6.2
-    # intimation depending on new_status:
+    # intimation depending on new_status (email wiring deferred):
     #   -> "Pending": I4 (assigned team, blocked, reason noted)
-    #   -> "Closed": check whether ALL tickets + functional items for
-    #      this employee are done -- if so, fire I5 ("Onboarding is
-    #      complete") to HR + Manager. This overall-completion check
-    #      belongs in services/ once written (see MIGRATION_NOTES.md's
-    #      note on reviving a track_status.py-style live rollup).
+    #   -> "Closed": I5 ("Onboarding is complete") to HR + Manager, gated
+    #      on the same completion signal used above
+    #      (services/onboarding_status.is_onboarding_complete).
 
     return ticket

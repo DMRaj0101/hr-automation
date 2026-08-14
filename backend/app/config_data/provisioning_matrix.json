@@ -97,7 +97,7 @@
     {
       "item": "Asset Allocation",
       "software": "Snipe-IT",
-      "status": "functional",
+      "status": "mock",
       "agent_key": "asset",
       "remarks": "Standard professional hardware kit."
     },
@@ -169,7 +169,7 @@
     {
       "item": "Asset Allocation",
       "software": "Snipe-IT",
-      "status": "functional",
+      "status": "mock",
       "agent_key": "asset",
       "remarks": "Standard professional hardware kit."
     },
@@ -241,7 +241,7 @@
     {
       "item": "Asset Allocation",
       "software": "Snipe-IT",
-      "status": "functional",
+      "status": "mock",
       "agent_key": "asset",
       "remarks": "Standard hardware kit via Snipe-IT's real asset-tracking API."
     },
@@ -255,7 +255,7 @@
     {
       "item": "Asset Management (operational access)",
       "software": "Snipe-IT",
-      "status": "functional",
+      "status": "mock",
       "agent_key": "asset",
       "remarks": "Open source, no license cost -- real operational console access."
     },

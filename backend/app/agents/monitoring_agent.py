@@ -84,7 +84,10 @@ def _create_failure_ticket(db: Session, record: ProvisioningRecord):
         "assigned_team": "IT",  # PDD Section 5's own wording: "auto-creates an IT ticket"
         "remarks": f"Auto-created by Monitoring Agent after {MAX_RETRIES} failed attempts. Last error: {record.error_detail}",
     }
-    ticket_agent.create_ticket(db, record.employee_id, employee.role, mock_item)
+    ticket_agent.create_ticket(
+        db, record.employee_id, employee.role, mock_item,
+        agent_name=f"{record.provisioning_item} Agent",
+    )
 
 
 def _check_sla_breaches(db: Session):
