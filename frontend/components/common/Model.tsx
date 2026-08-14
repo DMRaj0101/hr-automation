@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 export function Modal({
   open,
@@ -13,7 +14,7 @@ export function Modal({
 }) {
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="vantara-overlay"
       onClick={(e) => {
@@ -30,7 +31,8 @@ export function Modal({
         </button>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

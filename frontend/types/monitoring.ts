@@ -2,6 +2,10 @@ export interface SystemHealthDetail {
   name: string;
   status: string;
   latency: string;
+  // Business-friendly explanation of the current status (always present --
+  // "The system is healthy and operating normally." when there's no error --
+  // see health_check_orchestrator.get_cached_health()).
+  error: string;
   // Last-24h latency readings (ms) and uptime %, from GET /system-health's
   // latencyHistory24h / uptimePercentage maps -- merged in per-agent by
   // getSystemHealthDetail() (services/monitoring.service.ts).

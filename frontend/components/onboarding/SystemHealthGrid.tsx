@@ -1,5 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import { statusStyle } from "@/lib/utils";
 import { SystemHealthDetail } from "@/types/monitoring";
+import { Modal, ModalRow } from "@/components/common/Model";
 
 const SPARKLINE_WIDTH = 100;
 const SPARKLINE_HEIGHT = 22;
@@ -26,6 +30,8 @@ function sparklinePoints(history: number[]): string {
 }
 
 export function SystemHealthGrid({ items }: { items: SystemHealthDetail[] }) {
+  const [selected, setSelected] = useState<SystemHealthDetail | null>(null);
+
   return (
     <div className="grid grid-cols-4 gap-3">
       {items.map((item, idx) => {
@@ -35,7 +41,16 @@ export function SystemHealthGrid({ items }: { items: SystemHealthDetail[] }) {
         return (
           <div
             key={item.name}
-            className="animate-fade-in rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm"
+            role="button"
+            tabIndex={0}
+            onClick={() => setSelected(item)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setSelected(item);
+              }
+            }}
+            className="animate-fade-in cursor-pointer rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm"
             style={{
               border: "1px solid #E5E7EB",
               padding: "12px 14px",
@@ -95,6 +110,26 @@ export function SystemHealthGrid({ items }: { items: SystemHealthDetail[] }) {
           </div>
         );
       })}
+
+      {selected && (
+        <Modal open onClose={() => setSelected(null)}>
+          <h3 className="mb-1 text-lg font-bold text-vantara-navy">{selected.name}</h3>
+          <p className="mb-3 text-xs text-vantara-text-muted">
+            Why this agent is {selected.status.toLowerCase()}
+          </p>
+
+          <ModalRow label="Status" value={selected.status} />
+          <ModalRow label="Latency" value={selected.latency ?? "—"} />
+          <ModalRow
+            label="24h uptime"
+            value={selected.uptimePercentage != null ? `${selected.uptimePercentage}%` : "—"}
+          />
+
+          <div className="mt-3 rounded-lg bg-[#F3F4F6] p-3 text-[13.5px] leading-snug text-vantara-navy">
+            {selected.error}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
