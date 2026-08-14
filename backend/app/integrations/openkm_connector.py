@@ -52,6 +52,7 @@ import string
 import time
 import requests
 from dotenv import load_dotenv
+from app.services.action_counter import record_action
 load_dotenv()
 
 OPENKM_URL = os.getenv("OPENKM_URL", "http://localhost:8080/OpenKM/services/rest").rstrip("/")
@@ -363,6 +364,7 @@ def create_workspace(employee_name: str, employee_email: str, role: str) -> dict
         folder_uuid = folder.get("uuid")
         if not folder_uuid:
             raise OpenKMConnectorError(f"OpenKM returned no uuid for folder '{employee_folder_path}': {folder}")
+        record_action("openkm")  # folder created/verified
     except requests.RequestException as e:
         raise OpenKMConnectorError(f"Failed to create/verify OpenKM folder '{employee_folder_path}': {e}")
 
@@ -377,6 +379,7 @@ def create_workspace(employee_name: str, employee_email: str, role: str) -> dict
             _create_user(username, temp_password, employee_email, employee_name)
             _assign_role(username, DEFAULT_ROLE)
             account_note = f"OpenKM account '{username}' created and assigned role '{DEFAULT_ROLE}'."
+        record_action("openkm")  # user account created/verified
     except requests.RequestException as e:
         raise OpenKMConnectorError(f"Failed to create/verify OpenKM user '{username}': {e}")
 
@@ -384,6 +387,7 @@ def create_workspace(employee_name: str, employee_email: str, role: str) -> dict
     try:
         grant_note = _grant_user(folder_uuid, username)
         grant_verified = _verify_grant(folder_uuid, username)
+        record_action("openkm")  # folder access granted + verified
     except requests.RequestException as e:
         raise OpenKMConnectorError(f"Failed to grant/verify OpenKM access for '{username}': {e}")
 

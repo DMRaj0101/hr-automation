@@ -12,7 +12,7 @@
     "job_Level": "Senior",
     "phone_number": "123-456-7890",
     "employee_location": "New York",
-    "synced": false,
+    "synced": true,
     "documents_files": [
       "../mock_employee_docs/EMP-1001/Michael_Turner_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1001/Michael_Turner_Resume.pdf",
@@ -36,7 +36,7 @@
     "job_Level": "Junior",
     "phone_number": "854-204-9935",
     "employee_location": "Chennai",
-    "synced": false,
+    "synced": true,
     "documents_files": [
       "../mock_employee_docs/EMP-1002/Rachel_Bennett_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1002/Rachel_Bennett_Resume.pdf",
@@ -59,7 +59,7 @@
     "job_Level": "Lead",
     "phone_number": "132-130-2535",
     "employee_location": "Bengaluru",
-    "synced": false,
+    "synced": true,
     "documents_files": [
       "../mock_employee_docs/EMP-1003/David_Coleman_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1003/David_Coleman_Resume.pdf",
@@ -83,7 +83,7 @@
     "job_Level": "Mid",
     "phone_number": "674-303-9928",
     "employee_location": "Mumbai",
-    "synced": false,
+    "synced": true,
     "documents_files": [
       "../mock_employee_docs/EMP-1004/Jessica_Palmer_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1004/Jessica_Palmer_Resume.pdf",
@@ -107,7 +107,7 @@
     "job_Level": "Junior",
     "phone_number": "703-384-1106",
     "employee_location": "Chennai",
-    "synced": false,
+    "synced": true,
     "documents_files": [
       "../mock_employee_docs/EMP-1005/Andrew_Mitchell_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1005/Andrew_Mitchell_Resume.pdf",
@@ -130,7 +130,7 @@
     "job_Level": "Senior",
     "phone_number": "448-384-3547",
     "employee_location": "New York",
-    "synced": false,
+    "synced": true,
     "documents_files": [
       "../mock_employee_docs/EMP-1006/Emily_Sanders_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1006/Emily_Sanders_Resume.pdf",
@@ -154,7 +154,7 @@
     "job_Level": "Senior",
     "phone_number": "204-194-7224",
     "employee_location": "New York",
-    "synced": false,
+    "synced": true,
     "documents_files": [
       "../mock_employee_docs/EMP-1007/Christopher_Hayes_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1007/Christopher_Hayes_Resume.pdf",
@@ -178,7 +178,7 @@
     "job_Level": "Mid",
     "phone_number": "718-370-1711",
     "employee_location": "London",
-    "synced": false,
+    "synced": true,
     "documents_files": [
       "../mock_employee_docs/EMP-1008/Olivia_Foster_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1008/Olivia_Foster_Resume.pdf",
@@ -202,7 +202,7 @@
     "job_Level": "Junior",
     "phone_number": "487-180-5803",
     "employee_location": "London",
-    "synced": false,
+    "synced": true,
     "documents_files": [
       "../mock_employee_docs/EMP-1009/Brandon_Walsh_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1009/Brandon_Walsh_Resume.pdf",
@@ -225,7 +225,7 @@
     "job_Level": "Junior",
     "phone_number": "691-296-2139",
     "employee_location": "New York",
-    "synced": false,
+    "synced": true,
     "documents_files": [
       "../mock_employee_docs/EMP-1010/Natalie_Reyes_OfferLetter.pdf",
       "../mock_employee_docs/EMP-1010/Natalie_Reyes_Resume.pdf",

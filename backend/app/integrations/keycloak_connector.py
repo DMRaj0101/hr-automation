@@ -42,6 +42,7 @@ import time
 from typing import Any
 
 import httpx
+from app.services.action_counter import record_action
 load_dotenv()
 KEYCLOAK_URL = os.getenv("KEYCLOAK_URL").rstrip("/")
 KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM")
@@ -357,9 +358,11 @@ def create_user(employee_name: str, employee_email: str, deparment: str, scoped_
     try:
         username = _generate_username(employee_email)
         user_id = _create_keycloak_user(username, employee_name, employee_email)
+        record_action("keycloak")  # user account created
 
         role_to_assign = _SCOPED_HELPDESK_ROLE if scoped_role else deparment
         _assign_role(user_id, role_to_assign)
+        record_action("keycloak")  # role assigned
 
         return {
             "external_ref": user_id,
