@@ -29,9 +29,10 @@ from app.models import Employee, OnboardingTracker, AuditLog, ProvisioningRecord
 from app.agents.role_classifier import classify_role
 from app.agents.decision_agent import decide
 from app.agents import ticket_agent
-from app.integrations import keycloak_connector, mailu_connector, kimai_connector, snipeit_connector, openkm_connector, hrms_connector
+from app.integrations import keycloak_connector, mailu_connector, kimai_connector, snipeit_connector, openkm_connector, hrms_connector, mock_connector
 from app.services.agent_ticketing_service import AgentTicketClient
 from app.services.onboarding_status import mark_active_if_onboarding_complete
+from app.services.credential_store import store_credential
 from app import email_client
 from app.models import WelcomeEmail
 from dotenv import load_dotenv
@@ -302,25 +303,46 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
             agent_ticket.report_completed()
             _audit(db, employee_id, agent_display_name,
                    f"Provisioned {item['item']}", result.get("detail", ""))
-            # Capture any freshly-issued login credentials for the welcome
-            # email. Each connector uses a different key name for the
-            # password, confirmed by checking their actual return values
-            # (not assumed):
-            #   - openkm_connector.create_workspace()        -> "temp_password"
+            # Capture any freshly-issued login credentials. Each connector
+            # uses a different key name for the password, confirmed by
+            # checking their actual return values (not assumed):
+            #   - openkm_connector.create_workspace()         -> "temp_password"
             #   - mailu_connector.create_mailbox()            -> "temp_password"
+            #   - kimai_connector.create_user_and_timesheet() -> "temp_password"
             #   - keycloak_connector.create_user()            -> "password" (NOT "temp_password")
             # Missing/None whenever nothing new was issued (e.g. a reused
-            # OpenKM account), so those are correctly skipped.
+            # OpenKM or Kimai account).
             password_value = result.get("temp_password") or result.get("password")
+            credential_system = item["software_name"] or item["agent_key"]
+            credential_username = (
+                result.get("openkm_username")
+                or result.get("email_address")
+                or result.get("username")
+                or employee.email
+            )
+            # Persist to the credential store -- one row per successful
+            # functional item, INCLUDING the reused-account case where no
+            # new password was issued, so the provisional-status screen has
+            # an entry for every provisioned application rather than only
+            # the freshly-issued ones. Uses this same `db`, so the row
+            # lands in the same transaction as the ProvisioningRecord it
+            # points at. See services/credential_store.py.
+            store_credential(
+                db, employee_id,
+                system=credential_system,
+                agent_key=item["agent_key"],
+                username=credential_username,
+                password=password_value,
+                provisioning_record_id=record.id,
+                external_ref=result.get("external_ref"),
+            )
+            # The welcome email can only print credentials that exist, so
+            # unlike the store above this stays gated on a real password --
+            # a reused account has nothing new to tell the new hire.
             if password_value:
                 credentials.append({
-                    "system": item["software_name"] or item["agent_key"],
-                    "username": (
-                        result.get("openkm_username")
-                        or result.get("email_address")
-                        or result.get("username")
-                        or employee.email
-                    ),
+                    "system": credential_system,
+                    "username": credential_username,
                     "password": password_value,
                 })
             # Seed the new OpenKM workspace with the employee's onboarding
@@ -389,7 +411,16 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
         db.commit()
         db.refresh(record)
     
-        agent_name = f"{mock_item['item']} Agent"
+        # Same AGENT_DISPLAY_NAMES lookup the functional loop above uses.
+        # Previously this was f"{mock_item['item']} Agent", which produced
+        # names the rest of the system can't map back to an agent_key --
+        # routers/onboardingDetails.py resolves an AgentTicket to its
+        # ProvisioningRecord through the inverse of AGENT_DISPLAY_NAMES, so
+        # e.g. "Productivity Suite creation Agent" (item name) never matched
+        # "Productivity Suite Agent" (display name) and those rows fell back
+        # to placeholder credentials. Item-derived name kept as the fallback
+        # for any mock item whose agent_key isn't in the table.
+        agent_name = AGENT_DISPLAY_NAMES.get(provisioning_agent_key) or f"{mock_item['item']} Agent"
 
         agent_ticket = AgentTicketClient(
             agent_name=agent_name,
@@ -403,10 +434,32 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
                 db, ticket, "Closed",
                 note="Auto-closed: mock item, no real fulfillment required.",
                 closed_by="System (mock)",
-            ) 
+            )
+            # Simulated provisioning result, in the same shape the real
+            # connectors return -- so a Mock item fills external_ref,
+            # username and the credential store exactly like a Functional
+            # one, instead of leaving all three empty. Nothing here is a
+            # real account; see integrations/mock_connector.py.
+            result = mock_connector.provision(employee.name, employee.email, mock_item)
             record.status = "completed"
+            record.external_ref = result["external_ref"]
+            record.username = result["username"]
             record.completed_at = datetime.datetime.utcnow()
             db.commit()
+            store_credential(
+                db, employee_id,
+                system=mock_item.get("software_name") or provisioning_agent_key,
+                agent_key=provisioning_agent_key,
+                username=result["username"],
+                password=result["temp_password"],
+                provisioning_record_id=record.id,
+                external_ref=result["external_ref"],
+            )
+            _audit(db, employee_id, agent_name,
+                   f"Provisioned {mock_item['item']} (simulated)", result["detail"])
+            # NOTE: deliberately NOT appended to `credentials` -- that list
+            # feeds the welcome email (drafted above, before this loop), and
+            # a new hire should never be emailed a login that doesn't work.
         except Exception as e:
             agent_ticket.report_problem(str(e))
             raise

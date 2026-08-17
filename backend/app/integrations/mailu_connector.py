@@ -284,9 +284,17 @@ def create_mailbox(employee_name: str, desired_local_part: str) -> dict:
 
         return {
             "email_address": email,
-            "external_ref": password,
+            # The email address IS MailU's identifier -- its admin API keys
+            # users by address (see _get_mailu_user/delete_mailbox, which
+            # both hit /api/v1/user/{email}). This used to return `password`
+            # here, which meant get_mailbox_status() looked the mailbox up
+            # by its own temp password, always 404'd, and the Monitoring
+            # Agent eventually marked every healthy mailbox failed. The
+            # password now goes to the credential store instead; external_ref
+            # is an identifier, matching every sibling connector.
+            "external_ref": email,
             "temp_password": password,
-            "detail": f"{email}Mailbox created successfully for {employee_name}.",
+            "detail": f"{email} Mailbox created successfully for {employee_name}.",
         }
     except MailUConnectorError:
         raise

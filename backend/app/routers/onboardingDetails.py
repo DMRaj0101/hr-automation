@@ -22,6 +22,7 @@ from app.database import get_db
 from app.models import Employee, ProvisioningRecord, Ticket, AgentTicket
 from app.orchestrators import health_check_orchestrator
 from app.orchestrators.onboarding_orchestrator import AGENT_DISPLAY_NAMES
+from app.services import credential_store
 
 router = APIRouter(prefix="/onboarding-details", tags=["onboarding-details"])
  
@@ -229,6 +230,56 @@ def _format_dt(value):
 
     return value.strftime("%d-%m-%Y %H:%M:%S") if value else None
 
+
+def _provisional_row(agent, record, creds_by_record: dict) -> dict:
+    """One "Provisioning Result" row for the individual employee's
+    onboarding tracker (frontend: components/onboarding/OnboardingChecklist
+    .tsx, route /onboarding/[id]).
+
+    externalRef is the identifier the provisioned system handed back --
+    the Keycloak user UUID, the OpenKM folder UUID, the Kimai user id, or
+    the MailU mailbox address. It stays null until the item completes,
+    since ProvisioningRecord.external_ref is only written on success.
+
+    Credentials are read from the ProvisionedCredential store rather than
+    off ProvisioningRecord, so username and password are guaranteed to be
+    the pair actually issued together instead of two fields from two
+    sources. record.username is kept only as a fallback for rows
+    provisioned before the credential store existed. POC-only plaintext --
+    see services/credential_store.py.
+    """
+    base = {
+        "ticketID": agent.ticket_reference if agent else None,  # real
+        "ticketStatus": agent.status,
+        "startTime": _format_dt(agent.start_time),
+        "endtime": _format_dt(agent.end_time),
+        "note": agent.content,
+    }
+
+    # Mock-item agents have no ProvisioningRecord and never had real
+    # credentials -- same "Mock" placeholders this endpoint always used.
+    if record is None:
+        return {
+            **base,
+            "platform": agent.agent_name,
+            "externalRef": None,
+            "credentials": {"username": "Mock", "password": "Mock"},
+        }
+
+    credential = creds_by_record.get(record.id)
+    return {
+        **base,
+        "platform": record.software_name,  # real
+        "externalRef": (credential.external_ref if credential else None) or record.external_ref,
+        "credentials": {
+            "username": (credential.username if credential else None) or record.username,
+            # None when the connector reused an existing account and issued
+            # nothing new; the frontend hides the password row in that case.
+            "password": credential.password if credential else None,
+        },
+    }
+
+
 from datetime import datetime, timedelta
 
 def _planned_date(joining_date):
@@ -274,9 +325,27 @@ def provisional_status(employee_id: str, db: Session = Depends(get_db)):
 
     row/column has no value yet); ticketID, ticketStatus, note are read
 
-    straight off the matching AgentTicket; credentials.password is mocked
+    straight off the matching AgentTicket.
 
-    since this codebase has no credential-storage concept."""
+    externalRef is the identifier the provisioned system returned on
+
+    success (Keycloak user UUID, OpenKM folder UUID, Kimai user id, MailU
+
+    mailbox address), null while an item is still in progress.
+
+    credentials.username/password both come from the ProvisionedCredential
+
+    store, so they are the pair actually issued together (POC only --
+
+    stored in plaintext, see services/credential_store.py). password used
+
+    to read ProvisioningRecord.external_ref, which only ever held a real
+
+    password for MailU and by accident -- for every other agent it showed
+
+    a Keycloak UUID / Kimai id / OpenKM folder uuid labelled as a password.
+
+    See _provisional_row() for the per-row shape."""
 
     employees = (
 
@@ -293,8 +362,14 @@ def provisional_status(employee_id: str, db: Session = Depends(get_db)):
     for employee in employees:
         result[employee.employee_id] = []
 
-        username = employee.name  # real
-        password = username.replace(" ", "") if username else None  # mock -- no credential storage in the schema
+        # Credentials for every provisioned app, fetched once per employee
+        # and indexed by provisioning record so the row build below stays a
+        # dict lookup rather than a query per agent.
+        creds_by_record = {
+            c.provisioning_record_id: c
+            for c in credential_store.get_credentials_for_employee(db, employee.id)
+            if c.provisioning_record_id
+        }
 
         agent_details = (
             db.query(AgentTicket)
@@ -319,18 +394,7 @@ def provisional_status(employee_id: str, db: Session = Depends(get_db)):
             records = provisioning_records or [None]
 
             result[employee.employee_id].extend(
-                {
-                    "platform": record.software_name if record else agent.agent_name,  # real
-                    "ticketID": agent.ticket_reference if agent else None,  # real
-                    "ticketStatus": agent.status,
-                    "startTime": _format_dt(agent.start_time),
-                    "endtime": _format_dt(agent.end_time),
-                    "credentials": {
-                        "username": record.username  if record else "Mock",  # real
-                        "password": record.external_ref if record else "Mock",  # mock
-                    },
-                    "note": agent.content,
-                }
+                _provisional_row(agent, record, creds_by_record)
                 for record in records
             )
 

@@ -169,3 +169,38 @@ class AgentHealth(Base):
     last_heartbeat = Column(DateTime, default=datetime.datetime.utcnow)
     context = Column(Text, nullable=True)  # Additional context for the agent's health status
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class ProvisionedCredential(Base):
+    """One row per provisioned application account, holding the credential
+    that was issued for it.
+
+    POC/DEMO ONLY -- passwords are stored in PLAINTEXT. This is a
+    deliberate decision so the demo can show what was actually issued for
+    each provisioned application; it is NOT production-safe (no hashing,
+    no encryption at rest, no access control on the rows). Anything past
+    the POC should replace this with a secrets manager or drop it.
+
+    Exists because connectors previously had nowhere to put a credential:
+    mailu_connector was stuffing its temp password into
+    ProvisioningRecord.external_ref, which is meant to hold the target
+    system's identifier (see ProvisioningRecord's docstring above) and
+    which the Monitoring Agent polls with. Credentials belong here;
+    identifiers stay in external_ref.
+
+    Written by services/credential_store.py from the functional-items loop
+    in orchestrators/onboarding_orchestrator.py. Read by
+    routers/onboardingDetails.py for the provisional-status screen.
+    """
+    __tablename__ = "provisioned_credentials"
+
+    id = Column(String, primary_key=True, default=gen_id)
+    employee_id = Column(String, ForeignKey("employees.id"), nullable=False)
+    provisioning_record_id = Column(String, ForeignKey("provisioning_records.id"), nullable=True)  # the item this credential was issued for
+    agent_key = Column(String, nullable=True)  # "identity" | "email" | "time_billing" | "document_management"
+    system = Column(String, nullable=True)  # e.g. "Keycloak", "MailU" -- the software_name off the provisioning item
+    username = Column(String, nullable=True)
+    password = Column(String, nullable=True)  # PLAINTEXT, see class docstring. None when the connector reused an existing account and issued nothing new
+    external_ref = Column(String, nullable=True)  # mirrors ProvisioningRecord.external_ref, so a credential row is readable on its own
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)  # re-running onboarding updates in place rather than inserting a duplicate
