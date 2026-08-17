@@ -32,7 +32,7 @@ export function SimpleSelect({
   }, []);
 
   return (
-    <div ref={ref} className="relative" style={style}>
+    <div ref={ref} className="relative">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -40,6 +40,7 @@ export function SimpleSelect({
           "h-12 w-full rounded-xl border border-vantara-border bg-white px-4 text-sm text-vantara-navy focus:outline-none focus:ring-2 focus:ring-vantara-gold flex items-center justify-between gap-2",
           className
         )}
+        style={style}
       >
         <span>{value}</span>
         <svg

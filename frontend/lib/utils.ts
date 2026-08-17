@@ -48,6 +48,39 @@ export function statusStyle(status: string) {
   return statusColorMap[status] ?? { bg: "#F3F4F6", text: "#6B7280" };
 }
 
+// Fixed, visually-distinct palette for icon tiles (onboarding checklist
+// cards, dashboard system cards) that are keyed by an open-ended set of
+// names -- provisioning items vary per department
+// (config_data/provisioning_matrix.json's "item" text differs by dept
+// even for the same conceptual step) and dashboard mock agents vary with
+// whatever's actually in the DB, so a plain lookup-table-with-one-shared-
+// fallback would collapse most of them onto the same gray icon. A simple
+// string hash instead spreads any name across this palette -- same name
+// always lands on the same color (stable across renders/reloads), and
+// different names are very likely to land on different colors.
+const iconPalette: { bg: string; color: string }[] = [
+  { bg: "#DBEAFE", color: "#2563EB" }, // blue
+  { bg: "#EDE9FE", color: "#7C3AED" }, // purple
+  { bg: "#DCFCE7", color: "#16A34A" }, // green
+  { bg: "#FEF3C7", color: "#B45309" }, // amber
+  { bg: "#FFEDD5", color: "#C2410C" }, // orange
+  { bg: "#E0E7FF", color: "#4338CA" }, // indigo
+  { bg: "#CCFBF1", color: "#0F766E" }, // teal
+  { bg: "#FFE4E6", color: "#BE123C" }, // rose
+  { bg: "#FCE7F3", color: "#BE185D" }, // pink
+  { bg: "#CFFAFE", color: "#0E7490" }, // cyan
+  { bg: "#F3E8FF", color: "#7E22CE" }, // violet
+  { bg: "#ECFCCB", color: "#4D7C0F" }, // lime
+];
+
+export function iconColorFor(key: string): { bg: string; color: string } {
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash * 31 + key.charCodeAt(i)) | 0;
+  }
+  return iconPalette[Math.abs(hash) % iconPalette.length];
+}
+
 export const priorityColorMap: Record<string, { bg: string; text: string }> = {
   Critical: { bg: "#FEE2E2", text: "#DC2626" },
   High: { bg: "#FEF3C7", text: "#B45309" },
