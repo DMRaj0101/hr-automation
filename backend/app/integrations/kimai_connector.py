@@ -412,7 +412,9 @@ def create_user_and_timesheet(employee_name: str, employee_email: str, role: str
             "username": username,
             "temp_password": temp_password,
             "detail": (
-                f"{account_note} Timesheet profile ready "
+                f"Kimai time & billing access provisioned for {employee_name}. "
+                f"{account_note} Kimai user ID: {kimai_user_id}. "
+                f"Timesheet profile ready "
                 f"(customer='{customer.get('name')}', project='{project.get('name')}')."
             ),
         }

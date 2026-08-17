@@ -391,7 +391,10 @@ def create_workspace(employee_name: str, employee_email: str, role: str) -> dict
     except requests.RequestException as e:
         raise OpenKMConnectorError(f"Failed to grant/verify OpenKM access for '{username}': {e}")
 
-    detail = f"OpenKM folder '{employee_folder_path}' ready (uuid={folder_uuid}). {account_note} {grant_note}"
+    detail = (
+        f"OpenKM document workspace created for {employee_name}. "
+        f"Folder '{employee_folder_path}' ready (uuid={folder_uuid}). {account_note} {grant_note}"
+    )
     if not grant_verified:
         detail += " WARNING: grantUser returned success but getGrantedUsers readback did not confirm it."
 

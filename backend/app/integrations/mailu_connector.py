@@ -294,7 +294,11 @@ def create_mailbox(employee_name: str, desired_local_part: str) -> dict:
             # is an identifier, matching every sibling connector.
             "external_ref": email,
             "temp_password": password,
-            "detail": f"{email} Mailbox created successfully for {employee_name}.",
+            "detail": (
+                f"Mailbox created for {employee_name} with a "
+                f"{_DEFAULT_QUOTA_BYTES // 1024 ** 3} GB quota. "
+                f"MailU mailbox address: {email}."
+            ),
         }
     except MailUConnectorError:
         raise

@@ -1,0 +1,94 @@
+{
+  "_comment": "What each provisioning item actually grants -- feeds the human-readable detail sentence and the provided[] list on the Provisional Status screen. Keyed by agent_key (NOT by department: the standard hardware kit is identical for Tax/Audit/Law, and department-specific software names already live in provisioning_matrix.json). Overrides merge base -> by_department[department] -> by_item[item], each tier free to replace `provided` and/or `template`. by_item exists because IT Support has two items sharing agent_key 'asset'. Placeholders resolved in `template` and in each `provided` entry: {employee_name} {employee_id} {department} {software_name} {item} {external_ref} {username}; {provided} (the comma-joined list) is available in `template` only. Read at request time by services/provisioning_details.py and NOT persisted, so editing this file changes what already-provisioned rows report -- acceptable for POC/demo, not a substitute for an audit trail. Mock entries carry both `provided` and `template`; the functional entries at the bottom carry `provided` ONLY, because their detail sentence comes from the live connector, which is the only thing that knows the real identifier.",
+
+  "asset": {
+    "provided": ["Laptop", "Dual Monitor", "Docking Station", "Headset", "Mobile Device"],
+    "template": "Standard hardware kit allocated to {employee_name} ({employee_id}). Items issued: {provided}. Snipe-IT allocation reference: {external_ref}.",
+    "by_item": {
+      "Asset Management (operational access)": {
+        "provided": ["Snipe-IT operational console login", "Asset check-in/check-out permissions", "Asset audit report access"],
+        "template": "Snipe-IT operational console access granted to {employee_name} ({employee_id}). Access includes: {provided}. Console account: {username}. Snipe-IT reference: {external_ref}."
+      }
+    }
+  },
+
+  "access_recommendation": {
+    "provided": ["Microsoft 365 E3 licence", "Role-specific application seat", "Document repository access"],
+    "template": "Licence bundle recommended for {employee_name} ({department}) and queued for Admin approval. Recommended: {provided}. Covers: {software_name}. Recommendation reference: {external_ref}.",
+    "by_department": {
+      "Tax": {
+        "provided": ["Microsoft 365 E3 licence", "CCH Axcess Tax seat", "NetDocuments repository access"]
+      },
+      "Audit": {
+        "provided": ["Microsoft 365 E3 licence", "CaseWare IDEA seat", "NetDocuments repository access"]
+      },
+      "Law": {
+        "provided": ["Microsoft 365 E3 licence", "iManage Work seat", "NetDocuments repository access"]
+      },
+      "IT Support": {
+        "provided": ["Microsoft 365 E3 licence", "ServiceNow Fulfiller/Agent licence"]
+      }
+    }
+  },
+
+  "tax_preparation": {
+    "provided": ["CCH Axcess Tax user seat", "Tax return preparation module", "E-filing permissions", "Prior-year return access"],
+    "template": "CCH Axcess Tax access provisioned for {employee_name} ({employee_id}). Enabled: {provided}. Platform account reference: {external_ref}."
+  },
+
+  "audit_software": {
+    "provided": ["CaseWare IDEA licence seat", "Data analysis workspace", "Standard audit script library", "Sample engagement templates"],
+    "template": "CaseWare IDEA installed and licensed for {employee_name} ({employee_id}). Provisioned: {provided}. Licence reference: {external_ref}."
+  },
+
+  "legal_research": {
+    "provided": ["Westlaw research account", "Case law and statutes database", "KeyCite citator access", "Legal forms library"],
+    "template": "Westlaw legal research account created for {employee_name} ({employee_id}). Includes: {provided}. Account reference: {external_ref}."
+  },
+
+  "productivity_suite": {
+    "provided": ["Microsoft 365 E3 licence", "Outlook", "Word, Excel and PowerPoint", "Microsoft Teams", "OneDrive (1 TB)", "SharePoint access"],
+    "template": "Microsoft 365 productivity suite assigned to {employee_name} ({employee_id}). Applications enabled: {provided}. Licence reference: {external_ref}."
+  },
+
+  "network_access": {
+    "provided": ["Cisco AnyConnect VPN profile", "Corporate Wi-Fi certificate", "Multi-factor authentication enrolment", "Remote access group membership"],
+    "template": "Network access configured for {employee_name} ({employee_id}). Granted: {provided}. VPN profile reference: {external_ref}."
+  },
+
+  "ticketing_itsm": {
+    "provided": ["ServiceNow requester account", "IT service catalogue access", "Ticket submission and tracking"],
+    "template": "ServiceNow requester access registered for {employee_name} ({employee_id}). Permissions: {provided}. Requester account reference: {external_ref}."
+  },
+
+  "ticketing_fulfiller_role": {
+    "provided": ["ServiceNow Fulfiller/Agent licence", "Incident queue assignment", "Ticket resolution and closure permissions", "Knowledge base authoring"],
+    "template": "ServiceNow Fulfiller role granted to {employee_name} ({employee_id}). Permissions: {provided}. Fulfiller account reference: {external_ref}."
+  },
+
+  "remote_support_tool": {
+    "provided": ["Remote support console account", "Unattended access permissions", "Session recording enabled"],
+    "template": "Remote support tooling provisioned for {employee_name} ({employee_id}). Enabled: {provided}. Tool account reference: {external_ref}. No open-source remote support tool has been selected yet (PDD Open Item #7)."
+  },
+
+  "identity": {
+    "provided": ["Keycloak account", "{department} default role", "Single sign-on across provisioned applications"],
+    "by_item": {
+      "Helpdesk Admin Role (scoped)": {
+        "provided": ["Scoped Helpdesk Admin role", "User management (read and password reset)", "No full realm admin rights"]
+      }
+    }
+  },
+
+  "email": {
+    "provided": ["MailU mailbox", "1 GB mailbox quota", "SMTP and IMAP access"]
+  },
+
+  "time_billing": {
+    "provided": ["Kimai user account", "Timesheet profile", "{department} customer and project"]
+  },
+
+  "document_management": {
+    "provided": ["OpenKM workspace folder", "Folder-level read/write grant", "Onboarding documents seeded"]
+  }
+}

@@ -35,7 +35,13 @@ class TicketService:
         self._repository.set_end_time(db, ticket_id)
         return ticket_id
 
-    def handle_agent_completed(self, db: Session, agent_name: str, employee_id: str):
+    def handle_agent_completed(self, db: Session, agent_name: str, employee_id: str, detail: str = None):
+        """`detail` is the provisioning result the agent wants on record --
+        the connector's own sentence naming the employee and the identifier
+        it created (or, for a mock item, what was granted). It becomes the
+        ticket content, which routers/onboardingDetails.py surfaces as each
+        Provisional Status row's `note`. Falls back to the generic
+        completion message when an agent doesn't supply one."""
         ticket_id = self._repository.find_ticket_id_for_agent_run(db, agent_name, employee_id)
         if not ticket_id:
             return None
@@ -51,7 +57,7 @@ class TicketService:
             self._repository.update_content(db, ticket_id, blocked_message)
             return ticket_id
 
-        closed_message = f"Agent '{agent_name}' completed processing successfully. Ticket closed."
+        closed_message = detail or f"Agent '{agent_name}' completed processing successfully. Ticket closed."
         self._repository.add_followup(db, ticket_id, closed_message)
         self._repository.update_content(db, ticket_id, closed_message)
         self._repository.close_ticket(db, ticket_id)

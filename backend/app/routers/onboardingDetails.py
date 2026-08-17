@@ -22,7 +22,7 @@ from app.database import get_db
 from app.models import Employee, ProvisioningRecord, Ticket, AgentTicket
 from app.orchestrators import health_check_orchestrator
 from app.orchestrators.onboarding_orchestrator import AGENT_DISPLAY_NAMES
-from app.services import credential_store
+from app.services import credential_store, provisioning_details
 
 router = APIRouter(prefix="/onboarding-details", tags=["onboarding-details"])
  
@@ -231,7 +231,7 @@ def _format_dt(value):
     return value.strftime("%d-%m-%Y %H:%M:%S") if value else None
 
 
-def _provisional_row(agent, record, creds_by_record: dict) -> dict:
+def _provisional_row(agent, record, creds_by_record: dict, employee: Employee) -> dict:
     """One "Provisioning Result" row for the individual employee's
     onboarding tracker (frontend: components/onboarding/OnboardingChecklist
     .tsx, route /onboarding/[id]).
@@ -240,6 +240,18 @@ def _provisional_row(agent, record, creds_by_record: dict) -> dict:
     the Keycloak user UUID, the OpenKM folder UUID, the Kimai user id, or
     the MailU mailbox address. It stays null until the item completes,
     since ProvisioningRecord.external_ref is only written on success.
+
+    note is the agent's own account of what it did, naming the employee and
+    the identifier it created (Functional items) or what was granted (Mock
+    items) -- written to AgentTicket.content by the orchestrator from each
+    connector's `detail`. See services/agent_ticketing_service/
+    ticket_service.py::handle_agent_completed.
+
+    provided is the list of things this item granted ("Laptop", "Dual
+    Monitor", ...), resolved from config_data/mock_provisioning_details.json
+    at read time rather than persisted -- see
+    services/provisioning_details.py's module docstring for why, and for the
+    consequence (editing that file changes what past rows report).
 
     Credentials are read from the ProvisionedCredential store rather than
     off ProvisioningRecord, so username and password are guaranteed to be
@@ -264,19 +276,30 @@ def _provisional_row(agent, record, creds_by_record: dict) -> dict:
             "platform": agent.agent_name,
             "externalRef": None,
             "credentials": {"username": "Mock", "password": "Mock"},
+            "provided": [],
         }
 
     credential = creds_by_record.get(record.id)
+    external_ref = (credential.external_ref if credential else None) or record.external_ref
+    username = (credential.username if credential else None) or record.username
     return {
         **base,
         "platform": record.software_name,  # real
-        "externalRef": (credential.external_ref if credential else None) or record.external_ref,
+        "externalRef": external_ref,
         "credentials": {
-            "username": (credential.username if credential else None) or record.username,
+            "username": username,
             # None when the connector reused an existing account and issued
             # nothing new; the frontend hides the password row in that case.
             "password": credential.password if credential else None,
         },
+        "provided": provisioning_details.provided_for(
+            record.agent_key, record.provisioning_item, employee.department,
+            employee_name=employee.name,
+            employee_id=employee.employee_id,
+            software_name=record.software_name or "",
+            external_ref=external_ref or "",
+            username=username or "",
+        ),
     }
 
 
@@ -325,7 +348,15 @@ def provisional_status(employee_id: str, db: Session = Depends(get_db)):
 
     row/column has no value yet); ticketID, ticketStatus, note are read
 
-    straight off the matching AgentTicket.
+    straight off the matching AgentTicket. note is no longer placeholder
+
+    text -- it is the agent's own report of what it provisioned, naming the
+
+    employee and the identifier created (see _provisional_row()).
+
+    provided lists what the item granted, resolved from
+
+    config_data/mock_provisioning_details.json at read time.
 
     externalRef is the identifier the provisioned system returned on
 
@@ -374,28 +405,47 @@ def provisional_status(employee_id: str, db: Session = Depends(get_db)):
         agent_details = (
             db.query(AgentTicket)
             .filter(AgentTicket.employee_id == employee.employee_id)
+            .order_by(AgentTicket.ticket_id)
             .all()
         )
 
+        # An AgentTicket carries no reference to the ProvisioningRecord it
+        # ran for -- only an agent_name, which maps to an agent_key. Two
+        # roles have TWO items sharing one agent_key (IT Support's two
+        # "identity" items and its two "asset" items), so matching on
+        # agent_key alone produced a cross-product: 2 tickets x 2 records =
+        # 4 rows, each pairing one item's ticket with the other item's
+        # record. That showed a row whose `note` described the hardware kit
+        # while its externalRef and provided[] belonged to the console-access
+        # item -- confidently wrong, not just duplicated.
+        #
+        # Paired positionally instead: within one agent_key, the Nth agent
+        # ticket belongs to the Nth provisioning record, because the
+        # orchestrator creates them in lockstep (record first, then
+        # report_started) in a single pass over the plan. AgentTicket.ticket_id
+        # is autoincrement so its order is exact; ProvisioningRecord has no
+        # monotonic column, so it leans on created_at -- safe here because a
+        # connector call and a ticket write separate any two records sharing
+        # a key. A record with no ticket emits no row, same as before.
+        pending_records: dict[str, list] = {}
+        for rec in (
+            db.query(ProvisioningRecord)
+            .filter(ProvisioningRecord.employee_id == employee.id)
+            .order_by(ProvisioningRecord.created_at)
+            .all()
+        ):
+            pending_records.setdefault(rec.agent_key, []).append(rec)
+
         for agent in agent_details:
             agent_key = _AGENT_DISPLAY_TO_KEY.get(agent.agent_name)
+            queue = pending_records.get(agent_key) if agent_key else None
+            # None for an agent whose name doesn't map to an agent_key, or
+            # whose records are already all paired -- falls back to the
+            # "Mock" placeholder row in _provisional_row().
+            record = queue.pop(0) if queue else None
 
-            provisioning_records = (
-                db.query(ProvisioningRecord)
-                .filter(ProvisioningRecord.employee_id == employee.id)
-                .filter(ProvisioningRecord.agent_key == agent_key)
-                .all()
-                if agent_key
-                else []
-            )
-
-            # Mock-item agents have no agent_key/ProvisioningRecord -- still
-            # emit one row for them, using the existing "Mock" fallbacks below.
-            records = provisioning_records or [None]
-
-            result[employee.employee_id].extend(
-                _provisional_row(agent, record, creds_by_record)
-                for record in records
+            result[employee.employee_id].append(
+                _provisional_row(agent, record, creds_by_record, employee)
             )
 
     return {"ProvisionalStatus": result}

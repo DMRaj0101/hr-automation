@@ -40,6 +40,17 @@ def get_team_routing() -> dict:
     provisioning item routes to (IT / Admin / Security / Facilities / Payroll)."""
     return _load("team_routing.json")
 
+
+def get_mock_provisioning_details() -> dict[str, dict]:
+    """What each provisioning item actually grants -- agent_key -> {provided,
+    template, by_department, by_item}. Backs the human-readable detail
+    sentence and the provided[] list on the Provisional Status screen.
+
+    Read through services/provisioning_details.py, never directly: that
+    module owns the base -> by_department -> by_item merge and the
+    placeholder formatting."""
+    return _load("mock_provisioning_details.json")
+
 class Config:
     """Loads and exposes all environment-based configuration."""
 

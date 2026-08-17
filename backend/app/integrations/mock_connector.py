@@ -37,6 +37,8 @@ import re
 import secrets
 import string
 
+from app.services import provisioning_details
+
 _TEMP_PASSWORD_LENGTH = 16  # same length mailu_connector generates
 _EXTERNAL_REF_SUFFIX_BYTES = 3  # -> 6 hex characters
 
@@ -61,15 +63,32 @@ def _slug(label: str) -> str:
     return re.sub(r"[^A-Za-z0-9]", "", first).upper()
 
 
-def provision(employee_name: str, employee_email: str, mock_item: dict) -> dict:
+def provision(
+    mock_item: dict,
+    *,
+    employee_name: str,
+    employee_email: str,
+    employee_id: str,
+    department: str,
+) -> dict:
     """Simulate provisioning one Mock item for a newly onboarded employee.
 
     `mock_item` is one entry from decision_agent.decide()'s "mock_items"
     list: {item, software_name, assigned_team, remarks, agent_key}.
+    Keyword-only for the employee fields -- there are four of them and
+    they are all strings, so positional order would be easy to get wrong
+    and impossible to notice.
 
     Returns {"external_ref": "MOCK-<SYSTEM>-<hex>", "username": "...",
-    "temp_password": "...", "detail": "..."} -- matching the real
-    connectors' keys so the caller needs no special-casing.
+    "temp_password": "...", "detail": "...", "provided": [...]} -- the
+    real connectors' keys (so the caller needs no special-casing) plus
+    `provided`, the list of things this item granted.
+
+    `detail` and `provided` come from
+    config_data/mock_provisioning_details.json via
+    services/provisioning_details.py -- that file is where to change the
+    wording or the contents of a mock item, not this module. Falls back
+    to a generic sentence if an item has no template configured.
 
     Never raises and never touches the network; there is nothing here
     that can fail.
@@ -79,14 +98,32 @@ def provision(employee_name: str, employee_email: str, mock_item: dict) -> dict:
     # never just "MOCK--a1b2c3".
     slug = _slug(software_name) or _slug(mock_item["item"]) or "SYSTEM"
 
-    return {
-        "external_ref": f"MOCK-{slug}-{secrets.token_hex(_EXTERNAL_REF_SUFFIX_BYTES).upper()}",
-        # Same derivation the orchestrator already uses for MailU's local
-        # part, so a mock account's username matches the real ones.
-        "username": employee_email.split("@")[0],
-        "temp_password": _generate_temp_password(),
-        "detail": (
+    external_ref = f"MOCK-{slug}-{secrets.token_hex(_EXTERNAL_REF_SUFFIX_BYTES).upper()}"
+    # Same derivation the orchestrator already uses for MailU's local
+    # part, so a mock account's username matches the real ones.
+    username = employee_email.split("@")[0]
+
+    agent_key = mock_item.get("agent_key") or ""
+    item = mock_item["item"]
+    placeholders = {
+        "employee_name": employee_name,
+        "employee_id": employee_id,
+        "software_name": software_name,
+        "external_ref": external_ref,
+        "username": username,
+    }
+
+    detail = provisioning_details.render_detail(agent_key, item, department, **placeholders)
+    if not detail:
+        detail = (
             f"{software_name} access simulated for {employee_name} "
             f"-- mock item, no real provisioning call was made."
-        ),
+        )
+
+    return {
+        "external_ref": external_ref,
+        "username": username,
+        "temp_password": _generate_temp_password(),
+        "detail": detail,
+        "provided": provisioning_details.provided_for(agent_key, item, department, **placeholders),
     }

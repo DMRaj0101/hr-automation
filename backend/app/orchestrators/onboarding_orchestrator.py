@@ -300,7 +300,12 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
             )
             record.completed_at = datetime.datetime.utcnow()
             db.commit()
-            agent_ticket.report_completed()
+            # The connector's own detail sentence becomes the agent ticket's
+            # content, which routers/onboardingDetails.py returns as this
+            # row's `note` -- so the screen says "Identity account created
+            # for John Doe... Keycloak user ID: ..." instead of the generic
+            # "Agent 'Identity Agent' completed processing successfully."
+            agent_ticket.report_completed(detail=result.get("detail"))
             _audit(db, employee_id, agent_display_name,
                    f"Provisioned {item['item']}", result.get("detail", ""))
             # Capture any freshly-issued login credentials. Each connector
@@ -429,18 +434,24 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
         try:
             ticket = ticket_agent.create_ticket(db, employee_id, department, mock_item, agent_name)
             agent_ticket.report_started(ticket_reference=ticket.ticket_id)
-            agent_ticket.report_completed()
+            # Simulated provisioning result, in the same shape the real
+            # connectors return -- so a Mock item fills external_ref,
+            # username and the credential store exactly like a Functional
+            # one, instead of leaving all three empty. Nothing here is a
+            # real account; see integrations/mock_connector.py. Runs BEFORE
+            # report_completed() below, which needs its detail sentence.
+            result = mock_connector.provision(
+                mock_item,
+                employee_name=employee.name,
+                employee_email=employee.email,
+                employee_id=employee.employee_id,
+                department=department,
+            )
             ticket_agent.update_status(
                 db, ticket, "Closed",
                 note="Auto-closed: mock item, no real fulfillment required.",
                 closed_by="System (mock)",
             )
-            # Simulated provisioning result, in the same shape the real
-            # connectors return -- so a Mock item fills external_ref,
-            # username and the credential store exactly like a Functional
-            # one, instead of leaving all three empty. Nothing here is a
-            # real account; see integrations/mock_connector.py.
-            result = mock_connector.provision(employee.name, employee.email, mock_item)
             record.status = "completed"
             record.external_ref = result["external_ref"]
             record.username = result["username"]
@@ -455,6 +466,7 @@ def run_onboarding(db: Session, employee_id: str) -> dict:
                 provisioning_record_id=record.id,
                 external_ref=result["external_ref"],
             )
+            agent_ticket.report_completed(detail=result["detail"])
             _audit(db, employee_id, agent_name,
                    f"Provisioned {mock_item['item']} (simulated)", result["detail"])
             # NOTE: deliberately NOT appended to `credentials` -- that list

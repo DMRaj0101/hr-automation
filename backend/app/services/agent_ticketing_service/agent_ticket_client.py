@@ -28,10 +28,12 @@ class AgentTicketClient:
         finally:
             db_gen.close()
 
-    def report_completed(self):
+    def report_completed(self, detail: str = None):
+        """`detail`: the connector's provisioning result sentence, stored as
+        the ticket content and surfaced as the Provisional Status `note`."""
         db_gen = get_db()
         db = next(db_gen)
         try:
-            return self._service.handle_agent_completed(db, self._agent_name, self._employee_id)
+            return self._service.handle_agent_completed(db, self._agent_name, self._employee_id, detail=detail)
         finally:
             db_gen.close()
