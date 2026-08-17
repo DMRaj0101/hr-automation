@@ -2077,6 +2077,13 @@ body {
   font-size: 16px;
 }
 
+/* Status dot placed next to the icon (replaces the old text pill) */
+.dashboard-department-identity .dashboard-health-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+}
+
 .dashboard-department-title {
   font-size: 13.5px;
   font-weight: 700;
@@ -2096,9 +2103,9 @@ body {
 }
 
 .dashboard-department-stats-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
   margin: 12px 0 10px;
 }
 
@@ -2129,13 +2136,40 @@ body {
   height: 6px;
 }
 
+/* Boxed Actions / Success stat tiles, replacing the old plain right-aligned numbers */
 .dashboard-department-stat {
-  text-align: right;
+  text-align: center;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.dashboard-department-stat-actions {
+  background: #e6f1fb;
+}
+
+.dashboard-department-stat-actions .dashboard-department-stat-num {
+  color: #0c447c;
+}
+
+.dashboard-department-stat-actions .dashboard-department-stat-label {
+  color: #185fa5;
+}
+
+.dashboard-department-stat-success {
+  background: #d1fae5;
+}
+
+.dashboard-department-stat-success .dashboard-department-stat-num {
+  color: #065f46;
+}
+
+.dashboard-department-stat-success .dashboard-department-stat-label {
+  color: #059669;
 }
 
 .dashboard-department-stat .dashboard-department-stat-num {
-  font-size: 22px;
-  font-weight: 400;
+  font-size: 16px;
+  font-weight: 700;
   color: #16213e;
   line-height: 1;
 }

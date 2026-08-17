@@ -1,16 +1,16 @@
 "use client";
- 
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
- 
+
 import { Employee } from "@/types/employee";
 import { DataTable } from "@/components/common/DataTable";
 import { Avatar } from "@/components/common/Avatar";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { employeeTypeStyle, employeeTypeLabel } from "@/lib/utils";
+import { employeeTypeLabel } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
- 
+
 export function EmployeeTable({
   employees,
 }: {
@@ -18,20 +18,19 @@ export function EmployeeTable({
 }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
- 
+
   const isMobile = useMediaQuery("(max-width: 640px)");
   const isTablet = useMediaQuery("(max-width: 1024px)");
- 
+
   const goToProfile = (id: string) => {
     router.push(`/employee/${id}`);
   };
- 
+
   // ---------- MOBILE: card list ----------
   if (isMobile) {
     return (
       <div className="flex flex-col gap-3 p-3">
         {employees.map((emp) => {
-          const { bg, text } = employeeTypeStyle(emp.type);
           return (
             <div
               key={emp.id}
@@ -48,18 +47,15 @@ export function EmployeeTable({
                 </div>
                 <StatusBadge status={emp.status} />
               </div>
- 
+
               <div className="mt-3 flex flex-wrap items-center gap-2 text-[13px]">
-                <span
-                  className="rounded-full px-2.5 py-1 font-semibold whitespace-nowrap"
-                  style={{ backgroundColor: bg, color: text }}
-                >
+                <span className="rounded-full bg-vantara-navy/10 px-2.5 py-1 font-semibold text-vantara-navy whitespace-nowrap">
                   {employeeTypeLabel(emp.type)}
                 </span>
                 <span className="text-vantara-text-muted">{emp.dept}</span>
                 <span className="text-vantara-text-muted">· {emp.manager}</span>
               </div>
- 
+
               <div className="mt-3 flex items-center justify-between">
                 <span className="text-[13px] font-medium text-vantara-navy">
                   {emp.progress}% complete
@@ -69,7 +65,7 @@ export function EmployeeTable({
             </div>
           );
         })}
- 
+
         {employees.length === 0 && (
           <div className="flex h-40 items-center justify-center text-sm text-vantara-text-muted">
             No employees found.
@@ -78,7 +74,7 @@ export function EmployeeTable({
       </div>
     );
   }
- 
+
   // ---------- TABLET / DESKTOP: table, with fewer columns on tablet ----------
   const columns: ColumnDef<Employee>[] = [
     {
@@ -101,7 +97,7 @@ export function EmployeeTable({
         </div>
       ),
     },
- 
+
     {
       id: "dept",
       header: () => (
@@ -114,28 +110,22 @@ export function EmployeeTable({
         </div>
       ),
     },
- 
+
     {
       id: "type",
       header: () => (
         <div className="flex w-full items-center justify-center text-gray-700">Employee Category</div>
       ),
       accessorKey: "type",
-      cell: ({ row }) => {
-        const { bg, text } = employeeTypeStyle(row.original.type);
-        return (
-          <div className="flex w-full items-center justify-center">
-            <span
-              className="inline-flex items-center rounded-full px-3 py-1 text-[13px] font-semibold whitespace-nowrap"
-              style={{ backgroundColor: bg, color: text }}
-            >
-              {employeeTypeLabel(row.original.type)}
-            </span>
-          </div>
-        );
-      },
+      cell: ({ row }) => (
+        <div className="flex w-full items-center justify-center">
+          <span className="inline-flex items-center rounded-full bg-vantara-navy/10 px-3 py-1 text-[13px] font-semibold text-vantara-navy whitespace-nowrap">
+            {employeeTypeLabel(row.original.type)}
+          </span>
+        </div>
+      ),
     },
- 
+
     // Manager column hidden on tablet — too cramped
     ...(!isTablet
       ? [
@@ -155,7 +145,7 @@ export function EmployeeTable({
           } as ColumnDef<Employee>,
         ]
       : []),
- 
+
     {
       id: "status",
       header: () => (
@@ -168,7 +158,7 @@ export function EmployeeTable({
         </div>
       ),
     },
- 
+
     {
       id: "progress",
       header: () => (
@@ -183,7 +173,7 @@ export function EmployeeTable({
         </div>
       ),
     },
- 
+
     {
       id: "actions",
       header: () => (
@@ -205,11 +195,11 @@ export function EmployeeTable({
       ),
     },
   ];
- 
+
   const gridTemplateColumns = isTablet
   ? "minmax(200px,1.6fr) minmax(90px,0.9fr) minmax(110px,1fr) minmax(130px,1.1fr) minmax(70px,0.6fr)"
   : "minmax(220px,1.6fr) minmax(100px,0.9fr) minmax(120px,1fr) minmax(110px,1fr) minmax(140px,1.1fr) minmax(90px,0.9fr) minmax(70px,0.6fr)";
- 
+
   return (
     <DataTable
       columns={columns}
@@ -221,4 +211,3 @@ export function EmployeeTable({
     />
   );
 }
- 
