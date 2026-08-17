@@ -37,6 +37,7 @@ export const statusColorMap: Record<string, { bg: string; text: string }> = {
   "IT Pending": { bg: "#DBEAFE", text: "#2563EB" },
   Failed: { bg: "#FEE2E2", text: "#DC2626" },
   Down: { bg: "#FEE2E2", text: "#DC2626" },
+  Active: { bg: "#DCFCE7", text: "#22C55E" },
   Completed: { bg: "#D1FAE5", text: "#059669" },
   Closed: { bg: "#D1FAE5", text: "#059669" },
   Operational: { bg: "#D1FAE5", text: "#059669" },
