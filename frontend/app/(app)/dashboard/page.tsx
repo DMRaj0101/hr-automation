@@ -5,6 +5,7 @@ import { useDashboard } from "@/hooks/useDashboard";
 import { StatRow } from "@/components/dashboard/StatRow";
 import { LifecycleToggle, LifecycleKey } from "@/components/dashboard/Lifecycletoggle";
 import { SlaWarningCard } from "@/components/dashboard/SlaWarningCard";
+import { ErrorLogCard } from "@/components/dashboard/ErrorLogCard";
 import { OrchestrationOverviewCard } from "@/components/dashboard/Orchestrationoverviewcard";
 import { SystemStatusCards } from "@/components/dashboard/Systemstatuscards";
 
@@ -53,6 +54,11 @@ export default function DashboardPage() {
         <div className="dashboard-grid dashboard-grid-coverage">
           <OrchestrationOverviewCard totalActions={data.totalActions} totalRequests={data.stats.total} />
           <SlaWarningCard data={data.slaWarning} />
+        </div>
+
+        {/* Provisioning error log */}
+        <div className="dashboard-sla-row">
+          <ErrorLogCard data={data.errorReport} />
         </div>
 
         {/* Downstream system status */}

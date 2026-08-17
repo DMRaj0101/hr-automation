@@ -133,16 +133,8 @@ function StatItem({
       <div className="dashboard-stat-top">
         <span className="dashboard-stat-label">{label}</span>
 
-        <button
-          type="button"
-          className="dashboard-stat-menu"
-          aria-label={`${label} options`}
-        >
-          ⋮
-        </button>
+        <StatIcon type={type} />
       </div>
-
-      <StatIcon type={type} />
 
       <div className="dashboard-stat-content">
         <div className={`dashboard-stat-value dashboard-stat-value-${type}`}>
