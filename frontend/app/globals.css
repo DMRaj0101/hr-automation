@@ -2001,6 +2001,35 @@ body {
   color: #d99818;
 }
 
+.dashboard-error-card {
+  background: #fdeceb;
+  border-color: #f3bdb8;
+}
+
+.dashboard-error-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard-error-item {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3bdb8;
+}
+
+.dashboard-error-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.dashboard-error-detail {
+  margin-top: 4px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #5b6473;
+  word-break: break-word;
+}
+
 /* ==========================================================================
    DEPARTMENT / SYSTEM CARDS
    ========================================================================== */
@@ -2106,7 +2135,7 @@ body {
 
 .dashboard-department-stat .dashboard-department-stat-num {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 400;
   color: #16213e;
   line-height: 1;
 }
