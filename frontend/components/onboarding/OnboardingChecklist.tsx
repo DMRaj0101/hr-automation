@@ -27,6 +27,8 @@ import {
   ClipboardList,
   BookOpen,
   LayoutGrid,
+  Check,
+  Gift,
 } from "lucide-react";
 
 import type {
@@ -37,6 +39,7 @@ import type {
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { getProvisionalStatus } from "@/services/onboarding.service";
 import type { ProvisionalStatusItem } from "@/types/onboarding";
+import { iconColorFor } from "@/lib/utils";
 
 /* =========================================================
    CHECKLIST ICONS
@@ -121,17 +124,24 @@ const fallbackIcon = {
 };
 
 function getChecklistIcon(item: ChecklistItem) {
-  const base = iconMap[item.system] ?? fallbackIcon;
+  // iconMap only ever matches an item whose text is identical across
+  // every department (Identity/Email/Access Recommendation/Asset
+  // Allocation/Network Access) -- provisioning_matrix.json otherwise
+  // words the same conceptual step differently per department (e.g.
+  // Tax's "Time & Billing" vs Audit's "Time & Billing creation"), so
+  // most items fall back to the generic icon. iconColorFor() still
+  // gives each of those a distinct color by hashing the item text, so
+  // two differently-worded items never end up visually identical even
+  // when they share the fallback icon.
+  const known = iconMap[item.system];
+  const icon = known?.icon ?? fallbackIcon.icon;
 
   if (item.status === "pending") {
-    return {
-      icon: base.icon,
-      bg: "#F1F5F9",
-      color: "#94A3B8",
-    };
+    return { icon, bg: "#F1F5F9", color: "#94A3B8" };
   }
 
-  return base;
+  const { bg, color } = known ?? iconColorFor(item.system);
+  return { icon, bg, color };
 }
 
 /* =========================================================
@@ -929,6 +939,41 @@ const pcModalStyles = `
 }
 
 /* =========================================================
+   PROVIDED
+   ========================================================= */
+
+.pc-provided {
+  margin-top: 14px;
+}
+
+.pc-provided-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pc-provided-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 5px 11px;
+  border-radius: 999px;
+
+  background: #F0FDF4;
+  border: 1px solid #DCFCE7;
+
+  font-size: 12px;
+  font-weight: 600;
+  color: #166534;
+}
+
+.pc-provided-chip svg {
+  flex-shrink: 0;
+  color: #16A34A;
+}
+
+/* =========================================================
    HUMAN IN THE LOOP
    ========================================================= */
 
@@ -1672,6 +1717,39 @@ export function OnboardingChecklist({
                         </div>
                       </div>
                     </div>
+
+                    {/* PROVIDED -- only once the ticket is actually
+                        Closed; an item still in progress/failed hasn't
+                        necessarily granted what it lists yet. */}
+
+                    {selectedProvisional.ticketStatus === "Closed" &&
+                      !!selectedProvisional.provided?.length && (
+                      <div className="pc-provided">
+                        <div
+                          className="pc-section-title"
+                          style={{
+                            color: theme.titleColor,
+                          }}
+                        >
+                          <Gift size={13} />
+
+                          Provided
+                        </div>
+
+                        <div className="pc-provided-list">
+                          {selectedProvisional.provided.map((entry, i) => (
+                            <span
+                              key={`${entry}-${i}`}
+                              className="pc-provided-chip"
+                            >
+                              <Check size={12} strokeWidth={3} />
+
+                              {entry}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
             </div>

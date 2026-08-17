@@ -2,6 +2,7 @@ import { ChatMessage as ChatMessageType } from "@/types/monitoring";
 import { Copy, Check, Sparkles } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const NAVY = "#14213D";
 const GOLD = "#D9A653";
@@ -64,7 +65,21 @@ export function ChatMessage({ message }: { message: ChatMessageType }) {
               <p className="whitespace-pre-wrap break-words">{message.text}</p>
             ) : (
               <div className="vt-markdown break-words">
-                <ReactMarkdown>{message.text}</ReactMarkdown>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    // Wide tables must scroll inside their own container
+                    // rather than blow out the narrow (78%-max-width) chat
+                    // bubble.
+                    table: ({ children }) => (
+                      <div className="vt-markdown-table-wrap">
+                        <table>{children}</table>
+                      </div>
+                    ),
+                  }}
+                >
+                  {message.text}
+                </ReactMarkdown>
               </div>
             )}
 
@@ -98,6 +113,11 @@ export function ChatMessage({ message }: { message: ChatMessageType }) {
         .vt-markdown strong { font-weight: 700; }
         .vt-markdown code { background: rgba(20,33,61,0.06); border-radius: 4px; padding: 1px 5px; font-size: 0.85em; }
         .vt-markdown a { color: ${GOLD}; text-decoration: underline; }
+        .vt-markdown-table-wrap { overflow-x: auto; margin: 0 0 8px; }
+        .vt-markdown table { border-collapse: collapse; width: 100%; margin: 0; font-size: 0.92em; }
+        .vt-markdown th, .vt-markdown td { border: 1px solid #ece6d8; padding: 6px 10px; text-align: left; }
+        .vt-markdown th { background: rgba(217,166,83,0.12); font-weight: 700; }
+        .vt-markdown tr:nth-child(even) td { background: rgba(20,33,61,0.02); }
       `}</style>
     </div>
   );

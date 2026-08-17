@@ -90,6 +90,9 @@ export function AgentActivityTable({ activity }: { activity: RecentLog[] }) {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm leading-snug text-vantara-navy">
+                      {row.agent_ticket_id && (
+                        <span className="font-semibold">{row.agent_ticket_id} - </span>
+                      )}
                       <span className="font-semibold">{meta.title}</span>
                       <span className="text-vantara-text-muted"> — {meta.sentence}</span>
                     </p>

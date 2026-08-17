@@ -56,7 +56,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Downstream system status */}
-        <SystemStatusCards actionCounts={data.actionCounts} systemHealth={data.systemHealth} />
+        <SystemStatusCards actionCounts={data.actionCounts} />
 
       </div>
     </div>

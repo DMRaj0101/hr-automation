@@ -128,6 +128,10 @@ export interface ProvisionalStatusItem {
     password?: string;
   };
   note?: string;
+  // What this item actually granted (e.g. ["Laptop", "Dual Monitor"]),
+  // resolved server-side from config_data/mock_provisioning_details.json --
+  // see routers/onboardingDetails.py's _provisional_row() docstring.
+  provided?: string[];
 }
 
 /**
