@@ -16,7 +16,7 @@ import datetime
 from pathlib import Path
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, case, and_
 from app.database import get_db
 from app.models import Employee, Ticket, ProvisioningRecord, AgentTicket
 from app.config import get_provisioning_matrix
@@ -100,6 +100,15 @@ _AGENT_NAME_TO_SYSTEM_KEY = {
 }
 
 _AGENT_NAME_TO_SYSTEM_KEY.update(_MOCK_AGENT_NAME_TO_KEY)
+
+# SQL CASE translating a mock AgentTicket.agent_name (e.g. "Legal
+# Research account creation Agent") into the agent_key
+# ProvisioningRecord.agent_key actually stores (e.g. "legal_research")
+# -- _MOCK_AGENT_NAME_TO_KEY is a plain Python dict and can't be
+# evaluated against a column expression inside a join condition, same
+# reasoning as routers/healthcheck.py's _AGENT_DISPLAY_TO_KEY_CASE.
+_MOCK_AGENT_NAME_TO_KEY_CASE = case(_MOCK_AGENT_NAME_TO_KEY, value=AgentTicket.agent_name)
+
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
@@ -249,62 +258,124 @@ def _build_departments(db: Session) -> list[dict]:
         for dept, count in dept_rows
     ]
 
-def get_action_count(db: Session) -> dict:
-    """For each of the 4 real connector agents (keycloak/mailu/kimai/
-    openkm): totalActions is the static per-call count x employee
-    headcount (how many actions this agent is expected to perform
-    across every employee); successRate is the % of this agent's
-    AgentTicket rows recorded so far that are Closed."""
-    employee_count = db.query(Employee).count()
-    static_counts = get_static_action_counts()
+def _real_and_mock_ticket_rows(db: Session):
+    """The two AgentTicket queries backing both get_action_count() and
+    get_total_action() -- pulled out so the two can never recognize a
+    different set of agents/tickets from each other (previously
+    get_total_action ran its own simpler, item-name-keyed query and
+    silently diverged from the software_name-based one here, undercounting
+    the mock agents it saw).
 
-    rows = (
+    - real_rows: the 4 real connector agents (keycloak/mailu/kimai/openkm),
+      grouped by (agent_name, status).
+
+    - mock_rows: mock-item tickets, grouped by (agent_name, status,
+      ProvisioningRecord.software_name) -- NOT by agent_key, since
+      provisioning_matrix.json gives the same agent_key a different
+      software_name per role (e.g. access_recommendation's software
+      differs between Tax and IT Support), and it's the software_name
+      that distinguishes them as separate agents in the DB today. Joined
+      via Employee (AgentTicket.employee_id is the human-facing
+      employee_id, ProvisioningRecord.employee_id is the internal
+      Employee.id) plus _MOCK_AGENT_NAME_TO_KEY_CASE to match the right
+      ProvisioningRecord row for that specific mock item, not just any
+      row for that employee."""
+    real_rows = (
         db.query(AgentTicket.agent_name, AgentTicket.status, func.count(AgentTicket.ticket_id))
-        .filter(AgentTicket.agent_name.in_(_AGENT_NAME_TO_SYSTEM_KEY.keys()))
+        .filter(AgentTicket.agent_name.in_(
+            AGENT_DISPLAY_NAMES[provisioning_key] for provisioning_key in _SYSTEM_AGENT_KEYS.values()
+        ))
         .group_by(AgentTicket.agent_name, AgentTicket.status)
         .all()
     )
 
-    tickets_total_by_agent: dict[str, int] = {}
-    tickets_closed_by_agent: dict[str, int] = {}
-    for agent_name, status, count in rows:
-        system_key = _AGENT_NAME_TO_SYSTEM_KEY.get(agent_name)
-        if system_key not in static_counts:
-            continue  # not one of the 4 real connector agents (e.g. a mock-item agent)
-        tickets_total_by_agent[system_key] = tickets_total_by_agent.get(system_key, 0) + count
-        if status == "Closed":
-            tickets_closed_by_agent[system_key] = tickets_closed_by_agent.get(system_key, 0) + count
+    mock_rows = (
+        db.query(AgentTicket.agent_name, AgentTicket.status, ProvisioningRecord.software_name, func.count(AgentTicket.ticket_id))
+        .join(Employee, AgentTicket.employee_id == Employee.employee_id)
+        .join(
+            ProvisioningRecord,
+            and_(
+                ProvisioningRecord.employee_id == Employee.id,
+                ProvisioningRecord.agent_key == _MOCK_AGENT_NAME_TO_KEY_CASE,
+            ),
+        )
+        .filter(AgentTicket.agent_name.in_(_MOCK_AGENT_NAME_TO_KEY.keys()))
+        .group_by(AgentTicket.agent_name, AgentTicket.status, ProvisioningRecord.software_name)
+        .all()
+    )
 
+    return real_rows, mock_rows
+
+
+def get_action_count(db: Session) -> dict:
+    """totalActions/successRate per agent:
+
+    - The 4 real connector agents (keycloak/mailu/kimai/openkm) are
+      keyed by their system key, weighted by their static per-call
+      action count from get_static_action_counts().
+
+    - Mock-item agents are instead keyed by the literal software_name
+      string stored on their ProvisioningRecord row (weighted 1, since
+      one mock ticket represents exactly one action).
+
+    totalActions = weight x employee headcount (how many actions this
+    agent is expected to perform across every employee); successRate is
+    the % of the underlying AgentTicket rows recorded so far that are Closed."""
+    employee_count = db.query(Employee).count()
+    static_counts = get_static_action_counts()
     result = {}
+
+    real_rows, mock_rows = _real_and_mock_ticket_rows(db)
+
+    # --- real connector agents ---
+    real_totals: dict[str, int] = {}
+    real_closed: dict[str, int] = {}
+    for agent_name, status, count in real_rows:
+        system_key = _AGENT_NAME_TO_SYSTEM_KEY.get(agent_name)
+        real_totals[system_key] = real_totals.get(system_key, 0) + count
+        if status == "Closed":
+            real_closed[system_key] = real_closed.get(system_key, 0) + count
     for agent, static_count in static_counts.items():
-        tickets_total = tickets_total_by_agent.get(agent, 0)
-        tickets_closed = tickets_closed_by_agent.get(agent, 0)
+        tickets_total = real_totals.get(agent, 0)
+        tickets_closed = real_closed.get(agent, 0)
         success_rate = round(tickets_closed / tickets_total * 100, 2) if tickets_total else 0.0
-        result[agent] = {
-            "totalActions": static_count * employee_count,
-            "successRate": success_rate,
-        }
+        result[agent] = {"totalActions": static_count * employee_count, "successRate": success_rate}
+
+    # --- mock-item agents, keyed by ProvisioningRecord.software_name ---
+    mock_totals: dict[str, int] = {}
+    mock_closed: dict[str, int] = {}
+    for agent_name, status, software_name, count in mock_rows:
+        key = software_name or agent_name
+        mock_totals[key] = mock_totals.get(key, 0) + count
+        if status == "Closed":
+            mock_closed[key] = mock_closed.get(key, 0) + count
+    for key, tickets_total in mock_totals.items():
+        tickets_closed = mock_closed.get(key, 0)
+        success_rate = round(tickets_closed / tickets_total * 100, 2) if tickets_total else 0.0
+        result[key] = {"totalActions": 1 * employee_count, "successRate": success_rate}
+
     return result
 
 
 
 def get_total_action(db: Session) -> dict:
-    agent_names = list(_AGENT_NAME_TO_SYSTEM_KEY.keys())
+    """"total" is the sum of get_action_count()'s totalActions across all
+    15 agents (same real_rows/mock_rows via _real_and_mock_ticket_rows,
+    so this always covers the exact same agent set that endpoint does) --
+    i.e. capacity: weight x employee headcount per agent, matching
+    get_action_count exactly rather than only counting tickets that
+    happen to already exist.
 
-    rows = (
-        db.query(
-            AgentTicket.agent_name,
-            AgentTicket.status,
-            func.count(AgentTicket.ticket_id),
-        )
-        .filter(AgentTicket.agent_name.in_(agent_names))
-        .group_by(AgentTicket.agent_name, AgentTicket.status)
-        .all()
-    )
-
-    # Each connector's static per-employee action count, keyed by system
-    # key ("keycloak"/"mailu"/"kimai"/"openkm").
+    completed/inProgress/failed are that same capacity split by the
+    actual AgentTicket status (Closed/Processing/Failed). notStarted
+    absorbs both explicit "New" tickets and each agent's unrealized
+    capacity -- the employees who haven't had a ticket opened for that
+    agent at all yet -- so the four status buckets always sum back to
+    "total" exactly (an employee who was never ticketed for an agent
+    hasn't had that action started, same as one sitting in "New")."""
+    employee_count = db.query(Employee).count()
     static_counts = get_static_action_counts()
+    real_rows, mock_rows = _real_and_mock_ticket_rows(db)
 
     total = 0
     completed = 0
@@ -312,41 +383,43 @@ def get_total_action(db: Session) -> dict:
     not_started = 0
     failed = 0
 
-    for agent_name, status, count in rows:
-
-        # Map this ticket's agent_name (e.g. "Identity Agent") back to
-        # its system key ("keycloak") to look up its static action count.
-# Map agent name to its system key.
-        system_key = _AGENT_NAME_TO_SYSTEM_KEY.get(agent_name)
-
-        # Functional agents use their configured static action count.
-        if system_key in _SYSTEM_AGENT_KEYS:
-            action_count = static_counts.get(system_key, 0)
-
-        # Mock agents always represent 1 action per ticket.
-        elif system_key in MOCK_AGENTS:
-            action_count = 1
-
-        else:
-            action_count = 0        # Number of actions represented by these tickets
-        actions = action_count * count
-
-        # Add to overall total
-        total += actions
-
-        # Add to the appropriate status total -- AgentTicket.status is
-        # one of New/Processing/Failed/Closed (see ticket_repository.py).
+    def _accumulate(status: str, actions: int) -> None:
+        nonlocal completed, in_progress, not_started, failed
+        # AgentTicket.status is one of New/Processing/Failed/Closed (see
+        # ticket_repository.py).
         if status == "Closed":
             completed += actions
-
         elif status == "Processing":
             in_progress += actions
-
         elif status == "New":
             not_started += actions
-
         elif status == "Failed":
             failed += actions
+
+    # --- real connector agents: capacity = static per-employee weight x headcount ---
+    real_actual_by_key: dict[str, int] = {}
+    for agent_name, status, count in real_rows:
+        system_key = _AGENT_NAME_TO_SYSTEM_KEY.get(agent_name)
+        actions = static_counts.get(system_key, 0) * count
+        _accumulate(status, actions)
+        real_actual_by_key[system_key] = real_actual_by_key.get(system_key, 0) + actions
+
+    for system_key, weight in static_counts.items():
+        capacity = weight * employee_count
+        total += capacity
+        not_started += max(capacity - real_actual_by_key.get(system_key, 0), 0)
+
+    # --- mock agents: capacity = 1 action x headcount, per software_name bucket ---
+    mock_actual_by_bucket: dict[str, int] = {}
+    for agent_name, status, software_name, count in mock_rows:
+        key = software_name or agent_name
+        _accumulate(status, count)
+        mock_actual_by_bucket[key] = mock_actual_by_bucket.get(key, 0) + count
+
+    for key, actual in mock_actual_by_bucket.items():
+        capacity = employee_count
+        total += capacity
+        not_started += max(capacity - actual, 0)
 
     return {
         "total": total,

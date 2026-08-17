@@ -41,7 +41,10 @@ _SYSTEM_AGENT_KEYS = {
     "kimai": "time_billing",
     "openkm": "document_management",
 }
-
+_SYSTEM_AGENT_NAMES = [
+    AGENT_DISPLAY_NAMES[provisioning_key]
+    for provisioning_key in _SYSTEM_AGENT_KEYS.values()
+]
 # get_action_count()'s system keys -> the exact display name used in
 # _HEALTH_CHECKS/systemHealthDetail (health_check_orchestrator.py), so the
 # frontend can key off SystemHealthDetail.name for both latency/uptime and
@@ -168,10 +171,10 @@ def _recent_logs(db: Session) -> dict:
             )
         )
         .filter(
-            ~AuditLog.agent.in_(EXCLUDED_AGENTS)
+            AuditLog.agent.in_(_SYSTEM_AGENT_NAMES)
         )
         .order_by(
-            AuditLog.timestamp.desc(),
+            AgentTicket.updated_at.desc(),
             ProvisioningRecord.last_attempted_at.desc(),
         )
         .limit(50)

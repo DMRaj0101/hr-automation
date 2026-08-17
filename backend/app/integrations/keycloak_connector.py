@@ -368,7 +368,7 @@ def create_user(employee_name: str, employee_email: str, deparment: str, scoped_
             "external_ref": user_id,
             "username": username,
             "password": username,
-            "detail": "Identity account created.",
+            "detail": f"{user_id}Keycloak ID has been created successfully for {employee_name}.",
         }
     except KeycloakConnectorError:
         raise
