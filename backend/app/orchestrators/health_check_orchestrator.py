@@ -164,6 +164,21 @@ def _run_single_check(name: str, check_fn: Callable[[], dict]) -> dict:
         logger.error("Health check failed for %s: %s", name, exc)
         result = {"status": "DOWN", "status_code": None, "latency_ms": 0.0, "error": str(exc)}
 
+    # Every check_*_latency()/_ping() implementation only fills in "error"
+    # on a network-level exception -- a reachable-but-non-200 response
+    # (e.g. Kimai returning 401) comes back as status="DOWN" with
+    # error=None, status_code set. Left as None, that empty error would
+    # later read as "healthy" in _translate_errors_to_business_language()
+    # despite status being Down, so synthesize one here from status_code.
+    error = result.get("error")
+    if not error and result.get("status") != "UP":
+        status_code = result.get("status_code")
+        error = (
+            f"Received unexpected status code {status_code}"
+            if status_code is not None
+            else "Health check reported a failure with no additional details"
+        )
+
     # latency_ms and error carry the raw check_fn() readings through to
     # _persist_health() below -- the frontend-facing "latency" key from
     # _to_frontend_status() is a formatted string ("123ms" / "Timeout"),
@@ -171,7 +186,7 @@ def _run_single_check(name: str, check_fn: Callable[[], dict]) -> dict:
     return {
         "name": name,
         "latency_ms": result.get("latency_ms"),
-        "error": result.get("error"),
+        "error": error,
         **_to_frontend_status(result),
     }
 
@@ -217,6 +232,13 @@ def get_cached_health() -> dict:
         return _cached_result.copy()
 
 
+_translation_cache_lock = threading.Lock()
+# name -> (raw_error, translated_error), so a still-failing integration
+# reporting the exact same raw error doesn't pay for a fresh Ollama call
+# every sweep -- only re-translated when the raw error text changes.
+_translation_cache: dict[str, tuple[str, str]] = {}
+
+
 def _translate_errors_to_business_language(details: list[dict]) -> None:
     """
     Rewrites each detail's "error" in place into a short, non-technical
@@ -226,22 +248,39 @@ def _translate_errors_to_business_language(details: list[dict]) -> None:
     A down/slow Ollama must not block the sweep: call_ollama_text() raises
     OllamaError on any failure, in which case the raw error is kept as-is
     rather than losing the detail entirely.
+
+    Ollama is only actually invoked when an integration's raw error text
+    differs from the last sweep's (see _translation_cache) -- a long-lived
+    outage with an unchanged error message reuses its previous translation
+    instead of re-asking Ollama every CHECK_INTERVAL_SECONDS.
     """
     prompt_template = _load_error_translation_prompt()
 
     for item in details:
         error = item.get("error")
+        name = item.get("name")
 
         # No error means the system is healthy
         if not error or not str(error).strip():
             item["error"] = "The system is healthy and operating normally."
             continue
 
-        prompt = prompt_template.format(name=item.get("name"), status=item.get("status"), error=error)
+        with _translation_cache_lock:
+            cached = _translation_cache.get(name)
+        if cached is not None and cached[0] == error:
+            item["error"] = cached[1]
+            continue
+
+        prompt = prompt_template.format(name=name, status=item.get("status"), error=error)
         try:
-            item["error"] = call_ollama_text(prompt)
+            translated = call_ollama_text(prompt)
         except OllamaError as exc:
-            logger.error("Ollama translation failed for %s: %s", item.get("name"), exc)
+            logger.error("Ollama translation failed for %s: %s", name, exc)
+            continue
+
+        item["error"] = translated
+        with _translation_cache_lock:
+            _translation_cache[name] = (error, translated)
 def _persist_health(details: list[dict]) -> None:
     """
     Inserts one new AgentHealth row per integration per sweep -- an

@@ -41,6 +41,9 @@ _STATUS_LABELS = {
     "active": "Completed",
 
 }
+
+EXCLUDED_AGENT_KEYS = ["KeyCloak", "keycloak"]  
+
  
 # System only ever runs one workflow type -- offboarding was removed
 
@@ -231,6 +234,20 @@ def _format_dt(value):
     return value.strftime("%d-%m-%Y %H:%M:%S") if value else None
 
 
+def _hide_credentials_for_record(record) -> bool:
+    """Keycloak/identity rows intentionally hide credentials in the UI.
+    Some records are keyed by agent_key ('identity' / 'keycloak'), while
+    failed rows may also surface as platform='Keycloak'; match both shapes,
+    case-insensitive, so every Keycloak result suppresses username/password.
+    """
+    if record is None:
+        return False
+
+    agent_key = (record.agent_key or "").strip().lower()
+    software_name = (record.software_name or "").strip().lower()
+    return agent_key in {"identity", "keycloak"} or software_name == "keycloak"
+
+
 def _provisional_row(agent, record, creds_by_record: dict, employee: Employee) -> dict:
     """One "Provisioning Result" row for the individual employee's
     onboarding tracker (frontend: components/onboarding/OnboardingChecklist
@@ -282,15 +299,17 @@ def _provisional_row(agent, record, creds_by_record: dict, employee: Employee) -
     credential = creds_by_record.get(record.id)
     external_ref = (credential.external_ref if credential else None) or record.external_ref
     username = (credential.username if credential else None) or record.username
+    hide_credentials = _hide_credentials_for_record(record)
+
     return {
         **base,
         "platform": record.software_name,  # real
         "externalRef": external_ref,
         "credentials": {
-            "username": username,
+            "username": None if hide_credentials else username,
             # None when the connector reused an existing account and issued
             # nothing new; the frontend hides the password row in that case.
-            "password": credential.password if credential else None,
+            "password": credential.password if credential and not hide_credentials else None,
         },
         "provided": provisioning_details.provided_for(
             record.agent_key, record.provisioning_item, employee.department,
