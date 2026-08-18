@@ -27,24 +27,35 @@ const REAL_SYSTEM_META: Record<
 > = {
   keycloak: { name: "Keycloak", subtitle: "Identity Account Creation", icon: KeyRound },
   mailu: { name: "MailU", subtitle: "Email Account Creation", icon: Mail },
-  kimai: { name: "Kimai", subtitle: "Time & Billing", icon: Clock },
-  openkm: { name: "OpenKM", subtitle: "Document Management", icon: FileText },
+  kimai: { name: "Kimai", subtitle: "Time & Billing Agent", icon: Clock },
+  openkm: { name: "OpenKM", subtitle: "Document Management Agent", icon: FileText },
 };
 
-// Best-effort icon rules for the mock software names -- purely cosmetic,
-// tested in order against the actionCounts key (config_data/
+// Best-effort icon + subtitle rules for the mock software names -- purely
+// cosmetic, tested in order against the actionCounts key (config_data/
 // provisioning_matrix.json's "software" fields, e.g. the per-department
-// "Microsoft 365, <software>, NetDocuments" Access Recommendation combos),
-// falling back to a generic icon for anything unmatched.
-const MOCK_ICON_RULES: { test: RegExp; icon: ElementType }[] = [
-  { test: /netdocuments|access recommendation/i, icon: ClipboardList },
-  { test: /snipe-?it|asset/i, icon: Monitor },
-  { test: /cisco|vpn|network/i, icon: Network },
-  { test: /westlaw|legal research/i, icon: BookOpen },
-  { test: /caseware|audit software/i, icon: ShieldCheck },
-  { test: /axcess tax|tax preparation/i, icon: Receipt },
-  { test: /servicenow|glpi|ticketing/i, icon: Ticket },
-  { test: /microsoft 365|productivity suite/i, icon: LayoutGrid },
+// "Microsoft 365, <software>, NetDocuments" Access Recommendation combos).
+// More specific patterns (department-flavored combos) are listed BEFORE
+// their generic fallback so they match first -- order matters here.
+const MOCK_ICON_RULES: { test: RegExp; icon: ElementType; subtitle: string }[] = [
+  // Access Recommendation combos -- department-specific, checked before
+  // the generic netdocuments/access-recommendation fallback below.
+  { test: /caseware/i, icon: ClipboardList, subtitle: "Access Recommendation Agent (Audit)" },
+  { test: /cch axcess tax.*netdocuments|netdocuments.*cch axcess tax/i, icon: ClipboardList, subtitle: "Access Recommendation Agent (Tax)" },
+  { test: /imanage/i, icon: ClipboardList, subtitle: "Access Recommendation Agent (Law)" },
+  { test: /netdocuments|access recommendation/i, icon: ClipboardList, subtitle: "Access Recommendation Agent" },
+
+  { test: /snipe-?it|asset/i, icon: Monitor, subtitle: "Asset Allocation Agent" },
+  { test: /cisco|vpn|network/i, icon: Network, subtitle: "Network Access Agent" },
+  { test: /westlaw|legal research/i, icon: BookOpen, subtitle: "Legal Research Agent" },
+  { test: /caseware.*audit|audit software/i, icon: ShieldCheck, subtitle: "Audit Software Agent" },
+  { test: /axcess tax|tax preparation/i, icon: Receipt, subtitle: "Tax Preparation Agent" },
+  { test: /servicenow|glpi|ticketing/i, icon: Ticket, subtitle: "Ticketing/ITSM Agent" },
+
+  // Productivity Suite -- "+ Teams" combo is Law-specific, checked before
+  // the plain "Microsoft 365" fallback shared by Tax/Audit/IT Support.
+  { test: /microsoft 365\s*\+\s*teams/i, icon: LayoutGrid, subtitle: "Productivity Suite Agent (Law)" },
+  { test: /microsoft 365|productivity suite/i, icon: LayoutGrid, subtitle: "Productivity Suite Agent (Tax / Audit / IT Support)" },
 ];
 const DEFAULT_MOCK_ICON = Boxes;
 
@@ -52,14 +63,18 @@ function mockIconFor(key: string): ElementType {
   return MOCK_ICON_RULES.find((rule) => rule.test.test(key))?.icon ?? DEFAULT_MOCK_ICON;
 }
 
+function mockSubtitleFor(key: string): string | null {
+  return MOCK_ICON_RULES.find((rule) => rule.test.test(key))?.subtitle ?? null;
+}
+
 // Success-rate color coding:
-// 100%      -> green
-// >50, <100 -> orange
-// <=50%     -> red
+// 100%     -> green
+// 50-99%   -> orange
+// below 50%-> red
 function successColorFor(pct: number): { color: string; bg: string } {
   if (pct >= 100) return { color: "#15803d", bg: "#dcfce7" }; // green
-  if (pct > 50) return { color: "#c2680d", bg: "#fef3c7" }; // orange
-  return { color: "#b91c1c", bg: "#fee2e2" }; // red
+  if (pct >= 50) return { color: "#c2680d", bg: "#fef3c7" }; // orange (includes 50%)
+  return { color: "#b91c1c", bg: "#fee2e2" }; // red (below 50%)
 }
 
 export function SystemStatusCards({
@@ -67,19 +82,12 @@ export function SystemStatusCards({
 }: {
   actionCounts: Record<string, SystemActionCount>;
 }) {
-  // One card per actionCounts entry -- whatever real + mock agents/systems
-  // the backend actually has action data for right now, not a fixed list
-  // that silently drops entries as the DB's mock software names vary.
   const systems = Object.entries(actionCounts).map(([key, counts]) => {
     const realMeta = REAL_SYSTEM_META[key];
     const isReal = Boolean(realMeta);
     const name = realMeta?.name ?? key;
-    const subtitle = realMeta?.subtitle ?? null;
+    const subtitle = realMeta?.subtitle ?? mockSubtitleFor(key);
     const Icon = realMeta?.icon ?? mockIconFor(key);
-    // Every card gets its own color -- keyed off `key` (system key for
-    // real, literal software_name for mock) so it's stable across
-    // reloads, and spreads the open-ended/varying set of mock agents
-    // across the palette instead of every card sharing one flat color.
     const { bg, color } = iconColorFor(key);
     const successColor = successColorFor(counts.successRate);
 

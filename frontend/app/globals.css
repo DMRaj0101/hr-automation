@@ -441,8 +441,9 @@ body {
   position: relative;
   z-index: 2;
   box-sizing: border-box;
-  flex: 1;
+  flex: 0 1 auto;      /* was: flex: 1; — stop force-filling leftover space */
   min-height: 0;
+  max-height: 100%;    /* new — still allows shrink + internal scroll when content overflows */
   overflow: auto;
   overflow-x: auto;
   scrollbar-gutter: stable;

@@ -19,13 +19,19 @@ export const PAGE_HEADERS = [
   {
     href: "/employee-directory",
     title: "Employee directory",
-    subtitle: "Browse every employee in the onboarding pipeline",
+    subtitle: "Manage employee information throughout the employee lifecycle.",
     icon: Users,
+  },
+  {
+    href: "/onboarding/",
+    title: "Employee Onboarding Details",
+    subtitle: "View individual onboarding progress, tasks, dependencies, and active blockers.",
+    icon: ListChecks,
   },
   {
     href: "/onboarding",
     title: "Onboarding tracker",
-    subtitle: "Track onboarding progress across the team",
+    subtitle: "Track onboarding progress, status, and blockers across all new hires",
     icon: ListChecks,
   },
   {
@@ -50,11 +56,23 @@ export const PAGE_HEADERS = [
 
 export function getDefaultHeader(pathname: string) {
   const match =
-    PAGE_HEADERS.find((item) =>
-      item.href === "/employee-directory"
-        ? pathname.startsWith("/employee-directory") || pathname.startsWith("/employee/")
-        : pathname.startsWith(item.href)
-    ) ?? PAGE_HEADERS[0];
+    PAGE_HEADERS.find((item) => {
+      if (item.href === "/employee-directory") {
+        return pathname.startsWith("/employee-directory") || pathname.startsWith("/employee/");
+      }
+      if (item.href === "/onboarding/") {
+        // Detail page: /onboarding/<id> — must be checked before the
+        // plain "/onboarding" tracker entry below, since that one's
+        // startsWith("/onboarding") would otherwise match this route too.
+        return pathname.startsWith("/onboarding/");
+      }
+      if (item.href === "/onboarding") {
+        // Tracker list page only — exclude detail routes so this entry
+        // doesn't win first just because both share the same prefix.
+        return pathname === "/onboarding" || (pathname.startsWith("/onboarding") && !pathname.startsWith("/onboarding/"));
+      }
+      return pathname.startsWith(item.href);
+    }) ?? PAGE_HEADERS[0];
 
   return {
     title: match.title,
