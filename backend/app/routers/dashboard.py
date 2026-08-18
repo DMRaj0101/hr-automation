@@ -114,31 +114,39 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 def _build_stats(db: Session) -> dict:
     """total is the employee headcount; the other four counts classify
-    each employee (not each ProvisioningRecord row) by rolling up all of
-    that employee's provisioning item statuses: all completed ->
-    completed, no records or all not_started -> notStarted, all failed
-    -> failed, anything else (any in_progress, or a completed/failed mix
-    with no in_progress row) -> inProgress since the employee's
-    provisioning is neither finished nor fully stalled."""
+    each employee (not each AgentTicket row) by rolling up all of that
+    employee's agent ticket statuses: no tickets at all -> notStarted,
+    any ticket Failed -> failed (a single failed agent stalls the whole
+    employee), all tickets Closed -> completed, anything else (a mix of
+    Closed/Processing/New with no Failed) -> inProgress since the
+    employee's provisioning is neither finished nor stalled."""
     total = db.query(Employee).count()
 
-    rows = db.query(ProvisioningRecord.employee_id, ProvisioningRecord.status).all()
+    rows = db.query(AgentTicket.employee_id, AgentTicket.status).all()
     statuses_by_employee: dict[str, list[str]] = {}
     for employee_id, status in rows:
         statuses_by_employee.setdefault(employee_id, []).append(status)
 
     completed = in_progress = failed = not_started = 0
-    for (employee_id,) in db.query(Employee.id).all():
+
+    # AgentTicket.employee_id stores the human-facing Employee.employee_id
+    # (e.g. "EMP-1001"), not the internal Employee.id UUID -- must query
+    # the same column statuses_by_employee above was keyed by, or every
+    # lookup below misses and every employee falls into notStarted.
+    for (employee_id,) in db.query(Employee.employee_id).all():
         statuses = statuses_by_employee.get(employee_id, [])
-        if not statuses or all(s == "not_started" for s in statuses):
+
+        if not statuses:
             not_started += 1
-        elif all(s == "completed" for s in statuses):
-            completed += 1
-        elif all(s == "failed" for s in statuses):
+
+        elif "Failed" in statuses:
             failed += 1
+
+        elif all(s == "Closed" for s in statuses):
+            completed += 1
+
         else:
             in_progress += 1
-
     return {
         "total": total,
         "completed": completed,
@@ -362,71 +370,72 @@ def get_total_action(db: Session) -> dict:
     """"total" is the sum of get_action_count()'s totalActions across all
     15 agents (same real_rows/mock_rows via _real_and_mock_ticket_rows,
     so this always covers the exact same agent set that endpoint does) --
-    i.e. capacity: weight x employee headcount per agent, matching
-    get_action_count exactly rather than only counting tickets that
-    happen to already exist.
+    i.e. capacity: weight x employee headcount per agent.
 
-    completed/inProgress/failed are that same capacity split by the
-    actual AgentTicket status (Closed/Processing/Failed). notStarted
-    absorbs both explicit "New" tickets and each agent's unrealized
-    capacity -- the employees who haven't had a ticket opened for that
-    agent at all yet -- so the four status buckets always sum back to
-    "total" exactly (an employee who was never ticketed for an agent
-    hasn't had that action started, same as one sitting in "New")."""
+    completed/inProgress/failed/notStarted split that same capacity in
+    the exact proportions of each agent's actual AgentTicket statuses --
+    the same relationship get_action_count()'s totalActions x successRate
+    implies (successRate IS the Closed share of that agent's actual
+    tickets), so the two endpoints can never disagree about how many
+    actions are complete. Capacity beyond what's actually been ticketed
+    for an agent isn't assumed to resolve any particular way UNLESS the
+    agent already has at least one ticket -- an agent with zero tickets
+    at all puts its full capacity in notStarted, same as before; an
+    agent with some tickets scales its existing status split (e.g. 3 of
+    3 tickets Closed) across its full headcount-based capacity, exactly
+    mirroring successRate's 100%."""
     employee_count = db.query(Employee).count()
     static_counts = get_static_action_counts()
     real_rows, mock_rows = _real_and_mock_ticket_rows(db)
 
     total = 0
-    completed = 0
-    in_progress = 0
-    not_started = 0
-    failed = 0
+    completed = 0.0
+    in_progress = 0.0
+    not_started = 0.0
+    failed = 0.0
 
-    def _accumulate(status: str, actions: int) -> None:
-        nonlocal completed, in_progress, not_started, failed
+    def _add_bucket(capacity: int, status_actions: dict[str, int]) -> None:
+        nonlocal total, completed, in_progress, not_started, failed
+        total += capacity
+        actual_total = sum(status_actions.values())
+        if actual_total == 0:
+            not_started += capacity
+            return
         # AgentTicket.status is one of New/Processing/Failed/Closed (see
         # ticket_repository.py).
-        if status == "Closed":
-            completed += actions
-        elif status == "Processing":
-            in_progress += actions
-        elif status == "New":
-            not_started += actions
-        elif status == "Failed":
-            failed += actions
+        scale = capacity / actual_total
+        completed += status_actions.get("Closed", 0) * scale
+        in_progress += status_actions.get("Processing", 0) * scale
+        not_started += status_actions.get("New", 0) * scale
+        failed += status_actions.get("Failed", 0) * scale
 
     # --- real connector agents: capacity = static per-employee weight x headcount ---
-    real_actual_by_key: dict[str, int] = {}
+    real_status_by_key: dict[str, dict[str, int]] = {}
     for agent_name, status, count in real_rows:
         system_key = _AGENT_NAME_TO_SYSTEM_KEY.get(agent_name)
         actions = static_counts.get(system_key, 0) * count
-        _accumulate(status, actions)
-        real_actual_by_key[system_key] = real_actual_by_key.get(system_key, 0) + actions
+        bucket = real_status_by_key.setdefault(system_key, {})
+        bucket[status] = bucket.get(status, 0) + actions
 
     for system_key, weight in static_counts.items():
-        capacity = weight * employee_count
-        total += capacity
-        not_started += max(capacity - real_actual_by_key.get(system_key, 0), 0)
+        _add_bucket(weight * employee_count, real_status_by_key.get(system_key, {}))
 
     # --- mock agents: capacity = 1 action x headcount, per software_name bucket ---
-    mock_actual_by_bucket: dict[str, int] = {}
+    mock_status_by_bucket: dict[str, dict[str, int]] = {}
     for agent_name, status, software_name, count in mock_rows:
         key = software_name or agent_name
-        _accumulate(status, count)
-        mock_actual_by_bucket[key] = mock_actual_by_bucket.get(key, 0) + count
+        bucket = mock_status_by_bucket.setdefault(key, {})
+        bucket[status] = bucket.get(status, 0) + count
 
-    for key, actual in mock_actual_by_bucket.items():
-        capacity = employee_count
-        total += capacity
-        not_started += max(capacity - actual, 0)
+    for key, status_actions in mock_status_by_bucket.items():
+        _add_bucket(employee_count, status_actions)
 
     return {
         "total": total,
-        "completed": completed,
-        "inProgress": in_progress,
-        "notStarted": not_started,
-        "failed": failed,
+        "completed": round(completed),
+        "inProgress": round(in_progress),
+        "notStarted": round(not_started),
+        "failed": round(failed),
     }
 
 def _build_system_health() -> list[dict]:
