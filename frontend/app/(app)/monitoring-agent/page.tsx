@@ -33,12 +33,15 @@ export default function MonitoringAgentPage() {
             </h3>
 
             <span className="rounded-full bg-[#EEF2F6] px-2.5 py-0.5 text-xs font-semibold text-vantara-navy">
-              {(systemHealth.data ?? []).length} integrations
+              {(systemHealth.data?.items ?? []).length} integrations
             </span>
           </div>
 
           <div className="mt-4">
-            <SystemHealthGrid items={systemHealth.data ?? []} />
+            <SystemHealthGrid
+              items={systemHealth.data?.items ?? []}
+              degradedThresholdMs={systemHealth.data?.degradedThresholdMs ?? null}
+            />
           </div>
         </div>
 

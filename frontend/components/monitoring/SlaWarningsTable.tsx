@@ -25,8 +25,17 @@ const columns: ColumnDef<SlaWarning>[] = [
   {
     header: "Breach Since",
     accessorKey: "breach_since",
-    cell: ({ row }) =>
-      row.original.breach_since ? new Date(row.original.breach_since).toLocaleString() : "—",
+    cell: ({ row }) => {
+      if (!row.original.breach_since) return "—";
+      // FastAPI serializes this naive-UTC datetime with no "Z"/offset
+      // suffix (e.g. "2026-08-17T13:29:34.123456") -- new Date() on that
+      // shape is parsed as local time per spec, not UTC. Append "Z" so
+      // it's parsed as UTC and toLocaleString() converts it correctly to
+      // the viewer's own timezone instead of double-applying an offset.
+      const raw = row.original.breach_since;
+      const isoUtc = /Z|[+-]\d{2}:\d{2}$/.test(raw) ? raw : `${raw}Z`;
+      return new Date(isoUtc).toLocaleString();
+    },
   },
   {
     header: "SLA (hrs)",
