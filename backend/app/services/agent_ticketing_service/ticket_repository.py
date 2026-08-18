@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.models import AgentTicket, TicketFollowup
+from app.services.ticket_numbering import next_ticket_reference
 
 
 class TicketRepository:
@@ -102,7 +103,13 @@ class TicketRepository:
             db.commit()
 
     def generate_ticket_reference(self, db: Session, ticket_id: int, override: str = None) -> str:
-        reference = override or (f"TKT-{ticket_id:04d}" if ticket_id <= 9999 else f"TKT-{ticket_id}")
+        """`override` is the human-facing Ticket id a Mock item already
+        raised -- the pair is one ticket seen twice, so it keeps one
+        number. Without an override the number comes from the system-wide
+        allocator; it used to be formatted straight off `ticket_id`, this
+        row's autoincrement primary key, which is a sequence the Ticket
+        table knows nothing about (see services/ticket_numbering.py)."""
+        reference = override or next_ticket_reference(db)
         ticket = db.query(AgentTicket).filter_by(ticket_id=ticket_id).first()
         if ticket:
             ticket.ticket_reference = reference

@@ -9,27 +9,19 @@ ticket with child tasks. Functional items never generate a ticket.
 """
 import json
 import datetime
-import itertools
 from sqlalchemy.orm import Session
 from app.models import Ticket, AuditLog
 from app.services.onboarding_status import mark_active_if_onboarding_complete
-
-_ticket_counter = itertools.count(1001)  # TODO: replace with a real sequence/lookup once this isn't single-process -- fine for POC/demo scope
+from app.services.ticket_numbering import next_ticket_reference
 
 
 def _next_ticket_id(db: Session) -> str:
-    """Simple incrementing ID (TKT-1001, TKT-1002, ...). Looks at the
-    highest existing ticket_id in the DB first so restarts don't collide,
-    rather than trusting the in-process counter alone."""
-    last = db.query(Ticket).order_by(Ticket.ticket_id.desc()).first()
-    if last and last.ticket_id.startswith("TKT-"):
-        try:
-            next_n = int(last.ticket_id.split("-")[1]) + 1
-        except (IndexError, ValueError):
-            next_n = next(_ticket_counter)
-    else:
-        next_n = next(_ticket_counter)
-    return f"TKT-{next_n}"
+    """Next TKT- id, from the system-wide allocator in
+    services/ticket_numbering.py rather than a counter of its own. This
+    used to seed at 1001 while the AgentTicket half of the same queue
+    numbered from 0001, so the two ran as separate sequences -- see that
+    module's docstring."""
+    return next_ticket_reference(db)
 
 
 def create_ticket(db: Session, employee_id: str, role: str, mock_item: dict, agent_name:str) -> Ticket:

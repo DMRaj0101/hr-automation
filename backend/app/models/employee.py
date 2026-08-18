@@ -118,7 +118,7 @@ class Ticket(Base):
     __tablename__ = "tickets"
 
     id = Column(String, primary_key=True, default=gen_id)
-    ticket_id = Column(String, unique=True, nullable=False)  # human-facing ID, e.g. "TKT-1002"
+    ticket_id = Column(String, unique=True, nullable=False)  # human-facing ID, e.g. "TKT-0006" -- allocated by services/ticket_numbering.py, the same sequence AgentTicket.ticket_reference draws from
     employee_id = Column(String, ForeignKey("employees.id"), nullable=False)
     role = Column(String, nullable=False)
     provisioning_item = Column(String, nullable=False)
