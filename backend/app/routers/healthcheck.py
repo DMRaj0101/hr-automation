@@ -142,8 +142,16 @@ def _recent_logs(db: Session) -> dict:
     employee can in principle have more than one ProvisioningRecord row
     for the same agent_key (functional_items in onboarding_orchestrator.py
     is a list, not a 1:1 map), so this can still fan out one AuditLog row
-    into multiple result rows -- deduped below by keeping the
-    most-recently-attempted match per AuditLog row."""
+    into multiple result rows -- deduped below by keeping the first
+    (arbitrary, since they share the same AuditLog row) match per
+    AuditLog row.
+
+    One row PER AGENT, not per log entry: ordered by AuditLog.timestamp
+    descending so the first row seen for a given agent is that agent's
+    most recent run, every later row for that same agent is dropped, and
+    the result is capped at the 10 most-recently-active distinct agents
+    -- not merely the 10 most recent rows (which could all belong to the
+    same one or two agents)."""
     from sqlalchemy import and_
     rows = (
         db.query(
@@ -171,25 +179,28 @@ def _recent_logs(db: Session) -> dict:
             )
         )
         .filter(
-            AuditLog.agent.in_(_SYSTEM_AGENT_NAMES)
+            AuditLog.agent.in_(_AGENT_NAME_TO_SYSTEM_KEY)
         )
-        .order_by(
-            AgentTicket.updated_at.desc(),
-            ProvisioningRecord.last_attempted_at.desc(),
-        )
-        .limit(50)
+        .order_by(AuditLog.timestamp.desc())
         .all()
     )
 
-    # Dedup: an AuditLog row can still match more than one ProvisioningRecord
-    # (see docstring above) -- keep only the first (most-recently-attempted,
-    # per the order_by above) match per distinct AuditLog row, then cap at 10.
+    # Two-stage dedup: first collapse ProvisioningRecord fan-out back to
+    # one row per AuditLog row (see docstring), then collapse that down
+    # to one row per agent -- the most recent, since `rows` is already
+    # ordered by AuditLog.timestamp desc -- capped at 10 distinct agents.
     seen_audit_ids: set[str] = set()
+    seen_agents: set[str] = set()
     deduped: list[tuple] = []
     for a, employee, agent_ticket, provisioning_record in rows:
         if a.id in seen_audit_ids:
             continue
         seen_audit_ids.add(a.id)
+
+        if a.agent in seen_agents:
+            continue
+        seen_agents.add(a.agent)
+
         deduped.append((a, employee, agent_ticket, provisioning_record))
         if len(deduped) == 10:
             break

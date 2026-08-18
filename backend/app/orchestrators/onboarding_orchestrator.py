@@ -100,7 +100,6 @@ AGENT_DISPLAY_NAMES = {
     "remote_support_tool": "Remote Support Tool Agent",
 }
 
-
 def _mark(db: Session, employee_id: str, step: str, status: str, detail: str = None):
     db.add(OnboardingTracker(employee_id=employee_id, step=step, status=status, detail=detail))
     db.commit()
