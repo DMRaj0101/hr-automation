@@ -165,8 +165,18 @@ export function DataTable<T>({
 
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="directory-table-wrap flex-1 overflow-y-auto overflow-x-auto">
-        <div className="w-full" style={{ minWidth }}>
+      {/* min-h-0 + flex-1 lets this wrap adapt to whatever height the
+          parent card actually has on any screen size/ratio (no fixed
+          vh offsets). overflow-y-auto only activates if content overflows
+          that space, e.g. a large "rows per page" selection. */}
+      <div className="directory-table-wrap min-h-0 flex-1 overflow-x-auto overflow-y-auto">
+        {/* height: "fit-content" is the actual fix -- without it this
+            inner box stretches to fill the flex-1 wrap above even when
+            there are only a few rows, which is what left blank space
+            before the pagination footer. With it, the box sizes itself
+            to its real content (5 rows = short, 20 rows = tall + the
+            wrap above scrolls) on every page that uses this component. */}
+        <div className="w-full" style={{ minWidth, height: "fit-content" }}>
           {/* ================= HEADER ================= */}
 
           {table.getHeaderGroups().map((headerGroup) => (
@@ -175,10 +185,6 @@ export function DataTable<T>({
               className="directory-table-header grid"
               style={{
                 gridTemplateColumns,
-                // Drawn directly on the row (rather than relying on an
-                // external CSS class) so the underline always spans exactly
-                // as wide as the grid actually renders — fixes the border
-                // stopping short of the last column(s).
                 width: "100%",
                 boxSizing: "border-box",
                 borderBottom: "2px solid #d99818",
