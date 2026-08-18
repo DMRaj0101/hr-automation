@@ -27,7 +27,12 @@ function stripActionVerb(action: string): string {
 }
 
 // Backend timestamps are formatted server-side as "%d-%m-%Y %H:%M:%S"
-// (healthcheck.py's _format_dt), not ISO -- parse that shape directly.
+// (healthcheck.py's _format_dt) from a datetime.utcnow() column, with no
+// timezone marker -- i.e. this string is UTC wall-clock time, not local.
+// Must parse via Date.UTC(...), not the local-time Date constructor, or
+// every relative "X ago" label drifts by the browser's UTC offset (e.g.
+// reads "6 hr ago" for something that happened under an hour ago in a
+// UTC+5:30 browser).
 function parseLogTimestamp(value: string): Date | null {
   const match = value.match(
     /^(\d{2})-(\d{2})-(\d{4}) (\d{2}):(\d{2}):(\d{2})$/
@@ -35,12 +40,14 @@ function parseLogTimestamp(value: string): Date | null {
   if (!match) return null;
   const [, day, month, year, hour, minute, second] = match;
   return new Date(
-    Number(year),
-    Number(month) - 1,
-    Number(day),
-    Number(hour),
-    Number(minute),
-    Number(second)
+    Date.UTC(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second)
+    )
   );
 }
 

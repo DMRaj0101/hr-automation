@@ -92,6 +92,16 @@ def _latency_history_and_uptime(db: Session) -> tuple[dict[str, list], dict[str,
     health_check_orchestrator._persist_health()). "Up" counts any status
     other than "Down" (Operational and Degraded both mean the
     integration responded).
+
+    latency_history is one entry per sweep, oldest first, exactly as
+    recorded -- null for a Down sweep (AgentHealth.latency_ms is nullable;
+    a Down sweep has no successful round-trip to time) rather than a fake
+    0ms. This is deliberately raw (not hour-bucketed): for a POC that may
+    only run for a short demo window, an hourly average can render as a
+    near-empty chart, and the line needs to move in lockstep with the
+    current status badge sweep-by-sweep (line trending up / gapping right
+    when the badge flips to Down or Degraded) rather than smoothing that
+    moment out into an hour-wide average.
     """
     cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=_UPTIME_WINDOW_HOURS)
     rows = (
@@ -281,6 +291,14 @@ def get_system_health(db: Session = Depends(get_db)):
         result["latencyHistory24h"] = latency_history
         result["uptimePercentage"] = uptime_percentage
         result["actionCounts"] = get_action_count(db)
+        # The single number that actually decides Operational vs Degraded
+        # (health_check_orchestrator._to_frontend_status()) -- sent so the
+        # frontend can draw a threshold reference line instead of hardcoding
+        # a copy of this constant that could drift out of sync with it.
+        # "Down" has no latency value to draw a line at (it's a failed/timed
+        # -out sweep, not a slow one) -- that status is already represented
+        # by the gap in the trend line.
+        result["degradedThresholdMs"] = health_check_orchestrator._DEGRADED_THRESHOLD_MS
         return result
     except Exception as exc:
         logger.error("Failed to read cached system health: %s", exc)

@@ -6,10 +6,13 @@ export interface SystemHealthDetail {
   // "The system is healthy and operating normally." when there's no error --
   // see health_check_orchestrator.get_cached_health()).
   error: string;
-  // Last-24h latency readings (ms), from GET /system-health's
+  // Last-24h latency, one raw reading per health-check sweep (default
+  // every 5 min, see CHECK_INTERVAL_SECONDS), from GET /system-health's
   // latencyHistory24h map -- merged in per-agent by getSystemHealthDetail()
-  // (services/monitoring.service.ts).
-  latencyHistory24h: number[];
+  // (services/monitoring.service.ts). An entry is null for a Down sweep
+  // (no successful round-trip to time) -- a gap in the trend, not a 0ms
+  // reading, so the line moves in sync with the status badge sweep-by-sweep.
+  latencyHistory24h: (number | null)[];
   // Total actions performed and success rate, from GET /system-health's
   // actionCounts map (routers/healthcheck.py's get_action_count()) --
   // only populated for the 4 real connector agents (Keycloak/MailU/Kimai/

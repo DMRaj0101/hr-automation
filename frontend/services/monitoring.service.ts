@@ -3,8 +3,18 @@ import { RecentLog, SlaWarning, SystemHealthDetail } from "@/types/monitoring";
 
 interface SystemHealthResponse {
   systemHealthDetail: { name: string; status: string; latency: string; error: string }[];
-  latencyHistory24h: Record<string, number[]>;
+  latencyHistory24h: Record<string, (number | null)[]>;
   actionCounts: Record<string, { totalActions: number; successRate: number }>;
+  degradedThresholdMs: number;
+}
+
+export interface SystemHealthResult {
+  items: SystemHealthDetail[];
+  // The latency (ms) at/above which a reachable integration is "Degraded"
+  // instead of "Operational" (health_check_orchestrator._DEGRADED_THRESHOLD_MS)
+  // -- for drawing a chart reference line without hardcoding a copy of
+  // that constant on the frontend.
+  degradedThresholdMs: number;
 }
 
 // Real backend data -- GET /system-health (routers/healthcheck.py) returns
@@ -12,14 +22,17 @@ interface SystemHealthResponse {
 // and action counts (totalActions/successRate), keyed by agent name. Merge
 // them onto each detail row here so components only deal with one flat
 // SystemHealthDetail shape.
-export async function getSystemHealthDetail(): Promise<SystemHealthDetail[]> {
+export async function getSystemHealthDetail(): Promise<SystemHealthResult> {
   const { data } = await backendApiClient.get<SystemHealthResponse>("/system-health");
-  return data.systemHealthDetail.map((item) => ({
-    ...item,
-    latencyHistory24h: data.latencyHistory24h[item.name] ?? [],
-    totalActions: data.actionCounts[item.name]?.totalActions ?? null,
-    successRate: data.actionCounts[item.name]?.successRate ?? null,
-  }));
+  return {
+    items: data.systemHealthDetail.map((item) => ({
+      ...item,
+      latencyHistory24h: data.latencyHistory24h[item.name] ?? [],
+      totalActions: data.actionCounts[item.name]?.totalActions ?? null,
+      successRate: data.actionCounts[item.name]?.successRate ?? null,
+    })),
+    degradedThresholdMs: data.degradedThresholdMs,
+  };
 }
 
 // GET /system-health/sla-warnings (routers/healthcheck.py) -- currently
