@@ -62,6 +62,7 @@ MOCK_AGENTS = {
     "network_access": "Network Access Agent",
     "ticketing_itsm": "Ticketing/ITSM Agent",
     "audit_software": "Audit Software Agent",
+    "asset_allocation": "Asset Allocation Agent",
 }
 # Inverse lookup: AgentTicket.agent_name (display string, e.g. "Identity
 # Agent") -> the system key ("keycloak") get_static_action_counts() uses,
