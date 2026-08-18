@@ -55,14 +55,19 @@ _SYSTEM_KEY_TO_HEALTH_NAME = {
     "kimai": "Kimai",
     "openkm": "OpenKM",
 }
+# Every non-real-connector agent_key (mock provisioning items), derived
+# from AGENT_DISPLAY_NAMES -- the same complete source dashboard.py's
+# _build_mock_agent_maps() reads from -- rather than a hand-copied
+# subset. A hardcoded list here previously missed "asset" (Asset
+# Allocation Agent), silently dropping that agent's rows from
+# _recent_logs()'s AuditLog.agent.in_(_AGENT_NAME_TO_SYSTEM_KEY) filter:
+# a Law-department employee has exactly 10 provisioning items but only 9
+# ever showed up in Agent Activity, because Asset Allocation's log rows
+# never matched.
 MOCK_AGENTS = {
-    "access_recommendation": "Access Recommendation Agent",
-    "legal_research": "Legal Research Agent",
-    "productivity_suite": "Productivity Suite Agent",
-    "network_access": "Network Access Agent",
-    "ticketing_itsm": "Ticketing/ITSM Agent",
-    "audit_software": "Audit Software Agent",
-    "asset_allocation": "Asset Allocation Agent",
+    key: display
+    for key, display in AGENT_DISPLAY_NAMES.items()
+    if key not in _SYSTEM_AGENT_KEYS.values()
 }
 # Inverse lookup: AgentTicket.agent_name (display string, e.g. "Identity
 # Agent") -> the system key ("keycloak") get_static_action_counts() uses,
