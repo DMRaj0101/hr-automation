@@ -52,6 +52,16 @@ function mockIconFor(key: string): ElementType {
   return MOCK_ICON_RULES.find((rule) => rule.test.test(key))?.icon ?? DEFAULT_MOCK_ICON;
 }
 
+// Success-rate color coding:
+// 100%      -> green
+// >50, <100 -> orange
+// <=50%     -> red
+function successColorFor(pct: number): { color: string; bg: string } {
+  if (pct >= 100) return { color: "#15803d", bg: "#dcfce7" }; // green
+  if (pct > 50) return { color: "#c2680d", bg: "#fef3c7" }; // orange
+  return { color: "#b91c1c", bg: "#fee2e2" }; // red
+}
+
 export function SystemStatusCards({
   actionCounts,
 }: {
@@ -71,6 +81,7 @@ export function SystemStatusCards({
     // reloads, and spreads the open-ended/varying set of mock agents
     // across the palette instead of every card sharing one flat color.
     const { bg, color } = iconColorFor(key);
+    const successColor = successColorFor(counts.successRate);
 
     return {
       key,
@@ -82,6 +93,7 @@ export function SystemStatusCards({
       color,
       actions: counts.totalActions,
       successPct: counts.successRate,
+      successColor,
     };
   });
 
@@ -118,8 +130,14 @@ export function SystemStatusCards({
                 <div className="dashboard-department-stat-label">Actions</div>
               </div>
 
-              <div className="dashboard-department-stat dashboard-department-stat-success">
-                <div className="dashboard-department-stat-num">
+              <div
+                className="dashboard-department-stat dashboard-department-stat-success"
+                style={{ background: sys.successColor.bg, borderRadius: 8 }}
+              >
+                <div
+                  className="dashboard-department-stat-num"
+                  style={{ color: sys.successColor.color }}
+                >
                   {sys.successPct}%
                 </div>
                 <div className="dashboard-department-stat-label">Success</div>

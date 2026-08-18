@@ -24,17 +24,17 @@ export default function TicketQueuePage() {
   }, [tickets]);
 
   const filtered = useMemo(() => {
-  if (!tickets) return [];
-  return tickets.filter((t) => {
-    const matchesSearch =
-      !search ||
-      String(t.id).toLowerCase().includes(search.toLowerCase()) ||
-      t.employee_id?.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = role === "All" || t.dept === role;
-    const matchesStatus = status === "All" || t.status === status;
-    return matchesSearch && matchesRole && matchesStatus;
-  });
-}, [tickets, search, role, status]);
+    if (!tickets) return [];
+    return tickets.filter((t) => {
+      const matchesSearch =
+        !search ||
+        String(t.id).toLowerCase().includes(search.toLowerCase()) ||
+        t.employee_id?.toLowerCase().includes(search.toLowerCase());
+      const matchesRole = role === "All" || t.dept === role;
+      const matchesStatus = status === "All" || t.status === status;
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }, [tickets, search, role, status]);
 
   return (
     <div className="directory-bg">
