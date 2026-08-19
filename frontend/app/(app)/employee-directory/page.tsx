@@ -17,7 +17,7 @@ export default function EmployeeDirectoryPage() {
   useEffect(() => {
     setHeader({
       title: "Employee directory",
-      subtitle: "Browse every employee in the onboarding pipeline",
+      subtitle: "Manage employee information throughout the employee lifecycle",
       icon: <Users size={24} strokeWidth={2} />,
     });
   }, [setHeader]);

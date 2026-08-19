@@ -358,23 +358,35 @@ body {
 
 .directory-bg {
   position: relative;
-  height: 100%;
+  /* was: min-height: 100%; — this forced the whole panel to stretch to full
+     page height even when there are only 1–2 rows, creating a big empty gap
+     below the pagination bar. Let the panel size to its content instead. */
+  min-height: 0;
   background: #fbfaf7;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .directory-bg .page-content,
 .directory-bg .page-content-chat {
   width: 100%;
   max-width: none !important;
-  height: 100%;
+  /* was: flex: 1; — same reasoning, don't force this to fill leftover
+     vertical space when content is short. */
+  flex: 0 1 auto;
+  min-height: 0;
   padding: 12px !important;
 }
 
 .directory-panel {
   position: relative;
   overflow: hidden;
-  height: 100%;
+  /* was: flex: 1; — stop force-stretching the panel to fill the page. */
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   box-sizing: border-box;
   border-radius: 20px;
@@ -441,9 +453,9 @@ body {
   position: relative;
   z-index: 2;
   box-sizing: border-box;
-  flex: 0 1 auto;      /* was: flex: 1; — stop force-filling leftover space */
+  flex: 0 1 auto;      /* stop force-filling leftover space */
   min-height: 0;
-  max-height: 100%;    /* new — still allows shrink + internal scroll when content overflows */
+  max-height: 100%;    /* still allows shrink + internal scroll when content overflows */
   overflow: auto;
   overflow-x: auto;
   scrollbar-gutter: stable;
@@ -453,6 +465,11 @@ body {
   border: 1px solid #E5E7EB !important;
   border-radius: 20px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  /* NEW: make this a column flex container so the pagination bar (a direct
+     child, rendered after the table rows) can be pinned to the bottom of
+     the card's own content instead of leaving a gap below the whole panel. */
+  display: flex;
+  flex-direction: column;
 }
 
 .directory-table-wrap {
@@ -755,6 +772,10 @@ body {
   padding: 14px 24px;
   border-top: 1px solid rgba(20,33,61,.08);
   background: #ffffff;
+  /* NEW: pin this to the bottom of the .directory-card flex column so it
+     sits directly under the last table row, with no dead space beneath
+     it. This is the actual fix for the gap you're seeing. */
+  margin-top: auto;
 }
 
 .directory-pagination-summary {

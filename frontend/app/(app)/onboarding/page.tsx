@@ -17,7 +17,7 @@ export default function OnboardingTrackerPage() {
   useEffect(() => {
     setHeader({
       title: "Onboarding tracker",
-      subtitle: "Track provisioning progress for every employee in flight",
+      subtitle: "Track onboarding progress, status, and blockers across all new hires",
       icon: <ListChecks size={22} strokeWidth={2} />,
     });
   }, [setHeader]);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import {
   User,
@@ -8,10 +9,12 @@ import {
   IdCard,
   Briefcase,
   Sparkles,
+  ListChecks,
 } from "lucide-react";
 
 import { useOnboardingDetail } from "@/hooks/useOnboardingDetail";
 import { useChecklist } from "@/hooks/useEmployee";
+import { useHeaderStore } from "@/store/headerStore";
 
 import { ProgressBar } from "@/components/common/ProgressBar";
 
@@ -24,6 +27,15 @@ export default function OnboardingDetailPage() {
 
   const { employee, detail } = useOnboardingDetail(id);
   const { data: checklist } = useChecklist(id);
+  const setHeader = useHeaderStore((s) => s.setHeader);
+
+  useEffect(() => {
+    setHeader({
+      title: "Employee Onboarding Details",
+      subtitle: "View individual onboarding progress, tasks, dependencies, and active blockers",
+      icon: <ListChecks size={22} strokeWidth={2} />,
+    });
+  }, [setHeader]);
 
   if (employee.isLoading || !employee.data) {
     return (
@@ -76,14 +88,14 @@ export default function OnboardingDetailPage() {
 
             <div className="ob-hero-pills">
               <span className="ob-hero-pill ob-hero-pill--id">
-  <IdCard size={14} strokeWidth={2} />
-  {emp.employee_id}
-</span>
+                <IdCard size={14} strokeWidth={2} />
+                {emp.employee_id}
+              </span>
 
-<span className="ob-hero-pill ob-hero-pill--role">
-  <Briefcase size={14} strokeWidth={2} />
-  {emp.title}
-</span>
+              <span className="ob-hero-pill ob-hero-pill--role">
+                <Briefcase size={14} strokeWidth={2} />
+                {emp.title}
+              </span>
             </div>
           </div>
         </div>
