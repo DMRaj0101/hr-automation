@@ -30,7 +30,7 @@ export default function EmployeeProfilePage() {
   useEffect(() => {
     setHeader({
       title: "Employee profile",
-      subtitle: "View employee details and onboarding progress",
+      subtitle: "View employee information, employment details, and onboarding progress",
       icon: <User size={22} strokeWidth={2} />,
     });
   }, [setHeader]);
