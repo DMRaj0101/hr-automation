@@ -16,14 +16,15 @@ function parseLatencyMs(latency: string | null | undefined): number | null {
 }
 
 // Current-latency gauge: "how close is this system to Degraded right
-// now", not a history. Down renders as a solid red track (nothing to
-// place on a scale -- the endpoint didn't respond at all); Operational
-// renders as a solid green track up to the reading's position, so status
-// reads instantly from color the same way the badge above it does.
-// Degraded keeps the 3-band gradient (green/amber/red) with a marker, so
-// a Degraded reading's distance from the threshold is still visible --
-// only degradedThresholdMs (health_check_orchestrator._DEGRADED_THRESHOLD_MS)
-// drives where the bands fall; the green/amber split is a purely visual midpoint.
+// now", not a history. Track is always the green/amber/red band
+// (0 -> threshold/2 -> threshold -> 1.5x threshold) regardless of
+// status -- a fixed reference the reader can learn once, not something
+// that changes shape per system. A marker tick shows exactly where the
+// current reading falls on that fixed scale. Down has nothing to place
+// (the endpoint didn't respond at all) so it skips the band entirely and
+// shows a flat solid-red track instead. Only degradedThresholdMs
+// (health_check_orchestrator._DEGRADED_THRESHOLD_MS) is a real value;
+// the green/amber split is a purely visual midpoint of it.
 function LatencyGauge({
   latencyMs,
   degradedThresholdMs,
@@ -53,7 +54,6 @@ function LatencyGauge({
   const midPct = (midMs / scaleMax) * 100;
   const thresholdPct = (degradedThresholdMs / scaleMax) * 100;
   const markerPct = latencyMs != null ? Math.min((latencyMs / scaleMax) * 100, 100) : null;
-  const isOperational = status === "Operational";
 
   return (
     <div className="mt-3">
@@ -61,38 +61,27 @@ function LatencyGauge({
         {latencyMs != null ? `${latencyMs}ms latency` : "—"}
       </p>
 
-      <div className="relative mt-2 h-2 w-full overflow-hidden rounded-full bg-[#EEF0F3]">
-        {isOperational ? (
-          markerPct != null && (
-            <div
-              className="absolute inset-y-0 left-0 rounded-full"
-              style={{ width: `${markerPct}%`, backgroundColor: "#22C55E" }}
-            />
-          )
-        ) : (
-          <>
-            <div
-              className="absolute inset-y-0 left-0"
-              style={{ width: `${midPct}%`, backgroundColor: "#A7E3C3" }}
-            />
-            <div
-              className="absolute inset-y-0"
-              style={{
-                left: `${midPct}%`,
-                width: `${thresholdPct - midPct}%`,
-                backgroundColor: "#FBDA9D",
-              }}
-            />
-            <div
-              className="absolute inset-y-0"
-              style={{
-                left: `${thresholdPct}%`,
-                right: 0,
-                backgroundColor: "#F3B4B4",
-              }}
-            />
-          </>
-        )}
+      <div className="relative mt-2 h-2 w-full overflow-hidden rounded-full">
+        <div
+          className="absolute inset-y-0 left-0"
+          style={{ width: `${midPct}%`, backgroundColor: "#A7E3C3" }}
+        />
+        <div
+          className="absolute inset-y-0"
+          style={{
+            left: `${midPct}%`,
+            width: `${thresholdPct - midPct}%`,
+            backgroundColor: "#FBDA9D",
+          }}
+        />
+        <div
+          className="absolute inset-y-0"
+          style={{
+            left: `${thresholdPct}%`,
+            right: 0,
+            backgroundColor: "#F3B4B4",
+          }}
+        />
         {markerPct != null && (
           <div
             className="absolute top-1/2 h-3.5 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-vantara-navy"
